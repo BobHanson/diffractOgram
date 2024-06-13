@@ -23,6 +23,7 @@ package org.j3d.geom;
  * @author Justin Couch
  * @version $Revision: 1.1 $
  */
+@SuppressWarnings("serial")
 public class InvalidArraySizeException extends RuntimeException {
 
     /**

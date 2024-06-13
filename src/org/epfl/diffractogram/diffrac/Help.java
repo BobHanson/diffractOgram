@@ -36,6 +36,7 @@ public class Help {
 	}
 	private class HelpPanel extends HVPanel.v {
 		JTextPane textPane;
+		@SuppressWarnings("serial")
 		public HelpPanel() {
 			textPane = new JTextPane() {
 				public synchronized void paint(Graphics g) {

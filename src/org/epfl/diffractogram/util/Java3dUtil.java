@@ -15,6 +15,14 @@ import org.epfl.diffractogram.model3d.Univers.Selectable;
 
 public class Java3dUtil {
 
+	public static class TriangleStripArray extends javax.media.j3d.TriangleStripArray {
+
+		public TriangleStripArray(int vertexCount, int format, int[] stripCounts) {
+			super(vertexCount, format, stripCounts);
+		}
+
+	}
+
 	public static class AmbientLight extends javax.media.j3d.AmbientLight {
 
 		public AmbientLight(Color3f c) {
