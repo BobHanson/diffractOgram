@@ -207,7 +207,7 @@ GeometryAtom[] bgGeometryAtoms = null;
 
     /**
      * Initializes the background image to the specified image.
-     * @param image new ImageCompoent2D object used as the background image
+     * @param img new ImageCompoent2D object used as the background image
      */
     final void initImage(ImageComponent2D img) {
         int texFormat;
@@ -252,7 +252,7 @@ GeometryAtom[] bgGeometryAtoms = null;
 
     /**
      * Sets the background image to the specified image.
-     * @param image new ImageCompoent3D object used as the background image
+     * @param img new ImageCompoent3D object used as the background image
      */
     final void setImage(ImageComponent2D img) {
 	if (source.isLive()) {

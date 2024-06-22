@@ -215,7 +215,7 @@ class RasterRetained extends GeometryRetained {
 
     /**
      * Initializes the raster image to the specified image.
-     * @param image new ImageCompoent2D object used as the raster image
+     * @param img new ImageCompoent2D object used as the raster image
      */
     final void initImage(ImageComponent2D img) {
 
@@ -260,7 +260,7 @@ class RasterRetained extends GeometryRetained {
     /**
      * Sets the pixel array used to copy pixels to/from a Canvas3D.
      * This is used when the type is RASTER_COLOR or RASTER_COLOR_DEPTH.
-     * @param image the ImageComponent2D object containing the
+     * @param img the ImageComponent2D object containing the
      * color data
      */
     final void setImage(ImageComponent2D img) {

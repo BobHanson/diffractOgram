@@ -1,5 +1,8 @@
 Notes from Bob Hanson's work relating to SwingJS possibilities
 
+2024.06.21 Working in JavaScript
+2024.06.21 optimized ProjScreen for ijk search using HashMap<Integer,List<Point3f>>
+2024.06.21 fixed ProjScreen resize callback to properly update on resize
 2024.06.21 swingjs2.js adds Integer.getInteger(String, int)
 2024.06.21 MasterControl set pipeline to NOOP for now
 2024.06.21 Text3D disabled (setting numChars = 0) for now
