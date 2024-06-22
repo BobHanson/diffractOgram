@@ -27,6 +27,7 @@ import javax.swing.SwingUtilities;
 
 import org.epfl.diffractogram.diffrac.DefaultValues;
 import org.epfl.diffractogram.diffrac.MainPane;
+import org.epfl.diffractogram.util.WorldRenderer;
 
 
 @SuppressWarnings("serial")
@@ -45,12 +46,16 @@ public class diffractOgram extends JApplet implements Runnable {
 	}
 	
 	public void init() {
-		try {
-			SwingUtilities.invokeAndWait(this);
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
-		} catch (InvocationTargetException e) {
-			throw new RuntimeException(e);
+		if (WorldRenderer.isJS) {
+			run();
+		} else {
+			try {
+				SwingUtilities.invokeAndWait(this);
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			} catch (InvocationTargetException e) {
+				throw new RuntimeException(e);
+			}
 		}
 	}
 	public void start() {
@@ -117,7 +122,7 @@ public class diffractOgram extends JApplet implements Runnable {
 			defaultValues.parseParameters(this);
 			mainPane = new MainPane(defaultValues);
 		} catch (Error e) {
-			System.out.println(e);
+			e.printStackTrace();
 			showException(e);
 			throw e;
 		}

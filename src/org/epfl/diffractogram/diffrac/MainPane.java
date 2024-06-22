@@ -35,8 +35,7 @@ public class MainPane extends HVPanel.v {
 		JPanel panel3d = new JPanel();
 		panel3d.setMinimumSize(new Dimension(1, 1));
 		panel3d.setLayout(new BorderLayout());
-		model3d = new Model3d(defaultValues, projected);
-		panel3d.add(model3d.univers.getCanvas());
+		model3d = new Model3d(panel3d, defaultValues, projected);
 
 		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel3d, projected);
 		splitPane.setResizeWeight(0.6);

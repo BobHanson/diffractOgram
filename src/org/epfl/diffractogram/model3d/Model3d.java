@@ -1,5 +1,6 @@
 package org.epfl.diffractogram.model3d;
 
+import java.awt.Graphics;
 import java.awt.Point;
 
 import org.epfl.diffractogram.diffrac.DefaultValues;
@@ -7,10 +8,34 @@ import org.epfl.diffractogram.diffrac.Lattice;
 import org.epfl.diffractogram.projScreen.ProjScreen;
 import org.epfl.diffractogram.transformations.OrientationClass;
 import org.epfl.diffractogram.transformations.PrecessionClass;
-import org.epfl.diffractogram.util.Java3dUtil.Point3d;
-import org.epfl.diffractogram.util.Java3dUtil.Transform3D;
-import org.epfl.diffractogram.util.Java3dUtil.Vector3d;
+import javax.vecmath.Point3d;
+import javax.media.j3d.Transform3D;
+import javax.swing.JPanel;
+import javax.vecmath.Vector3d;
 
+/**
+ * The Model3d class comprises all the univers.root shapes.
+ * 
+ * <pre>
+ * 
+ * These include:
+ * 
+ *   Net net
+ *   
+ *   Rays rays
+ *   
+ *   VirtualSphere s
+ *   
+ *   
+ * 
+ * It also maintains two specialized transformation-heavy classes:
+ * 
+ *    precessionClass: Used for maintaining angle mu and rotation alpha
+ * 
+ *    orientationClass: Used for maintaining omega, chi, and phi
+ * 
+ * </pre>
+ */
 public class Model3d implements ColorConstants {
 	public Univers univers;
 	public VirtualSphere s;
@@ -26,9 +51,9 @@ public class Model3d implements ColorConstants {
 	public OrientationClass orientationClass;
 	public PrecessionClass precessionClass;
 
-	public Model3d(DefaultValues defaultValues, ProjScreen projScreen) {
+	public Model3d(JPanel panel3d, DefaultValues defaultValues, ProjScreen projScreen) {
 		this.defaultValues = defaultValues;
-		univers = new Univers();
+		univers = new Univers(panel3d);
 		univers.rotX(-90);
 		univers.rotY(-90);
 
@@ -110,6 +135,7 @@ public class Model3d implements ColorConstants {
 //		Debug.vector(Debug.root, n, c, ColorConstants.green, 0.05);
 //		Debug.vector(Debug.root, e3, c, ColorConstants.blue, 0.05);
 //		
+		Graphics mg = projScreen.getGraphics();
 		for (int h = -net.xMax; h <= net.xMax; h++)
 			for (int k = -net.yMax; k <= net.yMax; k++)
 				for (int l = -net.zMax; l <= net.zMax; l++) {
@@ -130,12 +156,12 @@ public class Model3d implements ColorConstants {
 					tOP.transform(q);
 
 					if (adjustR) {
-						r = -(q.x * q.x + q.y * q.y + q.z * q.z) / (2 * q.y);
+						r = -(q.x * q.x + q.y * q.y + q.getZ() * q.getZ()) / (2 * q.y);
 						if (Double.isInfinite(r) || Double.isNaN(r) || r <= 0d)
 							continue;
 					}
 
-					v.set(q.x, q.y + r, q.z);
+					v.set(q.x, q.y + r, q.getZ());
 					if (!p3d.projPoint(v, n, cn))
 						continue;
 
@@ -157,11 +183,13 @@ public class Model3d implements ColorConstants {
 						v.scale(defaultValues.maskDistFract);
 					} else {
 						float intensity = net.intensity(h, k, l);
-						projScreen.drawPoint(p2d, intensity, (byte) h, (byte) k, (byte) l);
+						projScreen.drawPoint(mg, p2d, intensity, (byte) h, (byte) k, (byte) l);
 					}
 					rays.addRay(s.center, q, v);
 					net.highlight(h, k, l);
 				}
+		if (mg != null)
+			mg.dispose();
 	}
 
 	public void doLaue() {
@@ -174,7 +202,7 @@ public class Model3d implements ColorConstants {
 		c.set(0, p3d.y, 0);
 		double cn = c.dot(n);
 		tOP.mul(precessionClass.t3d, orientationClass.t3d);
-
+		Graphics mg = projScreen.getGraphics();
 		for (int h = -net.xMax; h <= net.xMax; h++)
 			for (int k = -net.yMax; k <= net.yMax; k++)
 				for (int l = -net.zMax; l <= net.zMax; l++) {
@@ -183,10 +211,10 @@ public class Model3d implements ColorConstants {
 						continue;
 					q.set(p);
 					tOP.transform(q);
-					double r = -(q.x * q.x + q.y * q.y + q.z * q.z) / (2 * q.y);
+					double r = -(q.getX() * q.getX() + q.getY() * q.getY() + q.getZ() * q.getZ()) / (2 * q.getY());
 					if (Double.isInfinite(r) || Double.isNaN(r) || r <= 0d)
 						continue;
-					v.set(q.x, q.y + r, q.z);
+					v.set(q.getX(), q.getY() + r, q.getZ());
 					if (!p3d.projPoint(v, n, cn))
 						continue;
 					u.sub(v, c);
@@ -195,8 +223,9 @@ public class Model3d implements ColorConstants {
 					if (p2d == null)
 						continue;
 					float intensity = net.intensity(h, k, l);
-					projScreen.drawPoint(p2d, intensity, (byte) h, (byte) k, (byte) l);
+					projScreen.drawPoint(mg, p2d, intensity, (byte) h, (byte) k, (byte) l);
 				}
+		mg.dispose();
 	}
 
 	private void setScreenType(ProjScreen3d s, double h) {

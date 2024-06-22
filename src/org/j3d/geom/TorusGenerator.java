@@ -10,7 +10,7 @@
 package org.j3d.geom;
 
 // Standard imports
-import org.epfl.diffractogram.util.Java3dUtil.Vector3f;
+import javax.vecmath.Vector3f;
 
 // Application specific imports
 

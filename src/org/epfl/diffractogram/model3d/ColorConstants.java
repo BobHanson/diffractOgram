@@ -1,6 +1,6 @@
 package org.epfl.diffractogram.model3d;
 
-import org.epfl.diffractogram.util.Java3dUtil.Color3f;
+import javax.vecmath.Color3f;
 
 public interface ColorConstants {
 	static final Color3f black = new Color3f(0f, 0f, 0f);

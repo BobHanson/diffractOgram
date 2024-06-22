@@ -9,25 +9,52 @@ package org.epfl.diffractogram.transformations;
 
 import java.util.Vector;
 
-import org.epfl.diffractogram.util.Java3dUtil.Transform3D;
-import org.epfl.diffractogram.util.Java3dUtil.TransformGroup;
-import org.epfl.diffractogram.util.Java3dUtil.Point3d;
-import org.epfl.diffractogram.util.Java3dUtil.Vector3d;
+import javax.media.j3d.Transform3D;
+import javax.media.j3d.TransformGroup;
+import javax.vecmath.Point3d;
+import javax.vecmath.Vector3d;
 
+/**
+ * with TransformGroup subclass OrientationClass.OrientationObject.
+ * 
+ * 
+ * The singleton OrientationClass object model3d.orientationClass maintains the
+ * sample orientation angles omega, chi, and phi as well as an overall
+ * Transform3D t3d.
+ * 
+ * All OrientationObjects added to this class are transformed by t3d, 
+ * but the goniometer ring orientation is only set by omega, so it is 
+ * made to be an omega-only object, the sole child of tgOmegaOnly.
+ * 
+ * <pre>
+ * 
+ * OrientationObjects include:
+ * 
+ * model3d.net.orientationObject 
+ * model3d.net.gonioHead.orientationGonio
+ * 
+ * </pre>
+ */
 public class OrientationClass {
+	
+	public Transform3D t3d;
 	public double omega, chi, phi;
+	
 	private Vector<OrientationObject> v;
 	private Transform3D t3d1, t3d2, t3d3, t3d23, t3di;
-	public Transform3D t3d;
-	public boolean mathOnly = false;
+	private final static boolean mathOnly = false;
 	
+	/**
+	 * 
+	 *
+	 */
 	public class OrientationObject extends TransformGroup {
 		public TransformGroup tgOmegaOnly;
 		
 		public OrientationObject() {
-			setCapabilityTo(TransformGroup.ALLOW_TRANSFORM_WRITE);
+			setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 			tgOmegaOnly = new TransformGroup();
-			tgOmegaOnly.setCapabilityTo(TransformGroup.ALLOW_TRANSFORM_WRITE);
+			tgOmegaOnly.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 			v.add(this);
 		}
 	}

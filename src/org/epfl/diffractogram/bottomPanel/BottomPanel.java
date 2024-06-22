@@ -15,8 +15,8 @@ import javax.swing.border.TitledBorder;
 import javax.swing.text.DefaultFormatter;
 import javax.swing.text.NumberFormatter;
 
-import org.epfl.diffractogram.util.Java3dUtil.Point3d;
-import org.epfl.diffractogram.util.Java3dUtil.Vector3d;
+import javax.vecmath.Point3d;
+import javax.vecmath.Vector3d;
 import org.epfl.diffractogram.diffrac.DefaultValues;
 import org.epfl.diffractogram.diffrac.Help;
 import org.epfl.diffractogram.diffrac.Lattice;
@@ -589,10 +589,10 @@ public class BottomPanel extends HVPanel.h {
 		
 	}
 	public static Point3d round(Point3d p) {
-		return new Point3d(Math.round(1000*p.x)/1000d, Math.round(1000*p.y)/1000d, Math.round(1000*p.z)/1000d);
+		return new Point3d(Math.round(1000*p.getX())/1000d, Math.round(1000*p.getY())/1000d, Math.round(1000*p.getZ())/1000d);
 	}
 	public static Vector3d round(Vector3d p) {
-		return new Vector3d(Math.round(1000*p.x)/1000d, Math.round(1000*p.y)/1000d, Math.round(1000*p.z)/1000d);
+		return new Vector3d(Math.round(1000*p.getX())/1000d, Math.round(1000*p.getY())/1000d, Math.round(1000*p.getZ())/1000d);
 	}
 }
 

@@ -5,20 +5,20 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
 import org.epfl.diffractogram.diffrac.DefaultValues;
-import org.epfl.diffractogram.util.Java3dUtil.Appearance;
-import org.epfl.diffractogram.util.Java3dUtil.BranchGroup;
-import org.epfl.diffractogram.util.Java3dUtil.ImageComponent2D;
-import org.epfl.diffractogram.util.Java3dUtil.Material;
-import org.epfl.diffractogram.util.Java3dUtil.Point3d;
-import org.epfl.diffractogram.util.Java3dUtil.PolygonAttributes;
-import org.epfl.diffractogram.util.Java3dUtil.Sphere;
-import org.epfl.diffractogram.util.Java3dUtil.Texture;
-import org.epfl.diffractogram.util.Java3dUtil.Texture2D;
-import org.epfl.diffractogram.util.Java3dUtil.TextureAttributes;
-import org.epfl.diffractogram.util.Java3dUtil.Transform3D;
-import org.epfl.diffractogram.util.Java3dUtil.TransformGroup;
-import org.epfl.diffractogram.util.Java3dUtil.TransparencyAttributes;
-import org.epfl.diffractogram.util.Java3dUtil.Vector3d;
+import javax.media.j3d.Appearance;
+import javax.media.j3d.BranchGroup;
+import javax.media.j3d.ImageComponent2D;
+import javax.media.j3d.Material;
+import javax.vecmath.Point3d;
+import javax.media.j3d.PolygonAttributes;
+import com.sun.j3d.utils.geometry.Sphere;
+import javax.media.j3d.Texture;
+import javax.media.j3d.Texture2D;
+import javax.media.j3d.TextureAttributes;
+import javax.media.j3d.Transform3D;
+import javax.media.j3d.TransformGroup;
+import javax.media.j3d.TransparencyAttributes;
+import javax.vecmath.Vector3d;
 
 public class VirtualSphere extends BranchGroup implements ColorConstants {
 	TransformGroup sPositioned;
@@ -30,7 +30,7 @@ public class VirtualSphere extends BranchGroup implements ColorConstants {
 		this.defaultValues = defaultValues;
 		center = new Point3d();  
 		sPositioned = new TransformGroup();
-		sPositioned.setCapabilityTo(TransformGroup.ALLOW_TRANSFORM_WRITE);
+		sPositioned.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 		
 		setLambda(lambda);
 		Sphere s = new Sphere(1f, Sphere.GENERATE_NORMALS, 100, app(new Color(1f, .7f, .7f, .5f)));

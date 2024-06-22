@@ -5,6 +5,11 @@ import javax.swing.SwingUtilities;
 
 import org.epfl.diffractogram.bottomPanel.HVPanel.SliderAndValue;
 
+/**
+ * BH: This class will require a StateMachine implementation.
+ * 
+ *
+ */
 public class Animator {
 	public boolean fromToEnable;
 	public double from;

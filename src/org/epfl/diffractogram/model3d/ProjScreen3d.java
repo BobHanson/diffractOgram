@@ -5,26 +5,27 @@ import java.awt.Point;
 import java.awt.image.BufferedImage;
 
 import org.epfl.diffractogram.transformations.PrecessionClass;
-import org.epfl.diffractogram.util.Java3dUtil.Appearance;
-import org.epfl.diffractogram.util.Java3dUtil.BranchGroup;
-import org.epfl.diffractogram.util.Java3dUtil.Color3f;
-import org.epfl.diffractogram.util.Java3dUtil.Cylinder;
-import org.epfl.diffractogram.util.Java3dUtil.ImageComponent2D;
-import org.epfl.diffractogram.util.Java3dUtil.Material;
-import org.epfl.diffractogram.util.Java3dUtil.Matrix3d;
-import org.epfl.diffractogram.util.Java3dUtil.Point3d;
-import org.epfl.diffractogram.util.Java3dUtil.PolygonAttributes;
-import org.epfl.diffractogram.util.Java3dUtil.QuadArray;
-import org.epfl.diffractogram.util.Java3dUtil.Shape3D;
-import org.epfl.diffractogram.util.Java3dUtil.TexCoord2f;
-import org.epfl.diffractogram.util.Java3dUtil.Texture;
-import org.epfl.diffractogram.util.Java3dUtil.Texture2D;
-import org.epfl.diffractogram.util.Java3dUtil.Transform3D;
-import org.epfl.diffractogram.util.Java3dUtil.TransformGroup;
-import org.epfl.diffractogram.util.Java3dUtil.TransparencyAttributes;
-import org.epfl.diffractogram.util.Java3dUtil.Vector3d;
-import org.epfl.diffractogram.util.Java3dUtil.Vector3f;
-import org.epfl.diffractogram.util.Java3dUtil.Torus;
+import org.epfl.diffractogram.util.Calc;
+import javax.media.j3d.Appearance;
+import javax.media.j3d.BranchGroup;
+import javax.vecmath.Color3f;
+import com.sun.j3d.utils.geometry.Cylinder;
+import javax.media.j3d.ImageComponent2D;
+import javax.media.j3d.Material;
+import javax.vecmath.Matrix3d;
+import javax.vecmath.Point3d;
+import javax.media.j3d.PolygonAttributes;
+import javax.media.j3d.QuadArray;
+import javax.media.j3d.Shape3D;
+import javax.vecmath.TexCoord2f;
+import javax.media.j3d.Texture;
+import javax.media.j3d.Texture2D;
+import javax.media.j3d.Transform3D;
+import javax.media.j3d.TransformGroup;
+import javax.media.j3d.TransparencyAttributes;
+import javax.vecmath.Vector3d;
+import javax.vecmath.Vector3f;
+import org.j3d.geom.Torus;
 
 public abstract class ProjScreen3d extends BranchGroup implements ColorConstants {
 	protected Texture2D texture;
@@ -44,10 +45,10 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 		rotTg = precessionClass.new PrecessionObject();
 		transTg = new TransformGroup();
 		resizeTg = new TransformGroup();
-		transTg.setCapabilityTo(TransformGroup.ALLOW_TRANSFORM_WRITE);
-		resizeTg.setCapabilityTo(TransformGroup.ALLOW_TRANSFORM_WRITE);
-		rotTg.setCapabilityTo(BranchGroup.ALLOW_CHILDREN_EXTEND);
-		rotTg.setCapabilityTo(BranchGroup.ALLOW_CHILDREN_WRITE);
+		transTg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+		resizeTg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+		rotTg.setCapability(BranchGroup.ALLOW_CHILDREN_EXTEND);
+		rotTg.setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
 		
 		lastTg = resizeTg;
 		noSizeTg = rotTg;
@@ -188,13 +189,7 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 		//private Vector3d vOriented = new Vector3d();
 		//private double t;
 		public boolean projPoint(Point3d v, Vector3d n, double d) {
-			//vOriented.set(v);
-			//Orientation.apply(vOriented);
-			//t = Math.sqrt((y*y)/((vOriented.x*vOriented.x)+(vOriented.y*vOriented.y)));
-			double t = Math.sqrt((y*y)/((v.x*v.x)+(v.y*v.y)));
-			if (t<0) return false;
-			v.scale(t);
-			return true;
+			return Calc.projPointCylinder(v, n, d, y);
 		}
 		
 		
@@ -209,12 +204,7 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 		
 		
 		public Point.Double proj3dTo2d(Vector3d p) {
-			if (p.z<-h/4 || p.z>h/4) return null;
-			//vOriented.scale(t);
-//			double d = Math.atan(p.y/p.x)/Math.PI;
-//			return new Point.Double(-d, -p.z/h*2);
-			double d = Math.atan(p.x/p.y)/Math.PI/2.0;
-			return new Point.Double(d+(p.y<0?(p.x<0?-.5:.5):0), -p.z/h*2);
+			return Calc.projTo2dCylinder(p, h);
 		}
 	}
 	
@@ -282,7 +272,7 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 			if (tgLabel==null) {
 				t3dLabel = new Transform3D();
 				tgLabel = new TransformGroup();
-				tgLabel.setCapabilityTo(TransformGroup.ALLOW_TRANSFORM_WRITE);
+				tgLabel.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 				Appearance appLabel=new Appearance();
 				appLabel.setMaterial(new Material(black, black, black, white, 128));
 				BranchGroup label = Utils3d.createFixedLegend("Diffraction screen", new Point3d(0, y, 0), .2f, appLabel, false);
@@ -332,15 +322,11 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 		}
 		
 		public boolean projPoint(Point3d v, Vector3d n, double d) {
-			double t = d/(v.x*n.x+v.y*n.y+v.z*n.z);
-			if (t<0) return false;
-			v.scale(t);
-			return true;
+			return Calc.projPointFlat(v, n, d);
 		}
 
 		public Point.Double proj3dTo2d(Vector3d p) {
-			if (p.x>w/2||-p.x>w/2||p.y>h/2||-p.y>h/2) return null;
-			return new Point.Double(p.x/w, -p.z/h);
+			return Calc.projTo2dFlat(p, w, h);
 		}
 	}
 	

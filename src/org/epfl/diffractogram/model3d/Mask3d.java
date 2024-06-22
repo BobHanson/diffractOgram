@@ -9,15 +9,15 @@ package org.epfl.diffractogram.model3d;
 
 import org.epfl.diffractogram.diffrac.DefaultValues;
 import org.epfl.diffractogram.transformations.PrecessionClass;
-import org.epfl.diffractogram.util.Java3dUtil.BranchGroup;
-import org.epfl.diffractogram.util.Java3dUtil.Color3f;
-import org.epfl.diffractogram.util.Java3dUtil.Cylinder;
-import org.epfl.diffractogram.util.Java3dUtil.Matrix3d;
-import org.epfl.diffractogram.util.Java3dUtil.Point3d;
-import org.epfl.diffractogram.util.Java3dUtil.Transform3D;
-import org.epfl.diffractogram.util.Java3dUtil.TransformGroup;
-import org.epfl.diffractogram.util.Java3dUtil.Vector3d;
-import org.epfl.diffractogram.util.Java3dUtil.Torus;
+import javax.media.j3d.BranchGroup;
+import javax.vecmath.Color3f;
+import com.sun.j3d.utils.geometry.Cylinder;
+import javax.vecmath.Matrix3d;
+import javax.vecmath.Point3d;
+import javax.media.j3d.Transform3D;
+import javax.media.j3d.TransformGroup;
+import javax.vecmath.Vector3d;
+import org.j3d.geom.Torus;
 
 
 public class Mask3d extends BranchGroup {
@@ -40,11 +40,11 @@ public class Mask3d extends BranchGroup {
 		transTg = new TransformGroup();
 		resizeTg = new TransformGroup();
 		torTransTg = new TransformGroup();
-		transTg.setCapabilityTo(TransformGroup.ALLOW_TRANSFORM_WRITE);
-		resizeTg.setCapabilityTo(TransformGroup.ALLOW_TRANSFORM_WRITE);
-		rotTg.setCapabilityTo(BranchGroup.ALLOW_CHILDREN_EXTEND);
-		rotTg.setCapabilityTo(BranchGroup.ALLOW_CHILDREN_WRITE);
-		torTransTg.setCapabilityTo(TransformGroup.ALLOW_TRANSFORM_WRITE);
+		transTg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+		resizeTg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+		rotTg.setCapability(BranchGroup.ALLOW_CHILDREN_EXTEND);
+		rotTg.setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
+		torTransTg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 
 		pTg.addChild(resizeTg);
 		transTg.addChild(rotTg);

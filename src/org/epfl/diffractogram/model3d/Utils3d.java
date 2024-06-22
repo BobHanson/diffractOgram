@@ -3,30 +3,32 @@ package org.epfl.diffractogram.model3d;
 import java.awt.Font;
 import java.awt.Point;
 
-import org.epfl.diffractogram.util.Java3dUtil.Appearance;
-import org.epfl.diffractogram.util.Java3dUtil.BranchGroup;
-import org.epfl.diffractogram.util.Java3dUtil.Color3f;
-import org.epfl.diffractogram.util.Java3dUtil.Color4f;
-import org.epfl.diffractogram.util.Java3dUtil.Cone;
-import org.epfl.diffractogram.util.Java3dUtil.Cylinder;
-import org.epfl.diffractogram.util.Java3dUtil.Font3D;
-import org.epfl.diffractogram.util.Java3dUtil.FontExtrusion;
-import org.epfl.diffractogram.util.Java3dUtil.LineStripArray;
-import org.epfl.diffractogram.util.Java3dUtil.Material;
-import org.epfl.diffractogram.util.Java3dUtil.Matrix3d;
-import org.epfl.diffractogram.util.Java3dUtil.Matrix4f;
-import org.epfl.diffractogram.util.Java3dUtil.OrientedShape3D;
-import org.epfl.diffractogram.util.Java3dUtil.Point3d;
-import org.epfl.diffractogram.util.Java3dUtil.Point3f;
-import org.epfl.diffractogram.util.Java3dUtil.PolygonAttributes;
-import org.epfl.diffractogram.util.Java3dUtil.Shape3D;
-import org.epfl.diffractogram.util.Java3dUtil.Sphere;
-import org.epfl.diffractogram.util.Java3dUtil.Text3D;
-import org.epfl.diffractogram.util.Java3dUtil.Transform3D;
-import org.epfl.diffractogram.util.Java3dUtil.TransformGroup;
-import org.epfl.diffractogram.util.Java3dUtil.TransparencyAttributes;
-import org.epfl.diffractogram.util.Java3dUtil.Vector3d;
-import org.epfl.diffractogram.util.Java3dUtil.Vector3f;
+import javax.media.j3d.Appearance;
+import javax.media.j3d.BranchGroup;
+import javax.vecmath.Color3f;
+import javax.vecmath.Color4f;
+import com.sun.j3d.utils.geometry.Cone;
+import com.sun.j3d.utils.geometry.Cylinder;
+import javax.media.j3d.Font3D;
+import javax.media.j3d.FontExtrusion;
+import javax.media.j3d.LineStripArray;
+import javax.media.j3d.Material;
+import javax.vecmath.Matrix3d;
+import javax.vecmath.Matrix4f;
+import javax.media.j3d.OrientedShape3D;
+import javax.vecmath.Point3d;
+import javax.vecmath.Point3f;
+import javax.media.j3d.PolygonAttributes;
+import javax.media.j3d.Shape3D;
+import com.sun.j3d.utils.geometry.Sphere;
+import javax.media.j3d.Text3D;
+import javax.media.j3d.Transform3D;
+import javax.media.j3d.TransformGroup;
+import javax.media.j3d.TransparencyAttributes;
+import javax.vecmath.Vector3d;
+import javax.vecmath.Vector3f;
+
+import org.epfl.diffractogram.util.WorldRenderer;
 
 public class Utils3d {
 
@@ -53,14 +55,14 @@ public class Utils3d {
 		Vector3f unit = new Vector3f();
 		float height = calculateHeight(b, a, center, unit);
 		TransformGroup tg = new TransformGroup();  
-		tg.setCapabilityTo(TransformGroup.ALLOW_TRANSFORM_WRITE);
-		tg.setCapabilityTo(TransformGroup.ALLOW_CHILDREN_READ);
+		tg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+		tg.setCapability(TransformGroup.ALLOW_CHILDREN_READ);
 		createMatrix(tg, center, unit);
 		Transform3D th = new Transform3D();
 		th.set(new Matrix3d(1, 0, 0, 0, height, 0, 0, 0, 1));
 		TransformGroup tgh = new TransformGroup(th);  
-		tgh.setCapabilityTo(TransformGroup.ALLOW_TRANSFORM_WRITE);
-		tgh.setCapabilityTo(TransformGroup.ALLOW_CHILDREN_READ);
+		tgh.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+		tgh.setCapability(TransformGroup.ALLOW_CHILDREN_READ);
 
 		
 		Cylinder cyl = new Cylinder((float) radius, 1f, Cylinder.GENERATE_NORMALS, precision, 1, cylApp);
@@ -101,7 +103,7 @@ public class Utils3d {
 		Vector3d h = new Vector3d();
 		h.sub(a, new Vector3d(center));
 		h.normalize();
-		h.scaleBy(lenArrow/2);
+		h.scale(lenArrow/2);
 		center.sub(center, new Vector3f(h));
 		TransformGroup tg = new TransformGroup();  
 		createMatrix(tg, center, unit);
@@ -128,19 +130,10 @@ public class Utils3d {
 	public static BranchGroup createLegend(String s, Point3d pos, Point3d rot, float size, Appearance app, boolean centered) {
 		BranchGroup bg = new BranchGroup();
 		bg.setCapability(BranchGroup.ALLOW_DETACH);
-		Font3D f3d = new Font3D(new Font(null, Font.PLAIN, 2), new FontExtrusion());
-		Text3D txt = new Text3D(f3d, s, new Point3f(0, 0, 0), centered?Text3D.ALIGN_CENTER:Text3D.ALIGN_FIRST, Text3D.PATH_RIGHT); 
-		OrientedShape3D textShape = new OrientedShape3D();
-		textShape.setGeometry(txt);
-		textShape.setAppearance(app);
-	
-		textShape.setAlignmentMode(OrientedShape3D.ROTATE_ABOUT_POINT);
-		textShape.setRotationPoint(new Point3f(rot));
-	
+		Shape3D textShape = WorldRenderer.getTextShapeStatic(s, new Font(null, Font.PLAIN, 2), centered?Text3D.ALIGN_CENTER:Text3D.ALIGN_FIRST, Text3D.PATH_RIGHT, rot, app); 
 		Transform3D tt3d = new Transform3D();
 		tt3d.set(size, new Vector3d(pos));
 		TransformGroup tt = new TransformGroup(tt3d);
-		
 		tt.addChild(textShape);
 		bg.addChild(tt);
 		return bg;
@@ -149,25 +142,16 @@ public class Utils3d {
 	public static BranchGroup createFixedLegend(String s, Point3d pos, float size, Appearance app, boolean centered) {
 		BranchGroup bg = new BranchGroup();
 		bg.setCapability(BranchGroup.ALLOW_DETACH);
-		Font3D f3d = new Font3D(new Font(null, Font.PLAIN, 2), new FontExtrusion());
-		Text3D txt = new Text3D(f3d, s, new Point3f(0, 0, 0), centered?Text3D.ALIGN_CENTER:Text3D.ALIGN_FIRST, Text3D.PATH_RIGHT); 
-		Shape3D textShape = new Shape3D();
-		textShape.setGeometry(txt);
-		textShape.setAppearance(app);
-	
+		Shape3D textShape = WorldRenderer.getTextShapeStatic(s, new Font(null, Font.PLAIN, 2), centered?Text3D.ALIGN_CENTER:Text3D.ALIGN_FIRST, Text3D.PATH_RIGHT, null, app); 		
 		Transform3D tt3d = new Transform3D();
 		tt3d.rotX(Math.PI/2);
 		TransformGroup t = new TransformGroup(tt3d);
-	
 		tt3d = new Transform3D();
-		tt3d.set(new Vector3d(pos.x, pos.y, pos.z));
+		tt3d.set(new Vector3d(pos.getX(), pos.getY(), pos.getZ()));
 		TransformGroup tt = new TransformGroup(tt3d);
-
 		tt3d = new Transform3D();
 		tt3d.set(size);
 		TransformGroup ttt = new TransformGroup(tt3d);
-		
-		
 		t.addChild(textShape);
 		ttt.addChild(t);
 		tt.addChild(ttt);
@@ -182,7 +166,7 @@ public class Utils3d {
 //	}
 	public static Vector3d mul(Vector3d t, double scale) {
 		Vector3d r = (Vector3d) t.clone();
-		r.scaleBy(scale);
+		r.scale(scale);
 		return r;
 	}
 	public static Point3d mul(Point3d t, double scale) {
@@ -202,11 +186,11 @@ public class Utils3d {
 	}
 	
 	public static String posToString(Vector3d p) {
-		return "("+posToString(p.x)+" "+posToString(p.y)+" "+posToString(p.z)+")";
+		return "("+posToString(p.getX())+" "+posToString(p.getY())+" "+posToString(p.getZ())+")";
 	}
 	
 	public static String posToString(Point3d p) {
-		return "("+posToString(p.x)+" "+posToString(p.y)+" "+posToString(p.z)+")";
+		return "("+posToString(p.getX())+" "+posToString(p.getY())+" "+posToString(p.getZ())+")";
 	}
 
 	public static String posToString(float[] p) {

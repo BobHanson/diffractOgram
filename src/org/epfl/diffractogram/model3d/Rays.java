@@ -9,10 +9,10 @@ package org.epfl.diffractogram.model3d;
 
 import java.util.Vector;
 
-import org.epfl.diffractogram.util.Java3dUtil.Appearance;
-import org.epfl.diffractogram.util.Java3dUtil.BranchGroup;
-import org.epfl.diffractogram.util.Java3dUtil.TransparencyAttributes;
-import org.epfl.diffractogram.util.Java3dUtil.Point3d;
+import javax.media.j3d.Appearance;
+import javax.media.j3d.BranchGroup;
+import javax.media.j3d.TransparencyAttributes;
+import javax.vecmath.Point3d;
 
 
 public class Rays extends BranchGroup {

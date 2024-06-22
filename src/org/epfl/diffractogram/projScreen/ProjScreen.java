@@ -30,7 +30,7 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 	private Vector<Float> pointSizes;
 	private boolean firstPaint;
 	//private Raster blank;
-	private Graphics mg;//, ig;
+	//private Graphics mg;//, ig;
 	private boolean fixedWidth;
 	
 	public ProjScreen() {
@@ -78,7 +78,7 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 			paintX = 0;
 			paintY = (screen.height-paintH)/2;
 		}
-		mg = getGraphics();
+		//BH don't hold onto this mg = getGraphics();
 /*
 		if (screen.width>0 && screen.height>0) {
 			image = new BufferedImage(screen.width, screen.height, BufferedImage.TYPE_INT_ARGB);
@@ -113,12 +113,14 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 			}
 		}
 		if (!s.equals(index)) {
-			//paint(mg);
-			
-			mg.setClip(0, getSize().height-20, getSize().width, 20);
-			mg.clearRect(0, getSize().height-20, getSize().width, 20);
-			mg.setColor(Color.black);
-			mg.drawString(s, 5, getSize().height-5);
+			setToolTipText(s);
+//			//paint(mg);
+//			Graphics mg = getGraphics();
+//			mg.setClip(0, getSize().height-20, getSize().width, 20);
+//			mg.clearRect(0, getSize().height-20, getSize().width, 20);
+//			mg.setColor(Color.black);
+//			mg.drawString(s, 5, getSize().height-5);
+//			mg.dispose();
 			index = s;
 		}
 	}
@@ -192,7 +194,7 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 			//ig.fillOval((int)Math.round(x*pw+pw/2.0+px-w/2), (int)Math.round(y*ph+ph/2.0+py-w/2), w, w);
 	}
 	
-	public synchronized void drawPoint(Point.Double p, float s, byte i, byte j, byte k) {
+	public synchronized void drawPoint(Graphics mg, Point.Double p, float s, byte i, byte j, byte k) {
 		if (mg==null) return;
 		
 		if (Math.abs(p.x)<.01 && Math.abs(p.y)<.01) return;
@@ -243,7 +245,7 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 		paintY0 = e.getY();
 		paintX0S = e.getX();
 		paintY0S = e.getY();
-		
+		//hmm not during a paint?
 		showIndex(paintX0, paintY0);
 	}
 	

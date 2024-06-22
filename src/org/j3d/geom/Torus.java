@@ -10,9 +10,9 @@
 package org.j3d.geom;
 
 // Standard imports
-import org.epfl.diffractogram.util.Java3dUtil.Appearance;
-import org.epfl.diffractogram.util.Java3dUtil.Shape3D;
-import org.epfl.diffractogram.util.Java3dUtil.TriangleStripArray;
+import javax.media.j3d.Appearance;
+import javax.media.j3d.Shape3D;
+import javax.media.j3d.TriangleStripArray;
 
 // Application specific imports
 // none
@@ -29,7 +29,7 @@ import org.epfl.diffractogram.util.Java3dUtil.TriangleStripArray;
  *
  * As we assume you may want to use this as a collidable object, we store the
  * {@link GeometryData} instance that is used to create the object in the
- * userData of the underlying {@link org.epfl.diffractogram.util.Java3dUtil.TriangleStripArray}. The
+ * userData of the underlying {@link javax.media.j3d.TriangleStripArray}. The
  * geometry does not have texture coordinates set.
  *
  * @author Justin Couch

@@ -1,9 +1,9 @@
 package org.epfl.diffractogram.diffrac;
 
-import org.epfl.diffractogram.util.Java3dUtil.Matrix3d;
-import org.epfl.diffractogram.util.Java3dUtil.Point3d;
-import org.epfl.diffractogram.util.Java3dUtil.Vector3d;
-import org.epfl.diffractogram.util.Java3dUtil.Transform3D;
+import javax.vecmath.Matrix3d;
+import javax.vecmath.Point3d;
+import javax.vecmath.Vector3d;
+import javax.media.j3d.Transform3D;
 
 public class Lattice {
 	public double a, b, c;
@@ -27,7 +27,7 @@ public class Lattice {
 		o = new Vector3d(); 
 		o.add(x, y);
 		o.add(z);
-		o.scaleBy(-.5);
+		o.scale(-.5);
 		m = new Matrix3d();
 		m.setColumn(0, x);
 		m.setColumn(1, y);
@@ -59,7 +59,7 @@ public class Lattice {
 		o = new Vector3d(); 
 		o.add(x, y);
 		o.add(z);
-		o.scaleBy(-.5);
+		o.scale(-.5);
 		m = new Matrix3d();
 		m.setColumn(0, x);
 		m.setColumn(1, y);
@@ -77,7 +77,10 @@ public class Lattice {
 	
 	public void setOrientation(int u, int v, int w) {
 		Vector3d e2 = new Vector3d(0,1,0);
-		Vector3d p = new Vector3d(u*x.x+v*y.x+w*z.x, u*x.y+v*y.y+w*z.y, u*x.z+v*y.z+w*z.z);
+		Vector3d p = new Vector3d(
+				u*x.getX()+v*y.getX()+w*z.getX(), 
+				u*x.getY()+v*y.getY()+w*z.getY(), 
+				u*x.getZ()+v*y.getZ()+w*z.getZ());
 		double angle = p.angle(e2);
 		Vector3d n = new Vector3d();
 		n.cross(e2, p);
@@ -92,7 +95,7 @@ public class Lattice {
 		o = new Vector3d(); 
 		o.add(x, y);
 		o.add(z);
-		o.scaleBy(-.5);
+		o.scale(-.5);
 		m = new Matrix3d();
 		m.setColumn(0, x);
 		m.setColumn(1, y);
@@ -104,9 +107,9 @@ public class Lattice {
     double s = Math.sin(angle);
     double t = 1-c;
     double n = v.length();
-    double vx = v.x / n;
-    double vy = v.y / n;
-    double vz = v.z / n;
+    double vx = v.getX() / n;
+    double vy = v.getY() / n;
+    double vz = v.getZ() / n;
     Matrix3d m = new Matrix3d();
     m.m00 = t * vx * vx + c;
     m.m01 = t * vy * vx + s * vz;
@@ -172,9 +175,9 @@ public class Lattice {
 		r[0].cross(y, z);
 		r[1].cross(z, x);
 		r[2].cross(x, y);
-		r[0].scaleBy(iv);
-		r[1].scaleBy(iv);
-		r[2].scaleBy(iv);
+		r[0].scale(iv);
+		r[1].scale(iv);
+		r[2].scale(iv);
 		return r;
 	}
 	
@@ -191,8 +194,10 @@ public class Lattice {
 		return Math.pow(cos(a), 2);
 	}
 	public static Vector3d round(Vector3d p) {
-		if (Double.isNaN(p.x)||Double.isInfinite(p.x)||Double.isNaN(p.y)||Double.isInfinite(p.y)||Double.isNaN(p.z)||Double.isInfinite(p.z)) return p;
-		return new Vector3d(Math.round(1000*p.x)/1000d, Math.round(1000*p.y)/1000d, Math.round(1000*p.z)/1000d);
+		if (Double.isNaN(p.getX())||Double.isInfinite(p.getX())
+				||Double.isNaN(p.getY())||Double.isInfinite(p.getY())
+				||Double.isNaN(p.getZ())||Double.isInfinite(p.getZ())) return p;
+		return new Vector3d(Math.round(1000*p.getX())/1000d, Math.round(1000*p.getY())/1000d, Math.round(1000*p.getZ())/1000d);
 	}
 
 	public void transform(Point3d p) {
