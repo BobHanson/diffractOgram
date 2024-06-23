@@ -1,6 +1,6 @@
 Notes from Bob Hanson's work relating to SwingJS possibilities
 
-
+2024.06.23 Further coding efficiencies; all shape creation isolated
 2024.06.22 Working in JavaScript
 2024.06.22 optimized ProjScreen for ijk search using HashMap<Integer,List<Point3f>>
 2024.06.22 fixed ProjScreen resize callback to properly update on resize
