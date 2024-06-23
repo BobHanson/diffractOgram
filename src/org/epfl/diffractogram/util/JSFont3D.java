@@ -37,13 +37,12 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.ServiceLoader;
 
 import javax.media.j3d.BoundingBox;
 import javax.media.j3d.FontExtrusion;
 import javax.media.j3d.GeometryArray;
 import javax.media.j3d.GeometryArrayRetained;
+import javax.media.j3d.Text3D;
 import javax.media.j3d.TriangleArray;
 import javax.media.j3d.TriangleArrayRetained;
 import javax.media.j3d.UnorderList;

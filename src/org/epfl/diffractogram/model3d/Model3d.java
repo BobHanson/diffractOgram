@@ -38,7 +38,7 @@ import javax.vecmath.Vector3d;
  */
 public class Model3d implements ColorConstants {
 	public Univers univers;
-	public VirtualSphere s;
+	public VirtualSphere virtualSphere;
 	public ProjScreen3d p3d;
 	public Net net;
 	public ProjScreen projScreen;
@@ -61,18 +61,18 @@ public class Model3d implements ColorConstants {
 		precessionClass = new PrecessionClass();
 
 		this.projScreen = projScreen;
-		s = new VirtualSphere(defaultValues, defaultValues.lambda);
+		virtualSphere = new VirtualSphere(defaultValues, defaultValues.lambda);
 		setFlatScreen();
 
 		Lattice r = defaultValues.lattice.reciprocal();
 		net = new Net(orientationClass, precessionClass, defaultValues, r.x, r.y, r.z, defaultValues.crystalX,
 				defaultValues.crystalY, defaultValues.crystalZ);
 
-		net.gonioHead.setY(s.lambdaToRadius(defaultValues.lambda));
+		net.gonioHead.setY(virtualSphere.lambdaToRadius(defaultValues.lambda));
 
 		mask3d = new Mask3d(precessionClass, defaultValues, p3d.y, 2, p3d.w, p3d.h);
 
-		univers.root.addChild(s);
+		univers.root.addChild(virtualSphere);
 		univers.root.addChild(net);
 
 		rays = new Rays();
@@ -123,7 +123,7 @@ public class Model3d implements ColorConstants {
 		c.set(0, p3d.y, 0);
 		double cn = c.dot(n);
 		tOP.mul(precessionClass.t3d, orientationClass.t3d);
-		sReversed.set(s.center);
+		sReversed.set(virtualSphere.center);
 		precessionClass.reverse(sReversed);
 		orientationClass.reverse(sReversed);
 		double rMask = Math.sin(precessionClass.mu) * p3d.y;
@@ -146,7 +146,7 @@ public class Model3d implements ColorConstants {
 					if (p == null)
 						continue;
 
-					double r = s.radius;
+					double r = virtualSphere.radius;
 					double d = sReversed.distance(p) - r;
 					if (d > 0 || Math.abs(d) > defaultValues.dotSize)
 						continue;
@@ -185,7 +185,7 @@ public class Model3d implements ColorConstants {
 						float intensity = net.intensity(h, k, l);
 						projScreen.drawPoint(mg, p2d, intensity, (byte) h, (byte) k, (byte) l);
 					}
-					rays.addRay(s.center, q, v);
+					rays.addRay(virtualSphere.center, q, v);
 					net.highlight(h, k, l);
 				}
 		if (mg != null)

@@ -3,7 +3,9 @@ package org.epfl.diffractogram.util;
 import java.awt.AWTEvent;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Label;
 import java.awt.Toolkit;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
@@ -41,7 +43,14 @@ import javax.vecmath.Vector3f;
 
 import org.epfl.diffractogram.model3d.Univers;
 import org.epfl.diffractogram.model3d.Univers.Selectable;
+import org.epfl.diffractogram.model3d.Utils3d;
+import org.j3d.geom.Torus;
 
+import com.sun.j3d.utils.geometry.Box;
+import com.sun.j3d.utils.geometry.Cone;
+import com.sun.j3d.utils.geometry.Cylinder;
+import com.sun.j3d.utils.geometry.Primitive;
+import com.sun.j3d.utils.geometry.Sphere;
 import com.sun.j3d.utils.universe.SimpleUniverse;
 
 @SuppressWarnings("serial")
@@ -151,7 +160,7 @@ public class Java3DWorldRenderer extends WorldRenderer {
 	}
 
 	protected class UniversBehavior extends Behavior {
-		
+
 		private static final double x_factor = .02;
 		private static final double y_factor = .02;
 
@@ -190,7 +199,7 @@ public class Java3DWorldRenderer extends WorldRenderer {
 		}
 
 		public void processMouseEvent(MouseEvent e) {
-			
+
 			switch (e.getID()) {
 			case MouseEvent.MOUSE_PRESSED:
 				x = x_last = e.getX();
@@ -239,12 +248,12 @@ public class Java3DWorldRenderer extends WorldRenderer {
 		private void doZoom() {
 			t3d.set(1.0 + dy / 100d);
 			applyTransform(t3d);
-			
+
 			t3d.set(1.0 + dy / 100d);
 			applyTransform(t3d);
 
 		}
-		
+
 		private void doRotateXY() {
 			t3d.rotX(dy * y_factor);
 			applyTransform(t3d);
@@ -278,7 +287,7 @@ public class Java3DWorldRenderer extends WorldRenderer {
 			return getPointedObject(univers.root, mousePos, mouseVec);
 
 		}
-		
+
 		Selectable getPointedObject(BranchGroup root, Point3d mousePos, Vector3d mouseVec) {
 			PickRay pickRay = new PickRay();
 			pickRay.set(mousePos, mouseVec);
@@ -319,22 +328,112 @@ public class Java3DWorldRenderer extends WorldRenderer {
 		applyTransform(t3d);
 	}
 
-	public static Shape3D getTextShape(String s, Font font, int align, int path, Point3d rot,
-			Appearance app) {
+	public static BranchGroup getTextShapeImpl(BranchGroup bg, String s, Point3d pos, float size, Font font, int align,
+			int path, Point3d rotPoint, Appearance app) {
+		bg.setCapability(BranchGroup.ALLOW_DETACH);
 		Shape3D textShape;
-		if (rot == null) {
+		if (rotPoint == null) {
+			// These will rotate with the object
+			// Reciprocal lattice, Ewald Sphere, Precision mask, 1/lambda
 			textShape = new Shape3D();
 		} else {
-			OrientedShape3D t = new OrientedShape3D();
-			t.setAlignmentMode(OrientedShape3D.ROTATE_ABOUT_POINT);
-			t.setRotationPoint(new Point3f(rot));
-			textShape = t;
+			// x y z a b c a* b* c*
+			// rot is (0 0 0)
+			OrientedShape3D os = new OrientedShape3D();
+			os.setAlignmentMode(OrientedShape3D.ROTATE_ABOUT_POINT);
+			os.setRotationPoint(new Point3f(rotPoint));
+			textShape = os;
 		}
 		Font3D f3d = new Font3D(font, new FontExtrusion());
+		// switch from java.awt.Label.* to Text3D.*
+		switch (align) {
+		case Label.CENTER:
+			align = Text3D.ALIGN_CENTER;
+			break;
+		case Label.LEFT:
+			align = Text3D.ALIGN_FIRST;
+			break;
+		case Label.RIGHT:
+			align = Text3D.ALIGN_LAST;
+			break;
+		}
+		switch (path) {
+		case KeyEvent.VK_LEFT:
+			path = Text3D.PATH_LEFT;
+			break;
+		case KeyEvent.VK_RIGHT:
+			path = Text3D.PATH_RIGHT;
+			break;
+		case KeyEvent.VK_DOWN:
+			path = Text3D.PATH_DOWN;
+			break;
+		case KeyEvent.VK_UP:
+			path = Text3D.PATH_UP;
+			break;
+		}
 		Text3D txt = new Text3D(f3d, s, new Point3f(), align, path);
 		textShape.setGeometry(txt);
-		textShape.setAppearance(app);	
-		return textShape;
+		textShape.setAppearance(app);
+
+		if (rotPoint == null) {
+			Transform3D trotX90 = new Transform3D();
+			trotX90.rotX(Math.PI / 2);
+
+			Transform3D tsize = new Transform3D();
+			tsize.set(size);
+
+			Transform3D tpos = new Transform3D();
+			tpos.set(new Vector3d(pos));
+
+			Utils3d.setParents(textShape, new TransformGroup(trotX90), new TransformGroup(tsize),
+					new TransformGroup(tpos), bg);
+		} else {
+			Transform3D tsizepos = new Transform3D();
+			tsizepos.set(size, new Vector3d(pos));
+			Utils3d.setParents(textShape, new TransformGroup(tsizepos), bg);
+		}
+
+		return bg;
+	}
+
+	public static Node createTorusImpl(double innerRadius, double outerRadius, int innerFaces, int outerFaces,
+			Appearance app) {
+		return new Torus((float) innerRadius, (float) outerRadius, innerFaces, outerFaces, app);
+	}
+
+	public static Node createBoxImpl(double dx, double dy, double dz, Appearance app) {
+		return new Box((float) dx, (float) dy, (float) dz, app);
+	}
+
+	public static Node createCylinderImpl(double radius, double height, boolean isHollow, int xdiv, int ydiv,
+			Appearance app) {
+		int flags = Cylinder.GENERATE_NORMALS | (isHollow ? Cylinder.GENERATE_TEXTURE_COORDS : 0);
+		Cylinder c = new Cylinder((float) radius, (float) height, flags, xdiv, ydiv, app);
+		if (isHollow) {
+			c.removeChild(c.getShape(Cylinder.BOTTOM));
+			c.removeChild(c.getShape(Cylinder.TOP));
+		} else {
+			c.setCapability(Primitive.ENABLE_APPEARANCE_MODIFY);
+			c.getChild(0).setCapability(Shape3D.ALLOW_APPEARANCE_WRITE);
+			c.getChild(1).setCapability(Shape3D.ALLOW_APPEARANCE_WRITE);
+			c.getChild(2).setCapability(Shape3D.ALLOW_APPEARANCE_WRITE);
+		}
+		return c;
+	}
+
+	public static Node createSphereImpl(double radius, int divs, Appearance app) {
+		Sphere s = new Sphere((float) radius, Sphere.GENERATE_NORMALS, divs, app);
+		s.getShape().setCapability(Shape3D.ALLOW_APPEARANCE_WRITE);
+		return s;
+	}
+
+	public static TransformGroup createArrowImpl(TransformGroup tg, double radiusArrow, double lenArrow, double radius,
+			float height, int precision, Appearance app) {
+		Utils3d.setParents(
+				new Cone((float) radiusArrow, (float) lenArrow, Cylinder.GENERATE_NORMALS, precision, 1, app),
+				Utils3d.getVectorTransformGroup(0, height / 2f + lenArrow / 2f, 0, null), tg);
+		tg.addChild(new Cylinder((float) radius, height, Cylinder.GENERATE_NORMALS, precision, 1, app));
+		return tg;
 	}
 
 }

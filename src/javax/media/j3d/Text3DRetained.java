@@ -246,7 +246,7 @@ class Text3DRetained extends GeometryRetained {
     final void setString(String string) {
 	geomLock.getLock();
 	this.string = string;
-	if (string == null || /** @j2sNative true ||*/false) {
+	if (string == null) {
 	    numChars = 0;
 	} else {
 	    numChars = string.length();

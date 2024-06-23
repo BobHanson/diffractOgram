@@ -4,6 +4,18 @@ import java.awt.DefaultKeyboardFocusManager;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.KeyEvent;
 
+import javax.media.j3d.Appearance;
+import javax.media.j3d.BranchGroup;
+import javax.media.j3d.Material;
+import javax.media.j3d.Node;
+import javax.media.j3d.Transform3D;
+import javax.media.j3d.TransformGroup;
+import javax.media.j3d.TransparencyAttributes;
+import javax.vecmath.Color3f;
+import javax.vecmath.Matrix3d;
+import javax.vecmath.Point3d;
+import javax.vecmath.Vector3d;
+
 import org.epfl.diffractogram.diffrac.DefaultValues;
 import org.epfl.diffractogram.diffrac.Lattice;
 import org.epfl.diffractogram.transformations.OrientationClass;
@@ -11,20 +23,7 @@ import org.epfl.diffractogram.transformations.OrientationClass.OrientationObject
 import org.epfl.diffractogram.transformations.PrecessionClass;
 import org.epfl.diffractogram.transformations.PrecessionClass.PrecessionObject;
 import org.epfl.diffractogram.util.Calc;
-import javax.media.j3d.Appearance;
-import com.sun.j3d.utils.geometry.Box;
-import javax.media.j3d.BranchGroup;
-import javax.vecmath.Color3f;
-import javax.media.j3d.Material;
-import javax.vecmath.Matrix3d;
-import javax.vecmath.Point3d;
-import javax.media.j3d.Shape3D;
-import com.sun.j3d.utils.geometry.Sphere;
-import javax.media.j3d.Transform3D;
-import javax.media.j3d.TransformGroup;
-import javax.media.j3d.TransparencyAttributes;
-import javax.vecmath.Vector3d;
-import org.j3d.geom.Torus;
+import org.epfl.diffractogram.util.WorldRenderer;
 
 /**
  * the Net class maintains lattice points in the displayed reciprocal lattice,
@@ -57,15 +56,15 @@ public class Net extends BranchGroup implements ColorConstants {
 		setCapability(TransformGroup.ALLOW_CHILDREN_EXTEND);
 		setCapability(TransformGroup.ALLOW_CHILDREN_WRITE);
 		if (defaultApp == null) {
-			defaultApp = new Appearance();
+			defaultApp = Utils3d.newAppearance("color:blue");
 			defaultApp.setMaterial(new Material(blue, black, blue, white, 128));
 		}
 		if (redApp == null) {
-			redApp = new Appearance();
+			redApp = Utils3d.newAppearance("color:red");
 			redApp.setMaterial(new Material(red, black, red, white, 128));
 		}
 		if (greenApp == null) {
-			greenApp = new Appearance();
+			greenApp = Utils3d.newAppearance("color:green");
 			greenApp.setMaterial(new Material(green, black, green, white, 128));
 		}
 
@@ -106,17 +105,13 @@ public class Net extends BranchGroup implements ColorConstants {
 	}
 
 	private static BranchGroup createAtom(Vector3d v, Appearance app, float dotSize3d) {
-		Transform3D t = new Transform3D();
-		t.set(v);
-		TransformGroup tg = new TransformGroup(t);
-		tg.setCapability(TransformGroup.ALLOW_CHILDREN_READ);
-		Sphere s = new Sphere(dotSize3d, Sphere.GENERATE_NORMALS, 10, app);
-		s.getShape().setCapability(Shape3D.ALLOW_APPEARANCE_WRITE);
-		tg.addChild(s);
 		BranchGroup bg = new BranchGroup();
 		bg.setCapability(BranchGroup.ALLOW_CHILDREN_READ);
 		bg.setCapability(BranchGroup.ALLOW_DETACH);
-		bg.addChild(tg);
+		TransformGroup tg = Utils3d.getVectorTransformGroup(v.x, v.y, v.z, null);
+		tg.setCapability(TransformGroup.ALLOW_CHILDREN_READ);
+		Utils3d.setParents(WorldRenderer.createSphere(dotSize3d, 10, true, app), 
+				tg, bg);
 		return bg;
 	}
 
@@ -125,7 +120,7 @@ public class Net extends BranchGroup implements ColorConstants {
 	}
 
 	private void changeAtomApp(BranchGroup a, Appearance app) {
-		((Sphere) ((TransformGroup) a.getChild(0)).getChild(0)).setAppearance(app);
+		Utils3d.getShapeChild(a).setAppearance(app);
 	}
 
 	public synchronized void createNet(Vector3d a, Vector3d b, Vector3d c, int x, int y, int z) {
@@ -258,16 +253,13 @@ public class Net extends BranchGroup implements ColorConstants {
 		app.setMaterial(new Material(white, blue, black, blue, 120.0f));
 		TransparencyAttributes transp = new TransparencyAttributes(TransparencyAttributes.NICEST, .85f);
 		app.setTransparencyAttributes(transp);
-		Box box = new Box(2, 2, 2, app);
 		Transform3D t3d = new Transform3D();
 		Matrix3d matrix = new Matrix3d();
 		matrix.setColumn(0, (Vector3d) Utils3d.mul(a, x));
 		matrix.setColumn(1, (Vector3d) Utils3d.mul(b, y));
 		matrix.setColumn(2, (Vector3d) Utils3d.mul(c, z));
 		t3d.set(matrix);
-		TransformGroup tg = new TransformGroup(t3d);
-		tg.addChild(box);
-		netRoot.addChild(tg);
+		Utils3d.setParents(WorldRenderer.createBox(2, 2, 2, app), new TransformGroup(t3d), netRoot);
 	}
 
 	/**
@@ -284,10 +276,9 @@ public class Net extends BranchGroup implements ColorConstants {
 			t3d = new Transform3D();
 			tg = new TransformGroup(t3d);
 			tg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
-			tg.addChild(orientationGonio);
-			tg.addChild(orientationGonio.tgOmegaOnly);
-			addChild(tg);
-			buildGadjet();
+			Utils3d.setParents(orientationGonio, tg, this);
+			Utils3d.setParents(orientationGonio.tgOmegaOnly, tg, this);
+			buildGadjet(orientationGonio);
 		}
 
 		public void setY(double y) {
@@ -295,20 +286,21 @@ public class Net extends BranchGroup implements ColorConstants {
 			tg.setTransform(t3d);
 		}
 
-		private void buildGadjet() {
-			// goniometer ring 
-			orientationGonio.tgOmegaOnly.addChild(
-					new Torus(.05f, .6f, 10, 50, Utils3d.createApp(yellow)));
+		private void buildGadjet(OrientationObject gonio) {
+			Node ring = WorldRenderer.createTorus(.05, .6, 10, 50, Utils3d.createApp(yellow));
+			Node sample = WorldRenderer.createBox(0.2, 0.2, 0.1, Utils3d.createApp(blue));
+			Node pin = Utils3d.createCylinder(new Point3d(), new Point3d(0, 0, -.4), .02, Utils3d.createApp(orange), 5);
+			
+			Utils3d.setParents(ring, gonio.tgOmegaOnly);
+			
 			// sample crystal
-			Transform3D t3d1 = new Transform3D();
-			t3d1.set(new Vector3d(0, 0, -.4));
-			TransformGroup tg1 = new TransformGroup(t3d1);
-			orientationGonio.addChild(tg1);
-			tg1.addChild(
-					new Box(.2f, .2f, .1f, Utils3d.createApp(blue)));
+			Utils3d.setParents(sample, 
+					Utils3d.getVectorTransformGroup(0, 0, -.4, null),
+					gonio); 
+			
 			// sample pin
-			orientationGonio.addChild(
-					Utils3d.createCylinder(new Point3d(), new Point3d(0, 0, -.4), .02, Utils3d.createApp(orange), 5));
+			Utils3d.setParents(pin,
+					gonio);
 		}
 	}
 

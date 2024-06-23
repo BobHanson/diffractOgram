@@ -1,17 +1,19 @@
 Notes from Bob Hanson's work relating to SwingJS possibilities
 
-2024.06.21 Working in JavaScript
-2024.06.21 optimized ProjScreen for ijk search using HashMap<Integer,List<Point3f>>
-2024.06.21 fixed ProjScreen resize callback to properly update on resize
-2024.06.21 swingjs2.js adds Integer.getInteger(String, int)
-2024.06.21 MasterControl set pipeline to NOOP for now
-2024.06.21 Text3D disabled (setting numChars = 0) for now
+
+2024.06.22 Working in JavaScript
+2024.06.22 optimized ProjScreen for ijk search using HashMap<Integer,List<Point3f>>
+2024.06.22 fixed ProjScreen resize callback to properly update on resize
+2024.06.22 swingjs2.js adds Integer.getInteger(String, int)
+2024.06.22 MasterControl set pipeline to NOOP for now
+2024.06.22 Text3D disabled (setting numChars = 0) for now
+2024.06.22 added com.sun.j3d.utils.geometry selected classes only
 2024.06.21 j2s project
 2024.06.21 changed ProjScreen off-paint writing to graphihcs with a tooltip -- easier to see as well
 2024.06.21 removed unnecessary ProjScreen persistent reference to Graphics object
 2024.06.21 pulled out SimpleUniverse and environment to Java-only Java3DWorldRenderer
 2024.06.21 corrected a few bugs in javax/media/j3d/GroupRetained.java discovered by Eclipse
-2024.06.13 added javax.media.j3d package source (minus native components)
+2024.06.13 added javax.media.j3d package source (minus native components, especially Font3D)
 2024.06.13 added javax.vecmath package source
 2024.06.13 refactored project to package org.epfl.diffractogram
 2024.06.11 opened Eclipse project and github/bobhanson/diffractOgram

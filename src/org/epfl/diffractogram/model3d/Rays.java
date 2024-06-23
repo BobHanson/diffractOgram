@@ -29,7 +29,7 @@ public class Rays extends BranchGroup {
 		setCapability(BranchGroup.ALLOW_CHILDREN_READ);
 		raysAppRed = Utils3d.createApp(ColorConstants.red);
 		raysAppWhite = Utils3d.createApp(ColorConstants.white);
-		raysAppTransp = new Appearance();
+		raysAppTransp = Utils3d.newAppearance("ray:transp");
 		raysAppTransp.setTransparencyAttributes(new TransparencyAttributes(TransparencyAttributes.FASTEST,1f));
 
 		impacts = new BranchGroup();

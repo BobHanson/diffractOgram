@@ -187,8 +187,8 @@ public class BottomPanel extends HVPanel.h {
 			boolean ajustR = false;
 			if (e.getActionCommand().equals("Lambda")) {
 				double l = ((SliderAndValue)e.getSource()).getValue();
-				model3d.s.setLambda(l);
-				model3d.net.gonioHead.setY(model3d.s.lambdaToRadius(l));
+				model3d.virtualSphere.setLambda(l);
+				model3d.net.gonioHead.setY(model3d.virtualSphere.lambdaToRadius(l));
 				ajustR = true;
 			}
 			else if (e.getActionCommand().equals("Omega")) {
