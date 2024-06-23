@@ -30,10 +30,7 @@ public class DefaultValues {
 	public int stopAngle = 360;
 	
 	public void parseParameters(JApplet applet) {
-		try {lattice.a = Double.parseDouble(applet.getParameter("a"));}catch(Exception e) {
-			System.out.println(e);
-			
-		}
+		try {lattice.a = Double.parseDouble(applet.getParameter("a"));}catch(Exception e) {}
 		try {lattice.b = Double.parseDouble(applet.getParameter("b"));}catch(Exception e) {}
 		try {lattice.c = Double.parseDouble(applet.getParameter("c"));}catch(Exception e) {}
 		try {lattice.alpha = Double.parseDouble(applet.getParameter("alpha"));}catch(Exception e) {}
