@@ -48,9 +48,9 @@ public abstract class HVPanel implements ActionListener {
 		jPanel.setBorder(border);
 	}
 	
-	public static class h extends HVPanel {
+	public static class HPanel extends HVPanel {
 		private GridBagConstraints c;
-		public h() {
+		public HPanel() {
 			c = new GridBagConstraints();
 			c.fill = GridBagConstraints.BOTH;
 			c.gridx=c.gridy=0; 
@@ -101,9 +101,9 @@ public abstract class HVPanel implements ActionListener {
 		}
 	}	
 		
-	public static class v extends HVPanel {
+	public static class VPanel extends HVPanel {
 		private GridBagConstraints c;
-		public v() {
+		public VPanel() {
 			c = new GridBagConstraints();
 			c.fill = GridBagConstraints.BOTH;
 			c.insets = new Insets(0,2,0,2);  

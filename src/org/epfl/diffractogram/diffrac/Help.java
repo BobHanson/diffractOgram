@@ -34,7 +34,7 @@ public class Help {
 	  frame.setVisible(show);
 	  if (show) frame.toFront();
 	}
-	private class HelpPanel extends HVPanel.v {
+	private class HelpPanel extends HVPanel.VPanel {
 		JTextPane textPane;
 		@SuppressWarnings("serial")
 		public HelpPanel() {

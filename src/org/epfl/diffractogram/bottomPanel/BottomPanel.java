@@ -23,7 +23,7 @@ import org.epfl.diffractogram.diffrac.Lattice;
 import org.epfl.diffractogram.model3d.Animator;
 import org.epfl.diffractogram.model3d.Model3d;
 
-public class BottomPanel extends HVPanel.h {
+public class BottomPanel extends HVPanel.HPanel {
 	private Model3d model3d;
 	private LatticePane lPane, rPane;
 	private Parameters paramPane;
@@ -51,15 +51,15 @@ public class BottomPanel extends HVPanel.h {
 	}
 	
 	private boolean sync = true;
-	class LatticePane extends HVPanel.v {
+	class LatticePane extends HVPanel.VPanel {
 		private EditField a, b, c, alpha, beta, gamma;
 		public LatticePane(String name, String suffix, Lattice def) {
 			setBorder(new TitledBorder(name));
-			HVPanel p1 = new HVPanel.v();
+			HVPanel p1 = new HVPanel.VPanel();
 			a = p1.addFloatField("a"+suffix, "Å", 4, (float)def.a, "0.00");
 			b = p1.addFloatField("b"+suffix, "Å", 4, (float)def.b, "0.00");
 			c = p1.addFloatField("c"+suffix, "Å", 4, (float)def.c, "0.00");
-			HVPanel p2 = new HVPanel.v();
+			HVPanel p2 = new HVPanel.VPanel();
 			alpha = p2.addIntField("alpha"+suffix, "°", 3, (int)Math.round(def.alpha));
 			beta = p2.addIntField("beta"+suffix, "°", 3, (int)Math.round(def.beta));
 			gamma = p2.addIntField("gamma"+suffix, "°", 3, (int)Math.round(def.gamma));
@@ -103,21 +103,21 @@ public class BottomPanel extends HVPanel.h {
 	}
 
 	
-	class CrystalSize extends HVPanel.v {
+	class CrystalSize extends HVPanel.VPanel {
 		private EditField x, y, z;
 		public CrystalSize() {
 			setBorder(new TitledBorder("Lattice"));
-			HVPanel p1 = new HVPanel.v();
+			HVPanel p1 = new HVPanel.VPanel();
 			x = p1.addIntFieldSpinner("h max", null, 2, defaultValues.crystalX);
 			y = p1.addIntFieldSpinner("k max", null, 2, defaultValues.crystalY);
 			z = p1.addIntFieldSpinner("l  max", null, 2, defaultValues.crystalZ);
 			((NumberFormatter)x.edit.getFormatter()).setMinimum(new Integer(0));
 			((NumberFormatter)y.edit.getFormatter()).setMinimum(new Integer(0));
 			((NumberFormatter)z.edit.getFormatter()).setMinimum(new Integer(0));
-			HVPanel p0 = new HVPanel.h();
+			HVPanel p0 = new HVPanel.HPanel();
 			p0.addSubPane(p1);
 			
-			HVPanel.v p2 = new HVPanel.v();
+			HVPanel.VPanel p2 = new HVPanel.VPanel();
 			p2.addButton(new JButton("More"));
 			p2.addButton(new JButton("Less"));
 			addSubPane(p0);
@@ -144,13 +144,13 @@ public class BottomPanel extends HVPanel.h {
 		}
 	}
 	
-	public class Parameters extends HVPanel.v {
+	public class Parameters extends HVPanel.VPanel {
 		public SliderAndValue rotX, rotY, rotZ, lambda, precess;
 		public EditField uvw;
 		public Parameters() {
 			setBorder(new TitledBorder("Parameters"));
 			this.expand(true);
-			HVPanel.v p1 = new HVPanel.v();
+			HVPanel.VPanel p1 = new HVPanel.VPanel();
 			p1.expand(true);
 			rotX = p1.addSliderAndValueH("Omega", "°", -180, 180, defaultValues.omega, 0, 120);
 			rotY = p1.addSliderAndValueH("Chi", "°", -180, 180, defaultValues.chi, 0, 120);
@@ -158,14 +158,14 @@ public class BottomPanel extends HVPanel.h {
 			lambda = p1.addSliderAndValueH("Lambda", "Å", .2f, 3.5f, (float)defaultValues.lambda, 2, 120);
 			precess = p1.addSliderAndValueH("Precession", "°", -180, 180, defaultValues.precession, 0, 120);
 
-			HVPanel.v p3 = new HVPanel.v();
+			HVPanel.VPanel p3 = new HVPanel.VPanel();
 			p3.putExtraSpace();
 			uvw = p3.addSpecialFormatField("u v w", null, 5, defaultValues.uvw, new ThreeCoordsFormat());
 			uvw.edit.setMinimumSize(new Dimension(60, 20));
 			p3.expand(false);
 			p3.bottom();
 			
-			HVPanel.h p2 = new HVPanel.h();
+			HVPanel.HPanel p2 = new HVPanel.HPanel();
 			p2.addButton(new JButton("Reset angles"));
 			p2.putExtraSpace();
 			p2.addSubPane(p3);
@@ -240,7 +240,7 @@ public class BottomPanel extends HVPanel.h {
 	}
 	
 	
-	public class Animation extends HVPanel.h {
+	public class Animation extends HVPanel.HPanel {
 		private EditField from, to, angle;
 		private JCheckBox fromToEnable;
 		public  Animator animator;
@@ -251,27 +251,27 @@ public class BottomPanel extends HVPanel.h {
 		
 		public Animation() {
 			setBorder(new TitledBorder("Animation"));
-			HVPanel.v p1 = new HVPanel.v();
+			HVPanel.VPanel p1 = new HVPanel.VPanel();
 			
-			HVPanel p2 = new HVPanel.h();
+			HVPanel p2 = new HVPanel.HPanel();
 			p2.addButton(new JToggleButton("Omega"));
 			p2.addButton(new JToggleButton("Chi"));
 			p2.addButton(new JToggleButton("Phi"));
 			p1.addSubPane(p2);
 			
-			HVPanel p3 = new HVPanel.h();
+			HVPanel p3 = new HVPanel.HPanel();
 			p3.addButton(new JToggleButton("Sequential"));
 			p3.addButton(new JToggleButton("Debye-Scherrer"));
 			p1.addSubPane(p3);
 
-			HVPanel.h p5 = new HVPanel.h();
+			HVPanel.HPanel p5 = new HVPanel.HPanel();
 			p5.left();
 			p5.addButton(fromToEnable = new JCheckBox(""));
-			HVPanel.v p61 = new HVPanel.v();
+			HVPanel.VPanel p61 = new HVPanel.VPanel();
 			p61.expand(false);
 			from = p61.addIntField("", "°", 2, defaultValues.startAngle);
 			p5.addSubPane(p61);
-			HVPanel.v p62 = new HVPanel.v();
+			HVPanel.VPanel p62 = new HVPanel.VPanel();
 			p62.expand(false);
 			to = p62.addIntField("-", "°", 2, defaultValues.stopAngle);
 			p5.addSubPane(p62);
@@ -280,16 +280,16 @@ public class BottomPanel extends HVPanel.h {
 			p5.expand(true);
 			speed = p5.addSliderAndValueH("Speed", null, 1, 20, defaultValues.speed, 0, 80);
 			
-			HVPanel p7 = new HVPanel.h();
+			HVPanel p7 = new HVPanel.HPanel();
 			p7.addButton(new JToggleButton("Lambda"));
 			p7.addButton(laue=new JButton("Laue"));
 			p1.addSubPane(p7);
 			//p1.putExtraSpace();
 			
-			HVPanel.h p8 = new HVPanel.h();
+			HVPanel.HPanel p8 = new HVPanel.HPanel();
 			p8.expand(true);
 			p8.addButton(precession=new JToggleButton("Precession"));
-			HVPanel.v p9 = new HVPanel.v();
+			HVPanel.VPanel p9 = new HVPanel.VPanel();
 			p9.expand(false);
 			angle = p9.addIntFieldSpinner(" Angle", "°", 2, defaultValues.mu);
 			model3d.precessionClass.setAngle(defaultValues.mu);
@@ -416,29 +416,29 @@ public class BottomPanel extends HVPanel.h {
 		}
 	}
 	
-	class Screen extends HVPanel.v {
+	class Screen extends HVPanel.VPanel {
 		private EditField w, h, y;
 		private JCheckBox persistant;
 		private boolean flat;
 		public Screen() {
 			setBorder(new TitledBorder("Screen"));
-			HVPanel.h p1 = new HVPanel.h();
+			HVPanel.HPanel p1 = new HVPanel.HPanel();
 			w=p1.addIntFieldSpinner("Size ", null, 2, (int)defaultValues.wScreen);
 			h=p1.addIntFieldSpinner(" x ", "cm", 2, (int)defaultValues.hFlatScreen);
 			((NumberFormatter)w.edit.getFormatter()).setMinimum(new Integer(1));
 			((NumberFormatter)h.edit.getFormatter()).setMinimum(new Integer(1));
 			addSubPane(p1);
-			HVPanel.h p10 = new HVPanel.h();
+			HVPanel.HPanel p10 = new HVPanel.HPanel();
 			y = p10.addIntFieldSpinner("Distance ", "cm", 2, (int)defaultValues.zScreen);
 			addSubPane(p10);
 			
-			HVPanel p11 = new HVPanel.h();
+			HVPanel p11 = new HVPanel.HPanel();
 			p11.addButtonGroupped(new JRadioButton("Flat"));
 			p11.addButtonGroupped(new JRadioButton("Cylindric"));
 			addSubPane(p11);
 			addButton(persistant = new JCheckBox("Persistant"));
 			persistant.setSelected(true);
-			HVPanel p2 = new HVPanel.h();
+			HVPanel p2 = new HVPanel.HPanel();
 			p2.addButton(new JButton("Clear"));
 			//p2.addButton(new JButton("Snap"));
 			p2.addButton(new JButton("Help"));

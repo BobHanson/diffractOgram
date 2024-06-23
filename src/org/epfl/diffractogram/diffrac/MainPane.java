@@ -19,7 +19,7 @@ import org.epfl.diffractogram.projScreen.ProjScreen;
  * nicolas.schoeni@epfl.ch
  */
 
-public class MainPane extends HVPanel.v {
+public class MainPane extends HVPanel.VPanel {
 	public Model3d model3d;
 	private JSplitPane splitPane;
 	private ProjScreen projected;
