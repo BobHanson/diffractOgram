@@ -33,7 +33,7 @@ public abstract class HVPanel implements ActionListener {
 	public static boolean quiet = false;
 	private ButtonGroup group;
 	private ActionListener listener;
-	private JPanel jPanel;
+	protected JPanel jPanel;
 	
 	public HVPanel() {
 		jPanel = new JPanel();

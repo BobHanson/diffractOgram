@@ -3,6 +3,12 @@ package org.epfl.diffractogram.diffrac;
 import javax.swing.JApplet;
 
 public class DefaultValues {
+
+	public static /* not final */ boolean javaJmol = false;//true;
+	public static boolean useJmol = /** @j2sNative true || */javaJmol;
+
+	public static String strLambda = (useJmol ? "\u03bb" : "lambda");
+
 	public double zScreen = 4;
 	public double wScreen = 10;
 	public double hFlatScreen = 10;

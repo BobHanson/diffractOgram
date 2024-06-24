@@ -1,5 +1,6 @@
 package org.epfl.diffractogram.diffrac;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 
@@ -31,10 +32,11 @@ public class MainPane extends HVPanel.VPanel {
 		this.defaultValues = defaultValues;
 		projected = new ProjScreen();
 		projected.setMinimumSize(new Dimension(0, 0));
-		
+
 		JPanel panel3d = new JPanel();
 		panel3d.setMinimumSize(new Dimension(1, 1));
 		panel3d.setLayout(new BorderLayout());
+		
 		model3d = new Model3d(panel3d, defaultValues, projected);
 
 		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel3d, projected);
@@ -50,7 +52,7 @@ public class MainPane extends HVPanel.VPanel {
 		expand(false);
 		addSubPane(bottomPanel);
 		
-	  model3d.doRays(false);
+		model3d.complete();
 	}
 	public void actionPerformed(ActionEvent e) {
 		if (e.getActionCommand().equals("horizontal")) {

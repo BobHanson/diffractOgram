@@ -3,12 +3,16 @@ package org.epfl.diffractogram.model3d;
 import java.awt.Graphics;
 import java.awt.Point;
 
+import org.epfl.diffractogram.bottomPanel.HVPanel.SliderAndValue;
 import org.epfl.diffractogram.diffrac.DefaultValues;
 import org.epfl.diffractogram.diffrac.Lattice;
 import org.epfl.diffractogram.projScreen.ProjScreen;
 import org.epfl.diffractogram.transformations.OrientationClass;
 import org.epfl.diffractogram.transformations.PrecessionClass;
 import javax.vecmath.Point3d;
+import javax.media.j3d.BranchGroup;
+import javax.media.j3d.Group;
+import javax.media.j3d.Node;
 import javax.media.j3d.Transform3D;
 import javax.swing.JPanel;
 import javax.vecmath.Vector3d;
@@ -51,43 +55,53 @@ public class Model3d implements ColorConstants {
 	public OrientationClass orientationClass;
 	public PrecessionClass precessionClass;
 
+	public Lattice lattice, reciprocal; 
+
 	public Model3d(JPanel panel3d, DefaultValues defaultValues, ProjScreen projScreen) {
 		this.defaultValues = defaultValues;
+		
+		lattice = new Lattice(defaultValues.lattice.a, defaultValues.lattice.b, defaultValues.lattice.c, defaultValues.lattice.alpha, defaultValues.lattice.beta, defaultValues.lattice.gamma);
+		lattice.setOrientation(defaultValues.uvw[0], defaultValues.uvw[1], defaultValues.uvw[2]);
+		reciprocal = lattice.reciprocal();
+
+		
 		univers = new Univers(panel3d);
 		univers.rotX(-90);
 		univers.rotY(-90);
 
 		orientationClass = new OrientationClass();
 		precessionClass = new PrecessionClass();
-
+		
 		this.projScreen = projScreen;
-		virtualSphere = new VirtualSphere(defaultValues, defaultValues.lambda);
+		virtualSphere = new VirtualSphere(univers, defaultValues, defaultValues.lambda);
 		setFlatScreen();
 
 		Lattice r = defaultValues.lattice.reciprocal();
-		net = new Net(orientationClass, precessionClass, defaultValues, r.x, r.y, r.z, defaultValues.crystalX,
+		net = new Net(univers, orientationClass, precessionClass, defaultValues, r.x, r.y, r.z, defaultValues.crystalX,
 				defaultValues.crystalY, defaultValues.crystalZ);
 
 		net.gonioHead.setY(virtualSphere.lambdaToRadius(defaultValues.lambda));
 
-		mask3d = new Mask3d(precessionClass, defaultValues, p3d.y, 2, p3d.w, p3d.h);
+		mask3d = new Mask3d(univers, precessionClass, defaultValues, p3d.y, 2, p3d.w, p3d.h);
 
-		univers.root.addChild(virtualSphere);
-		univers.root.addChild(net);
+		rays = new Rays(univers);
 
-		rays = new Rays();
-		univers.root.addChild(rays);
+		univers.addNotify(null, virtualSphere);
+		univers.addNotify(null, net);
+		univers.addNotify(null, rays);
 
 		// Debug.transparentScreen(Debug.root, new Vector3d(0,0,0), new Vector3d(1,0,0),
 		// new Vector3d(0,0,1), new Vector3d(0,1,0), 2, 2, ColorConstants.green);
 		// Debug.point(Debug.root, new Point3d(0, 2, 0), ColorConstants.black, .1);
+		
+		
 	}
 
 	public void setMask(boolean enabled) {
 		if (!mask && enabled)
-			univers.root.addChild(mask3d);
+			univers.addNotify(null, mask3d);
 		if (mask && !enabled)
-			univers.root.removeChild(mask3d);
+			univers.removeNotify(null, mask3d);
 		mask = enabled;
 	}
 
@@ -107,7 +121,7 @@ public class Model3d implements ColorConstants {
 	private Vector3d n = new Vector3d();
 	private Vector3d c = new Vector3d();
 	private Vector3d u = new Vector3d();
-	private Transform3D tOP = new Transform3D();
+	private Transform3D tPrecOrient = new Transform3D();
 	private Point3d sReversed = new Point3d();
 	private Vector3d e1 = new Vector3d();
 	private Vector3d e3 = new Vector3d();
@@ -122,7 +136,7 @@ public class Model3d implements ColorConstants {
 		precessionClass.apply(e3);
 		c.set(0, p3d.y, 0);
 		double cn = c.dot(n);
-		tOP.mul(precessionClass.t3d, orientationClass.t3d);
+		tPrecOrient.mul(precessionClass.t3d, orientationClass.t3d);
 		sReversed.set(virtualSphere.center);
 		precessionClass.reverse(sReversed);
 		orientationClass.reverse(sReversed);
@@ -153,7 +167,7 @@ public class Model3d implements ColorConstants {
 					// TODO: ? if (Math.abs(d)>DefaultValues.dotSize) continue;
 
 					q.set(p);
-					tOP.transform(q);
+					tPrecOrient.transform(q);
 
 					if (adjustR) {
 						r = -(q.x * q.x + q.y * q.y + q.getZ() * q.getZ()) / (2 * q.y);
@@ -201,7 +215,7 @@ public class Model3d implements ColorConstants {
 		precessionClass.apply(e3);
 		c.set(0, p3d.y, 0);
 		double cn = c.dot(n);
-		tOP.mul(precessionClass.t3d, orientationClass.t3d);
+		tPrecOrient.mul(precessionClass.t3d, orientationClass.t3d);
 		Graphics mg = projScreen.getGraphics();
 		for (int h = -net.xMax; h <= net.xMax; h++)
 			for (int k = -net.yMax; k <= net.yMax; k++)
@@ -210,7 +224,7 @@ public class Model3d implements ColorConstants {
 					if (p == null)
 						continue;
 					q.set(p);
-					tOP.transform(q);
+					tPrecOrient.transform(q);
 					double r = -(q.getX() * q.getX() + q.getY() * q.getY() + q.getZ() * q.getZ()) / (2 * q.getY());
 					if (Double.isInfinite(r) || Double.isNaN(r) || r <= 0d)
 						continue;
@@ -242,21 +256,21 @@ public class Model3d implements ColorConstants {
 				hFlat = p3d.h;
 			else
 				hCyl = p3d.h;
-			univers.root.removeChild(p3d);
+			univers.removeNotify(null, p3d);
 		}
 		p3d = s;
 		p3d.setSize(w, h);
 		p3d.setPos(y);
-		univers.root.addChild(p3d);
+		univers.addNotify(null, p3d);
 	}
 
 	public void setFlatScreen() {
-		setScreenType(new ProjScreen3d.Flat(precessionClass), p3d == null ? defaultValues.hFlatScreen : hFlat);
+		setScreenType(new ProjScreen3d.Flat(univers, precessionClass), p3d == null ? defaultValues.hFlatScreen : hFlat);
 		projScreen.setImageSize(p3d.w, p3d.h, false);
 	}
 
 	public void setCylindricScreen() {
-		setScreenType(new ProjScreen3d.Cylindric(precessionClass), p3d == null ? defaultValues.hCylScreen : hCyl);
+		setScreenType(new ProjScreen3d.Cylindric(univers, precessionClass), p3d == null ? defaultValues.hCylScreen : hCyl);
 		projScreen.setImageSize(p3d.y * Math.PI * 2, p3d.h, true);
 	}
 
@@ -269,6 +283,64 @@ public class Model3d implements ColorConstants {
 	public void destroy() {
 		if (univers != null)
 			univers.cleanup();
+	}
+
+	public void complete() {
+		  doRays(false);
+		  univers.complete();
+	}
+
+	public void setLattice(float a, float b, float c, float alpha, float beta,
+			float gamma) {
+		lattice = new Lattice(a, b, c, alpha, beta, gamma);
+		reciprocal = lattice.reciprocal();
+	}
+
+	public void setReciprocalLattice(float a, float b, float c, float alpha, float beta,
+			float gamma) {
+		reciprocal = new Lattice(a, b, c, alpha, beta, gamma);
+		Lattice l = reciprocal.reciprocal();
+		lattice = new Lattice(l.a, l.b, l.c, l.alpha, l.beta, l.gamma);
+	}
+
+	public void setLatticeOrientation(int u, int v, int w) {
+		lattice.setOrientation(u, v, w);
+		reciprocal = lattice.reciprocal(); 
+		net.setLattice(reciprocal);
+	}
+
+	public void setDefaultParamters(DefaultValues defaultValues) {
+		orientationClass.setOmega(defaultValues.omega);
+		orientationClass.setChi(defaultValues.chi);
+		orientationClass.setPhi(defaultValues.phi);
+		precessionClass.setAngle(defaultValues.mu);
+		precessionClass.setRotation(defaultValues.precession);
+	}
+
+	public boolean processActionCommand(String cmd, double val) {
+		switch (cmd) {
+		case "Lambda":
+			virtualSphere.setLambda(val);
+			net.gonioHead.setY(virtualSphere.lambdaToRadius(val));
+			return true;
+		case "Omega":
+			orientationClass.setOmega(val);
+			break;
+		case "Chi":
+			orientationClass.setChi(val);
+			break;
+		case "Phi":
+			orientationClass.setPhi(val);
+			break;
+		case "Precession":
+			precessionClass.setRotation(val);
+		}
+		return false;
+	}
+
+	public void setPrecessionDefaults(DefaultValues defaultValues) {
+		precessionClass.setAngle(defaultValues.mu);
+		mask3d.setR(Math.sin(precessionClass.mu) * (p3d.y * defaultValues.maskDistFract));
 	}
 
 //public synchronized void doRays3(boolean dummy) {

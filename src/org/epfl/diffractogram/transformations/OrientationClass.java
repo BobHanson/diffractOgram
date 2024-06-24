@@ -51,10 +51,10 @@ public class OrientationClass {
 	public class OrientationObject extends TransformGroup {
 		public TransformGroup tgOmegaOnly;
 		
-		public OrientationObject() {
+		public OrientationObject(TransformGroup tgOmegaOnly) {
+			setName("orientationobject");
 			setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
-			tgOmegaOnly = new TransformGroup();
-			tgOmegaOnly.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+			this.tgOmegaOnly = tgOmegaOnly;
 			v.add(this);
 		}
 	}

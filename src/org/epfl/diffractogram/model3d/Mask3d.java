@@ -27,8 +27,9 @@ public class Mask3d extends BranchGroup {
 	private DefaultValues defaultValues;
 	private PrecessionClass precessionClass;
 
-	public Mask3d(PrecessionClass precessionClass, DefaultValues defaultValues, double y, double r, double w,
+	public Mask3d(Univers univers, PrecessionClass precessionClass, DefaultValues defaultValues, double y, double r, double w,
 			double h) {
+		setName("mask3d");
 		this.precessionClass = precessionClass;
 		this.defaultValues = defaultValues;
 		setCapability(BranchGroup.ALLOW_DETACH);
@@ -37,21 +38,21 @@ public class Mask3d extends BranchGroup {
 
 		rotTg = precessionClass.new PrecessionRotObject();
 		pTg = precessionClass.new PrecessionObject();
-		transTg = new TransformGroup();
-		resizeTg = new TransformGroup();
+		transTg = univers.newTransformGroup(null);
+		resizeTg = univers.newTransformGroup(null);
 
-		torTransTg = new TransformGroup();
+		torTransTg = univers.newTransformGroup(null);
 		transTg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 		resizeTg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 		rotTg.setCapability(BranchGroup.ALLOW_CHILDREN_EXTEND);
 		rotTg.setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
 		torTransTg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 
-		Utils3d.setParents(WorldRenderer.createCylinder(0.3, 0.1, false, 50, 5,
+		Utils3d.setParents(WorldRenderer.createCylinder("maskcyl", 0.3, 0.1, false, 50, 5,
 				Utils3d.createApp(new Color3f(.8f, .8f, .8f), .5f)), 
 				resizeTg, pTg, transTg, this);
 
-		Utils3d.setParents(WorldRenderer.createTorus(.04, 1, 10, 50, Utils3d.createApp(ColorConstants.black)), 
+		Utils3d.setParents(WorldRenderer.createTorus("maskframe",.04, 1, 10, 50, Utils3d.createApp(ColorConstants.black)), 
 				torTransTg, rotTg, transTg, this);
 
 		BranchGroup label = Utils3d.createFixedLegend("Precession mask", new Point3d(), .2f,

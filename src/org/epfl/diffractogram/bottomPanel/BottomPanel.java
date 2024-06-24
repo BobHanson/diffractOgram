@@ -17,6 +17,8 @@ import javax.swing.text.NumberFormatter;
 
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
+
+import org.epfl.diffractogram.bottomPanel.HVPanel.SliderAndValue;
 import org.epfl.diffractogram.diffrac.DefaultValues;
 import org.epfl.diffractogram.diffrac.Help;
 import org.epfl.diffractogram.diffrac.Lattice;
@@ -29,7 +31,6 @@ public class BottomPanel extends HVPanel.HPanel {
 	private Parameters paramPane;
 	public  Animation animPane;
 	public  Help help;
-	private Lattice lattice, reciprocal; 
 	private int u, v, w;
 	DefaultValues defaultValues;
 	
@@ -38,12 +39,9 @@ public class BottomPanel extends HVPanel.HPanel {
 		this.defaultValues = defaultValues;
 		this.model3d = model3d;
 		help = new Help();
-		lattice = new Lattice(defaultValues.lattice.a, defaultValues.lattice.b, defaultValues.lattice.c, defaultValues.lattice.alpha, defaultValues.lattice.beta, defaultValues.lattice.gamma);
-		lattice.setOrientation(defaultValues.uvw[0], defaultValues.uvw[1], defaultValues.uvw[2]);
-		reciprocal = lattice.reciprocal();
 		
-		addSubPane(lPane = new LatticePane("Unit cell", "", lattice));
-		addSubPane(rPane = new LatticePane("Reciprocal lattice", "*", reciprocal));
+		addSubPane(lPane = new LatticePane("Unit cell", "", model3d.lattice));
+		addSubPane(rPane = new LatticePane("Reciprocal lattice", "*", model3d.reciprocal));
 		addSubPane(new CrystalSize());
 		addSubPane(paramPane = new Parameters());
 		addSubPane(animPane=new Animation());
@@ -79,25 +77,21 @@ public class BottomPanel extends HVPanel.HPanel {
 				sync = false;
 				if (this==lPane) {
 					HVPanel.quiet = true;
-					lattice = new Lattice(a.getFloatValue(), b.getFloatValue(), c.getFloatValue(), alpha.getFloatValue(), beta.getFloatValue(), gamma.getFloatValue());
-					lattice.setOrientation(u, v, w);
-					reciprocal = lattice.reciprocal();
-					rPane.put(reciprocal);
+					model3d.setLattice(a.getFloatValue(), b.getFloatValue(), c.getFloatValue(), alpha.getFloatValue(), beta.getFloatValue(), gamma.getFloatValue());
+					model3d.setLatticeOrientation(u, v, w);
+					rPane.put(model3d.reciprocal);
 					HVPanel.quiet = false;
 				}
 				else if (this==rPane) {
 					HVPanel.quiet = true;
-					reciprocal = new Lattice(a.getFloatValue(), b.getFloatValue(), c.getFloatValue(), alpha.getFloatValue(), beta.getFloatValue(), gamma.getFloatValue());
-					Lattice l = reciprocal.reciprocal();
-					lattice = new Lattice(l.a, l.b, l.c, l.alpha, l.beta, l.gamma);
-					lattice.setOrientation(u, v, w);
-					reciprocal = lattice.reciprocal();
-					lPane.put(lattice);
+					model3d.setReciprocalLattice(a.getFloatValue(), b.getFloatValue(), c.getFloatValue(), alpha.getFloatValue(), beta.getFloatValue(), gamma.getFloatValue());
+					model3d.setLatticeOrientation(u, v, w);
+					lPane.put(model3d.lattice);
 					HVPanel.quiet = false;
 				}
 				sync = true;
 			}
-			model3d.net.setLattice(reciprocal);
+			model3d.net.setLattice(model3d.reciprocal);
 			model3d.doRays(false);
 		}
 	}
@@ -177,33 +171,13 @@ public class BottomPanel extends HVPanel.HPanel {
 			u = defaultValues.uvw[0];
 			v = defaultValues.uvw[1];
 			w = defaultValues.uvw[2];
-			model3d.orientationClass.setOmega(defaultValues.omega);
-			model3d.orientationClass.setChi(defaultValues.chi);
-			model3d.orientationClass.setPhi(defaultValues.phi);
-			model3d.precessionClass.setAngle(defaultValues.mu);
-			model3d.precessionClass.setRotation(defaultValues.precession);
+			model3d.setDefaultParamters(defaultValues);
 		}
 		public void actionPerformed(ActionEvent e) {
-			boolean ajustR = false;
-			if (e.getActionCommand().equals("Lambda")) {
-				double l = ((SliderAndValue)e.getSource()).getValue();
-				model3d.virtualSphere.setLambda(l);
-				model3d.net.gonioHead.setY(model3d.virtualSphere.lambdaToRadius(l));
-				ajustR = true;
-			}
-			else if (e.getActionCommand().equals("Omega")) {
-				model3d.orientationClass.setOmega(((SliderAndValue)e.getSource()).getValue());
-			}
-			else if (e.getActionCommand().equals("Chi")) {
-				model3d.orientationClass.setChi(((SliderAndValue)e.getSource()).getValue());
-			}
-			else if (e.getActionCommand().equals("Phi")) {
-				model3d.orientationClass.setPhi(((SliderAndValue)e.getSource()).getValue());
-			}
-			else if (e.getActionCommand().equals("Precession")) {
-				model3d.precessionClass.setRotation(((SliderAndValue)e.getSource()).getValue());
-			}
-			else if (e.getActionCommand().equals("Reset angles")) {
+			String cmd = e.getActionCommand();
+			boolean adjustR = false;
+			switch (cmd) {
+			case "Reset angles":
 				rotX.setValue(0);
 				rotY.setValue(0);
 				rotZ.setValue(0);
@@ -212,17 +186,19 @@ public class BottomPanel extends HVPanel.HPanel {
 //				uvw.edit.setText("0 1 0");
 //				HVPanel.quiet = false;
 				model3d.projScreen.clearImage();
-			}
-			else if (e.getActionCommand().equals("u v w")) {
+				break;
+			case "u v w":
 				HVPanel.quiet = true;
 				int[] ii = ((int[])((EditField)e.getSource()).getValue());
 				u=ii[0]; v=ii[1]; w=ii[2];
-				lattice.setOrientation(ii[0], ii[1], ii[2]);
-				reciprocal = lattice.reciprocal(); 
-				model3d.net.setLattice(reciprocal);
+				model3d.setLatticeOrientation(u, v, w);
 				HVPanel.quiet = false;
+				break;
+		    default:
+		    	adjustR = model3d.processActionCommand(cmd, ((SliderAndValue)e.getSource()).getValue());
+		    	break;
 			}
-			model3d.doRays(ajustR);
+			model3d.doRays(adjustR);
 		}
 //		private int sgn(double d) {
 //			return d==0?0:(d>0?1:-1);
@@ -292,8 +268,7 @@ public class BottomPanel extends HVPanel.HPanel {
 			HVPanel.VPanel p9 = new HVPanel.VPanel();
 			p9.expand(false);
 			angle = p9.addIntFieldSpinner(" Angle", "°", 2, defaultValues.mu);
-			model3d.precessionClass.setAngle(defaultValues.mu);
-			model3d.mask3d.setR(Math.sin(model3d.precessionClass.mu)*(model3d.p3d.y*defaultValues.maskDistFract));
+			model3d.setPrecessionDefaults(defaultValues);
 			
 			p8.addSubPane(p9);
 			p8.addButton(mask=new JCheckBox("Mask"));

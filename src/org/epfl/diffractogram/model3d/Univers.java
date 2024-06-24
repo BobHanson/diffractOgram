@@ -1,11 +1,12 @@
 package org.epfl.diffractogram.model3d;
 
 import javax.media.j3d.BranchGroup;
+import javax.media.j3d.Group;
+import javax.media.j3d.Node;
 import javax.media.j3d.Transform3D;
 import javax.media.j3d.TransformGroup;
 import javax.swing.JPanel;
 import javax.vecmath.Color3f;
-import javax.vecmath.Vector3d;
 
 import org.epfl.diffractogram.util.WorldRenderer;
 
@@ -49,35 +50,41 @@ import org.epfl.diffractogram.util.WorldRenderer;
  */
 public class Univers {
 	private WorldRenderer renderer;
-	private TransformGroup tg, reset;
-	public BranchGroup root;
+	private TransformGroup tgReset;
+	private TransformGroup tgTop;
+	private BranchGroup root;
 	
 	public Univers(JPanel panel3d) {
 
 		renderer = WorldRenderer.createWorldRenderer(panel3d, this);
-		// this is the root for all objects in the scene
+		
+		// tgReset is the highest transform group. 
+		// It will set the starting default view
+		tgReset = new TransformGroup();
+		tgReset.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+
+		// tgTop transform group will receive the mouse actions
+		// it is the parent of root and is started with rotx -90, roty -90
+		tgTop = new TransformGroup();
+		tgTop.setCapability(TransformGroup.ALLOW_TRANSFORM_READ);
+		tgTop.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+
+		// root is the root for all objects in the scene
+		// it is 
 		root = new BranchGroup();
+		root.setName("root");
 		root.setCapability(BranchGroup.ALLOW_CHILDREN_READ);
 		root.setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
 		root.setCapability(BranchGroup.ALLOW_CHILDREN_EXTEND);
 
-		// this transform group will receive the mouse actions
-		tg = new TransformGroup();
-		tg.setCapability(TransformGroup.ALLOW_TRANSFORM_READ);
-		tg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
-		tg.addChild(root);
-
-		// this transform group will receive the reset transform
-		reset = new TransformGroup();
-		reset.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
-		reset.addChild(tg);
-
-		// reset the transform group
-		reset();
-
-		renderer.setEnvironment(reset, root);
+		Utils3d.setParents(root, tgTop, tgReset);
+		renderer.setEnvironment(tgReset);
 	}
 	
+	public TransformGroup newTransformGroup(Transform3D t3d) {
+		return renderer.newTransformGroup(t3d);
+	}
+
 	public boolean isParallel() {
 		return renderer.isParallel();
 	}
@@ -88,9 +95,11 @@ public class Univers {
 
 	public void applyTransform(Transform3D t3d) {
 		Transform3D cur = new Transform3D();
-		tg.getTransform(cur);
+		tgTop.getTransform(cur);
 		cur.mul(t3d, cur);
-		tg.setTransform(cur);
+		tgTop.setTransform(cur);
+		Transform3D t = new Transform3D();
+		tgTop.getTransform(t);
 	}
 
 	public void rotX(double angle) {
@@ -115,10 +124,12 @@ public class Univers {
 		applyTransform(t3d);
 	}
 	
+	/**
+	 * This is only called once.
+	 * 
+	 */
 	public void reset() {
-		Transform3D t3d = new Transform3D();
-		t3d.set(new Vector3d(0, 0, -5), .2);
-		reset.setTransform(t3d);
+		renderer.reset(tgReset);
 	}
 	
 	public void setBackgroundColor(Color3f bgColor) {
@@ -132,7 +143,34 @@ public class Univers {
 	public interface Selectable {
 		public void click();
 	}
-	
+
+	public BranchGroup getRoot() {
+		return root;
+	}
+
+	public void removeNotify(Group parent, Node child) {
+		if (parent == null)
+			parent = root;
+		renderer.notifyRemove(parent, child);
+		parent.removeChild(child);
+	}
+
+	public void addNotify(Group parent, Node child) {
+		if (parent == null)
+			parent = root;
+		parent.addChild(child);
+		renderer.notifyAdd(parent, child);
+	}
+
+	public void removeAllNotify(Group g) {
+		renderer.notifyRemoveAll(g);
+		g.removeAllChildren();
+	}
+
+	public void complete() {
+		renderer.complete();
+	}
+
 }
 
 

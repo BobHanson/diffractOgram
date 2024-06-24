@@ -69,6 +69,7 @@ public class diffractOgram extends JApplet implements Runnable {
 			}
 		});
 	}
+	
 	public void destroy() {
 		mainPane.destroy();
 	}
@@ -84,6 +85,7 @@ public class diffractOgram extends JApplet implements Runnable {
 	public void run() {
 		createMainFrame();
 		if (isApplet) createWebPane();
+		
 		createMainPane();
 		showMainPane();
 		//new DropTarget(frame, new CifFileDropper(mainPane)); 
@@ -117,6 +119,7 @@ public class diffractOgram extends JApplet implements Runnable {
 	}
 	
 	private void createMainPane() {
+		
 		try {
 			DefaultValues defaultValues = new DefaultValues(); 
 			defaultValues.parseParameters(this);

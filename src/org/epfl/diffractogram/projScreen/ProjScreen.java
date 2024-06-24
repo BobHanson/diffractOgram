@@ -136,7 +136,7 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 		}
 	}
 	
-	public synchronized void paint(Graphics g) {
+	public synchronized void paint(Graphics g) {		
 		// does not fire while animating
 		Graphics2D g2d = (Graphics2D)g;
 		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
@@ -145,11 +145,14 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 			setImageDefaultOrigin(fixedWidth);
 			firstPaint = false;
 		}
-
+		// BH: for some reason, the background was black
+		Dimension size = getSize();
+		g.setColor(getBackground());
+		g.fillRect(0, 0,  size.width, size.height);
 		// BH must have been an earlier idea
 		//g.drawImage(image, paintX, paintY, paintW, paintH, null);
 		
-		g.setColor(new Color(255, 255, 255, 200));
+		g.setColor(new Color(255, 255, 255));
 		g.fillRect(paintX, paintY, paintW, paintH);
 		
 		Point.Double p;

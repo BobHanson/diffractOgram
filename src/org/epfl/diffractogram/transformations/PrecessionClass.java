@@ -56,6 +56,7 @@ public class PrecessionClass {
 
 	public class PrecessionObject extends TransformGroup {
 		public PrecessionObject() {
+			setName("precessionobject");
 			setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 			v.add(this);
 		}
@@ -66,6 +67,10 @@ public class PrecessionClass {
 	}
 
 	public class PrecessionRotObject extends PrecessionObject {
+		public PrecessionRotObject() {
+			setName("precessionrotobject");
+		}
+
 		public void update() {
 			super.setTransform(t3dRot);
 		}

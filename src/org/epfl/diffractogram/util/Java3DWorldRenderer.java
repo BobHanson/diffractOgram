@@ -22,6 +22,7 @@ import javax.media.j3d.Canvas3D;
 import javax.media.j3d.DirectionalLight;
 import javax.media.j3d.Font3D;
 import javax.media.j3d.FontExtrusion;
+import javax.media.j3d.Group;
 import javax.media.j3d.Node;
 import javax.media.j3d.OrientedShape3D;
 import javax.media.j3d.PickRay;
@@ -75,15 +76,16 @@ public class Java3DWorldRenderer extends WorldRenderer {
 	}
 
 	@Override
-	public void setEnvironment(TransformGroup reset, BranchGroup root) {
+	public void setEnvironment(TransformGroup tgReset) {
+		
 		// create the environment (lights, background, ...)
 		createEnvironment();
-		environment.addChild(reset);
+		environment.addChild(tgReset);
 
 		// the behavior reacts on mouse events
 		UniversBehavior behavior = new UniversBehavior();
 		behavior.setSchedulingBounds(bounds);
-		root.addChild(behavior);
+		univers.getRoot().addChild(behavior);
 
 		// also use mouse wheel to scale up/down
 		canvas3D.addMouseWheelListener(new WheelMouseBehavior());
@@ -93,9 +95,16 @@ public class Java3DWorldRenderer extends WorldRenderer {
 		// show the whole thing up
 		u.addBranchGraph(environment);
 		// TODO Auto-generated method stub
-
+		
+		
+		reset(tgReset);
+		
 	}
 
+	/**
+	 * Create the environment BranchGroup and add background, ambientLight, and two
+	 * directional lights
+	 */
 	private void createEnvironment() {
 		// Create the root of the branch graph
 		environment = new BranchGroup();
@@ -107,13 +116,11 @@ public class Java3DWorldRenderer extends WorldRenderer {
 		background = new Background(new Color3f(1, 1, 1));
 		background.setCapability(Background.ALLOW_COLOR_WRITE);
 		background.setApplicationBounds(bounds);
-		environment.addChild(background);
 
 		// Set up the ambient light
 		Color3f ambientColor = new Color3f(0.4f, 0.4f, 0.4f);
 		AmbientLight ambientLightNode = new AmbientLight(ambientColor);
 		ambientLightNode.setInfluencingBounds(bounds);
-		environment.addChild(ambientLightNode);
 
 		// Set up the directional lights
 		Color3f light1Color = new Color3f(0.7f, 0.7f, 0.7f);
@@ -123,13 +130,16 @@ public class Java3DWorldRenderer extends WorldRenderer {
 
 		DirectionalLight light1 = new DirectionalLight(light1Color, light1Direction);
 		light1.setInfluencingBounds(bounds);
-		environment.addChild(light1);
 
 		DirectionalLight light2 = new DirectionalLight(light2Color, light2Direction);
 		light2.setInfluencingBounds(bounds);
-		environment.addChild(light2);
 
 		BoundingLeaf boundingLeaf = new BoundingLeaf(bounds);
+		
+		environment.addChild(background);
+		environment.addChild(ambientLightNode);
+		environment.addChild(light1);
+		environment.addChild(light2);
 		environment.addChild(boundingLeaf);
 	}
 
@@ -284,7 +294,7 @@ public class Java3DWorldRenderer extends WorldRenderer {
 				mouseVec.normalize();
 			}
 
-			return getPointedObject(univers.root, mousePos, mouseVec);
+			return getPointedObject(univers.getRoot(), mousePos, mouseVec);
 
 		}
 
@@ -328,7 +338,7 @@ public class Java3DWorldRenderer extends WorldRenderer {
 		applyTransform(t3d);
 	}
 
-	public static BranchGroup getTextShapeImpl(BranchGroup bg, String s, Point3d pos, float size, Font font, int align,
+	public static BranchGroup getTextShapeImpl(String name, BranchGroup bg, String s, Point3d pos, float size, Font font, int align,
 			int path, Point3d rotPoint, Appearance app) {
 		bg.setCapability(BranchGroup.ALLOW_DETACH);
 		Shape3D textShape;
@@ -374,6 +384,7 @@ public class Java3DWorldRenderer extends WorldRenderer {
 		Text3D txt = new Text3D(f3d, s, new Point3f(), align, path);
 		textShape.setGeometry(txt);
 		textShape.setAppearance(app);
+		textShape.setName(name);
 
 		if (rotPoint == null) {
 			Transform3D trotX90 = new Transform3D();
@@ -396,16 +407,20 @@ public class Java3DWorldRenderer extends WorldRenderer {
 		return bg;
 	}
 
-	public static Node createTorusImpl(double innerRadius, double outerRadius, int innerFaces, int outerFaces,
+	public static Node createTorusImpl(String name, double innerRadius, double outerRadius, int innerFaces, int outerFaces,
 			Appearance app) {
-		return new Torus((float) innerRadius, (float) outerRadius, innerFaces, outerFaces, app);
+		Node n = new Torus((float) innerRadius, (float) outerRadius, innerFaces, outerFaces, app);
+		n.setName(name);
+		return n;
 	}
 
-	public static Node createBoxImpl(double dx, double dy, double dz, Appearance app) {
-		return new Box((float) dx, (float) dy, (float) dz, app);
+	public static Node createBoxImpl(String name, double dx, double dy, double dz, Appearance app) {
+		Node n = new Box((float) dx, (float) dy, (float) dz, app);
+		n.setName(name);
+		return n;
 	}
 
-	public static Node createCylinderImpl(double radius, double height, boolean isHollow, int xdiv, int ydiv,
+	public static Node createCylinderImpl(String name, double radius, double height, boolean isHollow, int xdiv, int ydiv,
 			Appearance app) {
 		int flags = Cylinder.GENERATE_NORMALS | (isHollow ? Cylinder.GENERATE_TEXTURE_COORDS : 0);
 		Cylinder c = new Cylinder((float) radius, (float) height, flags, xdiv, ydiv, app);
@@ -418,22 +433,65 @@ public class Java3DWorldRenderer extends WorldRenderer {
 			c.getChild(1).setCapability(Shape3D.ALLOW_APPEARANCE_WRITE);
 			c.getChild(2).setCapability(Shape3D.ALLOW_APPEARANCE_WRITE);
 		}
+		c.setName(name);
 		return c;
 	}
 
-	public static Node createSphereImpl(double radius, int divs, Appearance app) {
+	public static Node createSphereImpl(String name, double radius, int divs, Appearance app) {
 		Sphere s = new Sphere((float) radius, Sphere.GENERATE_NORMALS, divs, app);
 		s.getShape().setCapability(Shape3D.ALLOW_APPEARANCE_WRITE);
+		s.setName(name);
 		return s;
 	}
 
-	public static TransformGroup createArrowImpl(TransformGroup tg, double radiusArrow, double lenArrow, double radius,
+	public static TransformGroup createArrowImpl(String name, TransformGroup tg, double radiusArrow, double lenArrow, double radius,
 			float height, int precision, Appearance app) {
-		Utils3d.setParents(
-				new Cone((float) radiusArrow, (float) lenArrow, Cylinder.GENERATE_NORMALS, precision, 1, app),
-				Utils3d.getVectorTransformGroup(0, height / 2f + lenArrow / 2f, 0, null), tg);
-		tg.addChild(new Cylinder((float) radius, height, Cylinder.GENERATE_NORMALS, precision, 1, app));
+		Node cone = new Cone((float) radiusArrow, (float) lenArrow, Cylinder.GENERATE_NORMALS, precision, 1, app);
+		Node cyl = new Cylinder((float) radius, height, Cylinder.GENERATE_NORMALS, precision, 1, app);
+		Utils3d.setParents(cone,
+				Utils3d.getVectorTransformGroup(0, height / 2f + lenArrow / 2f, 0, null),
+				tg);
+		tg.addChild(cyl);
+		tg.setName(name);
 		return tg;
+	}
+
+	@Override
+	public void reset(TransformGroup reset) {
+		Transform3D t3d = new Transform3D();
+		t3d.set(new Vector3d(0, 0, -5), .2);
+		reset.setTransform(t3d);
+		setParallel(false);
+	}
+
+	@Override
+	public void notifyRemove(Group parent, Node child) {
+//		if (child == null)
+//			return;
+		//System.out.println("removed " + child.getName() + " from " + parent.getName());
+	}
+
+	@Override
+	public void notifyAdd(Group parent, Node child) {
+//		System.out.println("added " + child.getName() + " to " + parent.getName());
+//		switch(parent.getName()) {
+//		case "root":
+//			this.mapRoot.put(child.getName(), child);
+//			break;
+//		}
+	}
+
+	@Override
+	public void notifyRemoveAll(Group g) {
+//		Enumeration<? extends Node> e = g.getAllChildren();
+//		while (e.hasMoreElements()) {
+//			System.out.println("removed " + e.nextElement().getName() + " from " + g.getName());
+//		}
+	}
+
+	@Override
+	public TransformGroup newTransformGroup(Transform3D t3d) {
+		return (t3d == null ? new TransformGroup() : new TransformGroup(t3d));
 	}
 
 }

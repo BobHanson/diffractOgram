@@ -37,15 +37,18 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 	public double y;
 	public double w, h;
 	public Vector3d OyO;
+    protected Univers univers;
 
-	public ProjScreen3d(PrecessionClass precessionClass) {
+	public ProjScreen3d(Univers univers, PrecessionClass precessionClass, String name) {
+		setName(name);
+		this.univers = univers;
 		setCapability(BranchGroup.ALLOW_DETACH);
 		setCapability(BranchGroup.ALLOW_CHILDREN_EXTEND);
 		setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
 
 		rotTg = precessionClass.new PrecessionObject();
-		transTg = new TransformGroup();
-		resizeTg = new TransformGroup();
+		transTg = univers.newTransformGroup(null);
+		resizeTg = univers.newTransformGroup(null);
 		transTg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 		resizeTg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 		rotTg.setCapability(BranchGroup.ALLOW_CHILDREN_EXTEND);
@@ -86,17 +89,19 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 
 	public abstract Point.Double proj3dTo2d(Vector3d p);
 
-	static public class Cylindric extends ProjScreen3d {
-		private BranchGroup cadre, baseRay;
+	int cadreid;	
 
-		public Cylindric(PrecessionClass precessionClass) {
-			super(precessionClass);
-			Node c = WorldRenderer.createCylinder(1.0, 0.5, true, 100, 1, app);
+	static public class Cylindric extends ProjScreen3d {
+		private BranchGroup cadre, baseRayCyl;
+
+		public Cylindric(Univers univers, PrecessionClass precessionClass) {
+			super(univers, precessionClass, "screen.cyl");
+			Node c = WorldRenderer.createCylinder("screeen:cyl", 1.0, 0.5, true, 100, 1, app);
 			Transform3D t = new Transform3D();
 			t.rotX(Math.PI / 2);
-			TransformGroup tg = new TransformGroup(t);
+			TransformGroup tg = univers.newTransformGroup(t);
 			t.rotX(Math.PI);
-			TransformGroup tginv = new TransformGroup(t);
+			TransformGroup tginv = univers.newTransformGroup(t);
 			tg.addChild(c);
 			tginv.addChild(tg);
 			lastTg.addChild(tginv);
@@ -113,22 +118,24 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 			TransformGroup tgtor1 = Utils3d.getVectorTransformGroup(0, h / 4, 0, t);
 			TransformGroup tgtor2 = Utils3d.getVectorTransformGroup(0, -h / 4, 0, t);
 			t.rotX(Math.PI / 2);
-			TransformGroup tgtor3 = new TransformGroup(t);
-			
-			Utils3d.setParents(WorldRenderer.createTorus(.03, y, 10, 50, Utils3d.createApp(black)), tgtor1, tgtor3, cadre, noSizeTg);
-			Utils3d.setParents(WorldRenderer.createTorus(.03, y, 10, 50, Utils3d.createApp(black)), tgtor2, tgtor3, cadre, noSizeTg);
+			TransformGroup tgtor3 = univers.newTransformGroup(t);
+			++cadreid;
+			Node t1 = WorldRenderer.createTorus("frame:cyl1_" + cadreid ,.03, y, 10, 50, Utils3d.createApp(black));
+			Node t2 = WorldRenderer.createTorus("frame:cyl2_" + cadreid,.03, y, 10, 50, Utils3d.createApp(black));
+			Utils3d.setParents(t1, tgtor1, tgtor3, cadre);
+			Utils3d.setParents(t2, tgtor2, tgtor3, cadre, noSizeTg);
 		}
 
 		private void createBaseRay(double y) {
-			if (baseRay != null)
-				removeChild(baseRay);
-			baseRay = Utils3d.createCylinder(new Point3d(), new Point3d(0, y, 0), .01,
+			if (baseRayCyl != null)
+				univers.removeNotify(this, baseRayCyl);
+			baseRayCyl = Utils3d.createCylinder(univers, "baseray", new Point3d(), new Point3d(0, y, 0), .01,
 					Utils3d.createApp(ColorConstants.yellow), 8);
-			addChild(baseRay);
+			univers.addNotify(this, baseRayCyl);
 		}
 
 		private void createLabel() {
-//			tg3 = new TransformGroup();
+//			tg3 = univers.newTransformGroup(null);
 //			tg3.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 //			addChild(tg3);
 //			Appearance app2=new Appearance();
@@ -136,12 +143,14 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 //			Group l = Utils3d.createFixedLegend("Diffraction screen", new Point3d(0, y, 0), .1f, app2, false);
 //			Transform3D tl = new Transform3D();
 //			tl.set(new Vector3d(-0.8, -.1, -.5));
-//			TransformGroup tgl = new TransformGroup(tl);
+//			TransformGroup tgl = univers.newTransformGroup(tl);
 //			tgl.addChild(l);
 //			tg3.addChild(tgl);
 		}
 
 		public void setSize(double w, double h) {
+			if (h == this.h && w == this.w)
+				return;
 			this.h = h;
 			this.w = w;
 			Matrix3d m = new Matrix3d(y, 0, 0, 0, y, 0, 0, 0, h);
@@ -200,12 +209,12 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 
 	static public class Flat extends ProjScreen3d {
 		protected QuadArray quad;
-		private BranchGroup cadre1, cadre2, cadre3, cadre4, baseRay;
+		private BranchGroup cadre1, cadre2, cadre3, cadre4, baseRayFlat;
 		private TransformGroup tgLabel;
 		private Transform3D t3dLabel;
 
-		public Flat(PrecessionClass precessionClass) {
-			super(precessionClass);
+		public Flat(Univers univers, PrecessionClass precessionClass) {
+			super(univers, precessionClass, "screen.flat");
 			lastTg.addChild(new Shape3D(createQuad(), app));
 		}
 
@@ -261,13 +270,13 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 		private void createLabel(double w, double h) {
 			if (tgLabel == null) {
 				t3dLabel = new Transform3D();
-				tgLabel = new TransformGroup();
+				tgLabel = univers.newTransformGroup(null);
 				tgLabel.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 				Appearance appLabel = new Appearance();
 				appLabel.setMaterial(new Material(black, black, black, white, 128));
-				Utils3d.setParents(
-						Utils3d.createFixedLegend("Diffraction screen", new Point3d(0, y, 0), .2f, appLabel, true),
-						tgLabel, noSizeTg);
+				Node l = Utils3d.createFixedLegend("Diffraction screen", new Point3d(0, y, 0), .2f, appLabel, true);
+				l.setName("legend:diffscreen");
+				Utils3d.setParents(l, tgLabel, noSizeTg);
 			}
 			Vector3d v = new Vector3d(0, 0, 4.2 * h / w);
 			t3dLabel.set(v, w / 8);
@@ -276,13 +285,14 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 
 		private void createCadre(double w, double h) {
 			if (cadre1 == null) {
-				noSizeTg.addChild(cadre1 = Utils3d.createCylinder(new Point3d(-w / 2, 0, -h / 2),
+				cadreid++;
+				noSizeTg.addChild(cadre1 = Utils3d.createCylinder(univers, "frame1_" + cadreid, new Point3d(-w / 2, 0, -h / 2),
 						new Point3d(-w / 2, 0, h / 2), .03, Utils3d.createApp(black), 10));
-				noSizeTg.addChild(cadre2 = Utils3d.createCylinder(new Point3d(w / 2, 0, -h / 2),
+				noSizeTg.addChild(cadre2 = Utils3d.createCylinder(univers, "frame2_" + cadreid, new Point3d(w / 2, 0, -h / 2),
 						new Point3d(w / 2, 0, h / 2), .03, Utils3d.createApp(black), 10));
-				noSizeTg.addChild(cadre3 = Utils3d.createCylinder(new Point3d(-w / 2, 0, h / 2),
+				noSizeTg.addChild(cadre3 = Utils3d.createCylinder(univers, "frame3_" + cadreid, new Point3d(-w / 2, 0, h / 2),
 						new Point3d(w / 2, 0, h / 2), .03, Utils3d.createApp(black), 10));
-				noSizeTg.addChild(cadre4 = Utils3d.createCylinder(new Point3d(w / 2, 0, -h / 2),
+				noSizeTg.addChild(cadre4 = Utils3d.createCylinder(univers, "frame4_" + cadreid, new Point3d(w / 2, 0, -h / 2),
 						new Point3d(-w / 2, 0, -h / 2), .03, Utils3d.createApp(black), 10));
 			} else {
 				Utils3d.changeCylinder(cadre1, new Point3d(-w / 2, 0, -h / 2), new Point3d(-w / 2, 0, h / 2));
@@ -293,14 +303,16 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 		}
 
 		private void createBaseRay(double y) {
-			if (baseRay != null)
-				removeChild(baseRay);
-			baseRay = Utils3d.createCylinder(new Point3d(), new Point3d(0, y, 0), .02,
+			if (baseRayFlat != null)
+				univers.removeNotify(this, baseRayFlat);
+			baseRayFlat = Utils3d.createCylinder(univers, "baserayflat", new Point3d(), new Point3d(0, y, 0), .02,
 					Utils3d.createApp(ColorConstants.yellow), 8);
-			addChild(baseRay);
+			univers.addNotify(this, baseRayFlat);
 		}
 
 		public void setSize(double w, double h) {
+			if (this.w == w && this.h == h)
+				return;
 			this.w = w;
 			this.h = h;
 			Matrix3d m = new Matrix3d(w, 0, 0, 0, 1, 0, 0, 0, h);

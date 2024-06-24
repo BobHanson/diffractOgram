@@ -8,6 +8,7 @@ import javax.media.j3d.Appearance;
 import javax.media.j3d.BranchGroup;
 import javax.media.j3d.ImageComponent2D;
 import javax.media.j3d.Material;
+import javax.media.j3d.Node;
 import javax.media.j3d.PolygonAttributes;
 import javax.media.j3d.Texture;
 import javax.media.j3d.Texture2D;
@@ -26,15 +27,18 @@ public class VirtualSphere extends BranchGroup implements ColorConstants {
 	public Point3d center;
 	public double radius;
 	public DefaultValues defaultValues;
+	private Univers univers;
 
-	public VirtualSphere(DefaultValues defaultValues, double lambda) {
+	public VirtualSphere(Univers univers, DefaultValues defaultValues, double lambda) {
+		this.univers = univers;
+		setName("virtualsphere");
 		this.defaultValues = defaultValues;
 		center = new Point3d();
-		sPositioned = new TransformGroup();
+		sPositioned = univers.newTransformGroup(null);
 		sPositioned.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 
 		setLambda(lambda);
-		createSphere();
+		createSphere("vsphere");
 		createLegend();
 		createRadius();
 		createRepere();
@@ -68,17 +72,18 @@ public class VirtualSphere extends BranchGroup implements ColorConstants {
 		return app;
 	}
 
-	private void createSphere() {
-		Utils3d.setParents(WorldRenderer.createSphere(1,100, false, app(new Color(1f, .7f, .7f, .5f))),
-				sPositioned, this);
+	private void createSphere(String name) {
+		Node s = WorldRenderer.createSphere(name, 1,100, false, app(new Color(1f, .7f, .7f, .5f)));
+		Utils3d.setParents(s, sPositioned, this);
 	}
 
 	private void createLegend() {
 		Appearance app = new Appearance();
 		app.setMaterial(new Material(magenta, black, magenta, white, 128));
 		app.setTransparencyAttributes(new TransparencyAttributes(TransparencyAttributes.NICEST, 0.7f));
-		Utils3d.setParents(Utils3d.createFixedLegend("Ewald sphere", new Point3d(0, -.9, 0), .05f, app, true),
-				sPositioned, this);
+		Node legend = Utils3d.createFixedLegend("Ewald sphere", new Point3d(0, -.9, 0), .05f, app, true);
+		legend.setName("legend:ewald");
+		Utils3d.setParents(legend, sPositioned, this);
 	}
 
 	private void createRadius() {
@@ -87,17 +92,19 @@ public class VirtualSphere extends BranchGroup implements ColorConstants {
 		t3v1.rotZ(3 * Math.PI / 4);
 		t3v2.rotY(-Math.PI / 4);
 		t3v1.mul(t3v2);
-		Utils3d.setParents(Utils3d.createNamedVector("1/lambda", new Point3d(0, 0, 0), new Point3d(-.98, 0, 0),
-				new Point3d(-.5, 0, .02), .2f, magenta, magenta),
-		new TransformGroup(t3v1), sPositioned, this);
+		Node l = Utils3d.createNamedVector("1/" + DefaultValues.strLambda, new Point3d(0, 0, 0), new Point3d(-.98, 0, 0),
+				new Point3d(-.5, 0, .02), .2f, magenta, magenta);
+		l.setName("vector:lambda");
+		Utils3d.setParents(l, univers.newTransformGroup(t3v1), sPositioned, this);
 	}
 
 	private void createRepere() {
 		Transform3D t3dRepere = new Transform3D();
 		t3dRepere.set(.3);
-		Utils3d.setParents(Utils3d.createRepere(cyan, green, green, new String[] { "x", "y", "z" }, .15f, .03f, 0, 0,
-				new Vector3d(1, 0, 0), new Vector3d(0, 1, 0), new Vector3d(0, 0, 1)),
-				new TransformGroup(t3dRepere), sPositioned, this);
+		Node r = Utils3d.createRepere(cyan, green, green, new String[] { "x", "y", "z" }, .15f, .03f, 0, 0,
+				new Vector3d(1, 0, 0), new Vector3d(0, 1, 0), new Vector3d(0, 0, 1));
+		r.setName("repere:xyz");
+		Utils3d.setParents(r, univers.newTransformGroup(t3dRepere), sPositioned, this);
 	}
 
 	public double lambdaToRadius(double l) {

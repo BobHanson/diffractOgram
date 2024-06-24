@@ -6,6 +6,7 @@ import java.awt.Point;
 import java.awt.event.KeyEvent;
 
 import javax.media.j3d.Appearance;
+import javax.media.j3d.Behavior;
 import javax.media.j3d.BranchGroup;
 import javax.media.j3d.Group;
 import javax.media.j3d.LineStripArray;
@@ -30,22 +31,31 @@ import org.epfl.diffractogram.util.WorldRenderer;
 public class Utils3d {
 
 	public static void changeCylinder(BranchGroup cyl, Point3d b, Point3d a) {
-		TransformGroup tg = ((TransformGroup) cyl.getChild(0));
-		TransformGroup tgh = (TransformGroup) ((TransformGroup) cyl.getChild(0)).getChild(0);
+		TransformGroup tg = getTransformGroup(cyl);
+		TransformGroup tgh = getTransformGroup(tg);
 		Vector3f center = new Vector3f();
 		Vector3f unit = new Vector3f();
-		float height = calculateHeight(b, a, center, unit);
+		double height = calculateHeight(b, a, center, unit);
 		createMatrix(tg, center, unit);
 		Transform3D th = new Transform3D();
 		th.set(new Matrix3d(1, 0, 0, 0, height, 0, 0, 0, 1));
 		tgh.setTransform(th);
 	}
 
+	private static TransformGroup getTransformGroup(Group g) {
+		for (int i = 0;i < 2; i++) {
+			Node n = g.getChild(i);
+			if (n instanceof TransformGroup)
+				return (TransformGroup) n;
+		}
+		return null;
+	}
+
 	public static void changeCylinderApp(BranchGroup cyl, Appearance app) {
 		getShapeChild(cyl).setAppearance(app);
 	}
 
-	public static BranchGroup createCylinder(Point3d b, Point3d a, double radius, Appearance cylApp, int precision) {
+	public static BranchGroup createCylinder(Univers univers, String name, Point3d b, Point3d a, double radius, Appearance cylApp, int precision) {
 		BranchGroup cylBg = new BranchGroup();
 		cylBg.setCapability(BranchGroup.ALLOW_CHILDREN_READ);
 		cylBg.setCapability(BranchGroup.ALLOW_DETACH);
@@ -53,16 +63,17 @@ public class Utils3d {
 		Vector3f center = new Vector3f();
 		Vector3f unit = new Vector3f();
 		float height = calculateHeight(b, a, center, unit);
-		TransformGroup tg = new TransformGroup();
+		TransformGroup tg = univers.newTransformGroup(null);
 		tg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 		tg.setCapability(TransformGroup.ALLOW_CHILDREN_READ);
 		createMatrix(tg, center, unit);
 		Transform3D th = new Transform3D();
 		th.set(new Matrix3d(1, 0, 0, 0, height, 0, 0, 0, 1));
-		TransformGroup tgh = new TransformGroup(th);
+		TransformGroup tgh = univers.newTransformGroup(th);
 		tgh.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 		tgh.setCapability(TransformGroup.ALLOW_CHILDREN_READ);
-		setParents(WorldRenderer.createCylinder(radius, 1, false, precision, 1, cylApp), tgh, tg, cylBg);
+		setParents(WorldRenderer.createCylinder(name + ":cyl", radius, 1, false, precision, 1, cylApp), tgh, tg, cylBg);
+		cylBg.setName(name);
 		return cylBg;
 	}
 
@@ -70,14 +81,16 @@ public class Utils3d {
 		return atom(p, createApp(color), r, 20);
 	}
 
+	public static int atomid;
+	
 	public static BranchGroup atom(Point3d p, Appearance app, double r, int facets) {
 		BranchGroup bg = new BranchGroup();
 		bg.setCapability(BranchGroup.ALLOW_DETACH);
-		setParents(WorldRenderer.createSphere(r, facets, true, app), getVectorTransformGroup(p.x, p.y, p.z, null), bg);
+		setParents(WorldRenderer.createSphere("atom:" + ++atomid, r, facets, true, app), getVectorTransformGroup(p.x, p.y, p.z, null), bg);
 		return bg;
 	}
 
-	public static BranchGroup createArrow(Point3d b, Point3d a, double radius, double radiusArrow, double lenArrow,
+	public static BranchGroup createArrow(String name, Point3d b, Point3d a, double radius, double radiusArrow, double lenArrow,
 			Appearance cylApp, int precision) {
 		Vector3f center = new Vector3f();
 		Vector3f unit = new Vector3f();
@@ -90,7 +103,7 @@ public class Utils3d {
 		TransformGroup tg = new TransformGroup();
 		createMatrix(tg, center, unit);
 		BranchGroup cylBg = new BranchGroup();
-		cylBg.addChild(WorldRenderer.createArrow(tg, radiusArrow, lenArrow, radius, height, precision, cylApp));
+		cylBg.addChild(WorldRenderer.createArrow(name, tg, radiusArrow, lenArrow, radius, height, precision, cylApp));
 		return cylBg;
 	}
 
@@ -108,7 +121,7 @@ public class Utils3d {
 	 */
 	public static BranchGroup createLegend(String s, Point3d pos, Point3d rot, float size, Appearance app,
 			boolean centered) {
-		return WorldRenderer.getTextShape(new BranchGroup(), s, pos, size, new Font(null, Font.PLAIN, 2),
+		return WorldRenderer.getTextShape("text:" + s, new BranchGroup(), s, pos, size, new Font(null, Font.PLAIN, 2),
 				centered ? Label.CENTER : Label.LEFT, KeyEvent.VK_RIGHT, rot, app);
 	}
 
@@ -167,14 +180,14 @@ public class Utils3d {
 		BranchGroup repere = new BranchGroup();
 
 		if (colorCenter != null)
-			repere.addChild(WorldRenderer.createSphere(.05, 10, false, createApp(colorCenter)));
+			repere.addChild(WorldRenderer.createSphere("axes:o" + names[0], .05, 10, false, createApp(colorCenter)));
 
 		Point3d o = new Point3d(0, 0, 0);
-		repere.addChild(createArrow(o, new Point3d(mul(x, (x.length() + deltaArrows) / x.length())), sizeArrows,
+		repere.addChild(createArrow("axes:" + names[0], o, new Point3d(mul(x, (x.length() + deltaArrows) / x.length())), sizeArrows,
 				sizeArrows * 2f, sizeArrows * 6f, app2, 12));
-		repere.addChild(createArrow(o, new Point3d(mul(y, (y.length() + deltaArrows) / y.length())), sizeArrows,
+		repere.addChild(createArrow("axes:" + names[1], o, new Point3d(mul(y, (y.length() + deltaArrows) / y.length())), sizeArrows,
 				sizeArrows * 2f, sizeArrows * 6f, app2, 12));
-		repere.addChild(createArrow(o, new Point3d(mul(z, (z.length() + deltaArrows) / z.length())), sizeArrows,
+		repere.addChild(createArrow("axes:" + names[2], o, new Point3d(mul(z, (z.length() + deltaArrows) / z.length())), sizeArrows,
 				sizeArrows * 2f, sizeArrows * 6f, app2, 12));
 
 		repere.addChild(createLegend(names[0], new Point3d(mul(x, (x.length() + deltaText) / x.length())), o, sizeText,
@@ -190,10 +203,10 @@ public class Utils3d {
 			Color3f colorText, Color3f colorArrow) {
 		Appearance app1 = createApp(colorText);
 		Appearance app2 = createApp(colorArrow);
-		BranchGroup r = new BranchGroup();
-		r.addChild(createArrow(p1, p2, .03 * size, .1 * size, .4 * size, app2, 12));
-		r.addChild(createFixedLegend(name, p3, .15f * size, app1, true));
-		return r;
+		BranchGroup group = new BranchGroup();
+		group.addChild(createArrow(name, p1, p2, .03 * size, .1 * size, .4 * size, app2, 12));
+		group.addChild(createFixedLegend(name, p3, .15f * size, app1, true));
+		return group;
 	}
 
 //	static final Color3f ambWhite = new Color3f(0.3f, 0.3f, 0.3f);
@@ -336,7 +349,7 @@ public class Utils3d {
 
 		tgOut.setTransform(transMatrix);
 
-		// TransformGroup tg = new TransformGroup(transMatrix);
+		// TransformGroup tg = univers.newTransformGroup(transMatrix);
 		// return tg;
 	}
 
@@ -363,8 +376,14 @@ public class Utils3d {
 
 	public static Shape3D getShapeChild(Group a) {
 		Node g = a;
-		while (!(g instanceof Shape3D))
-			g = ((Group) g).getChild(0);
+		while (!(g instanceof Shape3D)) {
+			Node c = ((Group) g).getChild(0);
+			if (c instanceof Behavior) {
+				g = ((Group) g).getChild(1);
+			} else {
+				g = c;
+			}
+		}
 		return (Shape3D) g;
 	}
 

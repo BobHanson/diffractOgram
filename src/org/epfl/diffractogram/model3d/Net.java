@@ -27,7 +27,8 @@ import org.epfl.diffractogram.util.WorldRenderer;
 
 /**
  * the Net class maintains lattice points in the displayed reciprocal lattice,
- * the goniometer head, and the floating label of the Net, all of which share its orientation.
+ * the goniometer head, and the floating label of the Net, all of which share
+ * its orientation.
  * 
  */
 public class Net extends BranchGroup implements ColorConstants {
@@ -49,9 +50,12 @@ public class Net extends BranchGroup implements ColorConstants {
 	private BranchGroup directRepere;
 	private boolean directShowed = false;
 	private DefaultValues defaultValues;
+	private Univers univers;
 
-	public Net(OrientationClass orientationClass, PrecessionClass precessionClass, DefaultValues defaultValues,
-			Vector3d a, Vector3d b, Vector3d c, int x, int y, int z) {
+	public Net(Univers univers, OrientationClass orientationClass, PrecessionClass precessionClass,
+			DefaultValues defaultValues, Vector3d a, Vector3d b, Vector3d c, int x, int y, int z) {
+		this.setName("net");
+		this.univers = univers;
 		this.defaultValues = defaultValues;
 		setCapability(TransformGroup.ALLOW_CHILDREN_EXTEND);
 		setCapability(TransformGroup.ALLOW_CHILDREN_WRITE);
@@ -68,7 +72,9 @@ public class Net extends BranchGroup implements ColorConstants {
 			greenApp.setMaterial(new Material(green, black, green, white, 128));
 		}
 
-		orientationObject = orientationClass.new OrientationObject();
+		TransformGroup tgOmegaOnly = univers.newTransformGroup(null);
+		tgOmegaOnly.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+		orientationObject = orientationClass.new OrientationObject(tgOmegaOnly);
 		orientationObject.setCapability(TransformGroup.ALLOW_CHILDREN_EXTEND);
 		orientationObject.setCapability(TransformGroup.ALLOW_CHILDREN_WRITE);
 
@@ -77,8 +83,8 @@ public class Net extends BranchGroup implements ColorConstants {
 
 		createNet(a, b, c, x, y, z);
 
-		addChild(precessionObject);
-		addChild(gonioHead = new GonioHead(orientationClass));
+		univers.addNotify(this, precessionObject);
+		univers.addNotify(this, gonioHead = new GonioHead(univers, orientationClass));
 
 		KeyboardFocusManager kbfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
 		kbfm.addKeyEventDispatcher(new MyKeyboardManager());
@@ -88,9 +94,9 @@ public class Net extends BranchGroup implements ColorConstants {
 		public boolean dispatchKeyEvent(KeyEvent e) {
 			if (e.getKeyCode() == KeyEvent.VK_F1 && e.getID() == KeyEvent.KEY_PRESSED) {
 				if (directShowed) {
-					netRoot.removeChild(directRepere);
+					univers.removeNotify(netRoot, directRepere);
 				} else {
-					netRoot.addChild(directRepere);
+					univers.addNotify(netRoot, directRepere);
 				}
 				directShowed = !directShowed;
 			}
@@ -100,9 +106,11 @@ public class Net extends BranchGroup implements ColorConstants {
 
 	public BranchGroup putAtom(Vector3d v, Color3f c) {
 		BranchGroup a = (BranchGroup) createAtom(v, Utils3d.createApp(c), defaultValues.dotSize3d);
-		netRoot.addChild(a);
+		univers.addNotify(netRoot, a);
 		return a;
 	}
+
+	static int atomid;
 
 	private static BranchGroup createAtom(Vector3d v, Appearance app, float dotSize3d) {
 		BranchGroup bg = new BranchGroup();
@@ -110,8 +118,9 @@ public class Net extends BranchGroup implements ColorConstants {
 		bg.setCapability(BranchGroup.ALLOW_DETACH);
 		TransformGroup tg = Utils3d.getVectorTransformGroup(v.x, v.y, v.z, null);
 		tg.setCapability(TransformGroup.ALLOW_CHILDREN_READ);
-		Utils3d.setParents(WorldRenderer.createSphere(dotSize3d, 10, true, app), 
-				tg, bg);
+		++atomid;
+		Utils3d.setParents(WorldRenderer.createSphere("atom:sphere" + atomid, dotSize3d, 10, true, app), tg, bg);
+		bg.setName("atom:" + atomid);
 		return bg;
 	}
 
@@ -146,7 +155,8 @@ public class Net extends BranchGroup implements ColorConstants {
 		dontdraw = new boolean[2 * xMax + 1][2 * yMax + 1][2 * zMax + 1];
 		intensity = new float[2 * xMax + 1][2 * yMax + 1][2 * zMax + 1];
 		isProjected = new boolean[2 * xMax + 1][2 * yMax + 1][2 * zMax + 1];
-		orientationObject.removeChild(netRoot);
+		if (netRoot != null)
+			univers.removeNotify(orientationObject, netRoot);
 
 		for (int i = 0; i < points.length; i++)
 			for (int j = 0; j < points[i].length; j++)
@@ -156,6 +166,7 @@ public class Net extends BranchGroup implements ColorConstants {
 				}
 
 		netRoot = new BranchGroup();
+		netRoot.setName("netroot");
 		netRoot.setCapability(BranchGroup.ALLOW_DETACH);
 		netRoot.setCapability(BranchGroup.ALLOW_CHILDREN_EXTEND);
 		netRoot.setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
@@ -185,12 +196,10 @@ public class Net extends BranchGroup implements ColorConstants {
 		createRepere();
 		createTranspBox();
 		netRoot.compile();
-		orientationObject.addChild(netRoot);
+		univers.addNotify(orientationObject, netRoot);
 	}
 
 	private void createPoint(int i, int j, int k, boolean visible) {
-		// System.out.println((i+xMax)+" "+(j+yMax)+" "+(k+zMax)+" "+(2*xMax+1)+"
-		// "+(2*yMax+1)+" "+(2*zMax+1));
 		Vector3d v = new Vector3d();
 		v.scaleAdd(defaultValues.scale * i, a, v);
 		v.scaleAdd(defaultValues.scale * j, b, v);
@@ -204,34 +213,43 @@ public class Net extends BranchGroup implements ColorConstants {
 		dontdraw[i + xMax][j + yMax][k + zMax] = !visible;
 		isProjected[i + xMax][j + yMax][k + zMax] = false;
 		if (visible)
-			netRoot.addChild(atom);
+			univers.addNotify(netRoot, atom);
 	}
 
 	public void createLegend() {
 		double h = defaultValues.scale * zMax * c.getZ() + 1;
 		Transform3D t3l = new Transform3D();
 		t3l.rotZ(Math.PI / 2);
-		TransformGroup tgl = new TransformGroup(t3l);
-		tgl.addChild(Utils3d.createFixedLegend("Reciprocal lattice", new Point3d(0, 0, h + .2), .1f,
-				Utils3d.createApp(blue), true));
-		tgl.addChild(Utils3d.createFixedLegend("points", new Point3d(0, 0, h), .1f, Utils3d.createApp(blue), true));
+		TransformGroup tgl = univers.newTransformGroup(t3l);
+		Node txt = Utils3d.createFixedLegend("Reciprocal lattice", new Point3d(0, 0, h + .2), .1f,
+				Utils3d.createApp(blue), true);
+		txt.setName("leg:reclatt");
+		tgl.addChild(txt);
+		txt = Utils3d.createFixedLegend("points", new Point3d(0, 0, h), .1f, Utils3d.createApp(blue), true);
+		txt.setName("leg:points");
+		tgl.addChild(txt);
 		if (netLabel != null)
-			removeChild(netLabel);
+			univers.removeNotify(this, netLabel);
 		netLabel = new BranchGroup();
+		netLabel.setName("netlabel");
 		netLabel.setCapability(BranchGroup.ALLOW_DETACH);
 		netLabel.addChild(tgl);
-		addChild(netLabel);
+		univers.addNotify(this, netLabel);
 	}
 
 	public void createRepere() {
 		BranchGroup bb = new BranchGroup();
+		bb.setName("bb");
 		bb.setCapability(BranchGroup.ALLOW_DETACH);
-		bb.addChild(Utils3d.createRepere(cyan, blue, null, new String[] { "a*", "b*", "c*" }, .15f, .02f,
+		Node rep = Utils3d.createRepere(cyan, blue, null, new String[] { "a*", "b*", "c*" }, .15f, .02f,
 				defaultValues.dotSize, -defaultValues.dotSize, (Vector3d) Utils3d.mul(a, defaultValues.scale),
-				(Vector3d) Utils3d.mul(b, defaultValues.scale), (Vector3d) Utils3d.mul(c, defaultValues.scale)));
-		netRoot.addChild(bb);
+				(Vector3d) Utils3d.mul(b, defaultValues.scale), (Vector3d) Utils3d.mul(c, defaultValues.scale));
+		rep.setName("rep:abc*");
+		univers.addNotify(bb, rep);
+		univers.addNotify(netRoot, bb);
 
 		directRepere = new BranchGroup();
+		directRepere.setName("directrepere");
 		directRepere.setCapability(BranchGroup.ALLOW_DETACH);
 		Vector3d[] r = Lattice.reciprocal(a, b, c);
 		r[0].normalize();
@@ -240,9 +258,11 @@ public class Net extends BranchGroup implements ColorConstants {
 		r[1].scale(.3);
 		r[2].normalize();
 		r[2].scale(.3);
-		directRepere.addChild(Utils3d.createRepere(red, red, null, new String[] { "a", "b", "c" }, .15f, .02f,
-				defaultValues.dotSize, -defaultValues.dotSize, (Vector3d) Utils3d.mul(r[0], defaultValues.scale),
-				(Vector3d) Utils3d.mul(r[1], defaultValues.scale), (Vector3d) Utils3d.mul(r[2], defaultValues.scale)));
+		rep = Utils3d.createRepere(red, red, null, new String[] { "a", "b", "c" }, .15f, .02f, defaultValues.dotSize,
+				-defaultValues.dotSize, (Vector3d) Utils3d.mul(r[0], defaultValues.scale),
+				(Vector3d) Utils3d.mul(r[1], defaultValues.scale), (Vector3d) Utils3d.mul(r[2], defaultValues.scale));
+		rep.setName("repere:abc");
+		univers.addNotify(directRepere, rep);
 		if (directShowed) {
 			netRoot.addChild(directRepere);
 		}
@@ -259,7 +279,8 @@ public class Net extends BranchGroup implements ColorConstants {
 		matrix.setColumn(1, (Vector3d) Utils3d.mul(b, y));
 		matrix.setColumn(2, (Vector3d) Utils3d.mul(c, z));
 		t3d.set(matrix);
-		Utils3d.setParents(WorldRenderer.createBox(2, 2, 2, app), new TransformGroup(t3d), netRoot);
+		Node box = WorldRenderer.createBox("netbox", 2, 2, 2, app);
+		Utils3d.setParents(box, univers.newTransformGroup(t3d), netRoot);
 	}
 
 	/**
@@ -271,14 +292,18 @@ public class Net extends BranchGroup implements ColorConstants {
 		private Transform3D t3d;
 		private TransformGroup tg;
 
-		public GonioHead(OrientationClass orientationClass) {
-			orientationGonio = orientationClass.new OrientationObject();
+		public GonioHead(Univers univers, OrientationClass orientationClass) {
+			setName("goinohead");
+
+			TransformGroup tgOmegaOnly = univers.newTransformGroup(null);
+			tgOmegaOnly.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+			orientationGonio = orientationClass.new OrientationObject(tgOmegaOnly);
 			t3d = new Transform3D();
-			tg = new TransformGroup(t3d);
+			tg = univers.newTransformGroup(t3d);
 			tg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 			Utils3d.setParents(orientationGonio, tg, this);
 			Utils3d.setParents(orientationGonio.tgOmegaOnly, tg, this);
-			buildGadjet(orientationGonio);
+			buildGadjet(univers, orientationGonio);
 		}
 
 		public void setY(double y) {
@@ -286,21 +311,18 @@ public class Net extends BranchGroup implements ColorConstants {
 			tg.setTransform(t3d);
 		}
 
-		private void buildGadjet(OrientationObject gonio) {
-			Node ring = WorldRenderer.createTorus(.05, .6, 10, 50, Utils3d.createApp(yellow));
-			Node sample = WorldRenderer.createBox(0.2, 0.2, 0.1, Utils3d.createApp(blue));
-			Node pin = Utils3d.createCylinder(new Point3d(), new Point3d(0, 0, -.4), .02, Utils3d.createApp(orange), 5);
-			
+		private void buildGadjet(Univers univers, OrientationObject gonio) {
+			Node ring = WorldRenderer.createTorus("ring", .05, .6, 10, 50, Utils3d.createApp(yellow));
+			Node sample = WorldRenderer.createBox("sample", 0.2, 0.2, 0.1, Utils3d.createApp(blue));
+			Node pin = Utils3d.createCylinder(univers, "pin", new Point3d(), new Point3d(0, 0, -.4), .02,
+					Utils3d.createApp(orange), 5);
 			Utils3d.setParents(ring, gonio.tgOmegaOnly);
-			
+
 			// sample crystal
-			Utils3d.setParents(sample, 
-					Utils3d.getVectorTransformGroup(0, 0, -.4, null),
-					gonio); 
-			
+			Utils3d.setParents(sample, Utils3d.getVectorTransformGroup(0, 0, -.4, null), gonio);
+
 			// sample pin
-			Utils3d.setParents(pin,
-					gonio);
+			Utils3d.setParents(pin, gonio);
 		}
 	}
 
@@ -319,7 +341,7 @@ public class Net extends BranchGroup implements ColorConstants {
 	public synchronized void highlight(int h, int k, int l) {
 		if (!isSelected[h + xMax][k + yMax][l + zMax]) {
 			if (dontdraw[h + xMax][k + yMax][l + zMax])
-				netRoot.addChild(atoms[h + xMax][k + yMax][l + zMax]);
+				univers.addNotify(netRoot, atoms[h + xMax][k + yMax][l + zMax]);
 			changeAtomApp(atoms[h + xMax][k + yMax][l + zMax], redApp);
 			isSelected[h + xMax][k + yMax][l + zMax] = true;
 		}
@@ -329,7 +351,7 @@ public class Net extends BranchGroup implements ColorConstants {
 		if (isSelected[h + xMax][k + yMax][l + zMax]) {
 			changeAtomApp(atoms[h + xMax][k + yMax][l + zMax], defaultApp);
 			if (dontdraw[h + xMax][k + yMax][l + zMax])
-				netRoot.removeChild(atoms[h + xMax][k + yMax][l + zMax]);
+				univers.removeNotify(netRoot, atoms[h + xMax][k + yMax][l + zMax]);
 			isSelected[h + xMax][k + yMax][l + zMax] = false;
 		}
 	}

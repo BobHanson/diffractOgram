@@ -44,7 +44,7 @@ public class Debug {
 		Transform3D t3d = new Transform3D(); 
 		Precession rotTg = new Precession();
 		t3d.set(p);
-		TransformGroup transTg = new TransformGroup(t3d);
+		TransformGroup transTg = univers.newTransformGroup(t3d);
 		transTg.addChild(rotTg);
 		BranchGroup bg2 = new BranchGroup();
 		bg2.setCapability(BranchGroup.ALLOW_DETACH);
