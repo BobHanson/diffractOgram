@@ -10,6 +10,7 @@ import javax.media.j3d.Appearance;
 import javax.media.j3d.BranchGroup;
 import javax.media.j3d.Group;
 import javax.media.j3d.Node;
+import javax.media.j3d.QuadArray;
 import javax.media.j3d.Transform3D;
 import javax.media.j3d.TransformGroup;
 import javax.swing.JPanel;
@@ -19,14 +20,14 @@ import javax.vecmath.Point3d;
 import org.epfl.diffractogram.diffrac.DefaultValues;
 import org.epfl.diffractogram.model3d.Univers;
 
-import j3djmol.JmolWorldRenderer;
+import org.jmol.j3d.JmolWorldRenderer;
 
 public abstract class WorldRenderer {
 	
 	protected Univers univers;
 	protected JPanel panel3d;
 	
-	protected boolean completed;
+	public static boolean completed;
 	
 	protected boolean debugging = true;
 
@@ -92,6 +93,12 @@ public abstract class WorldRenderer {
 				: Java3DWorldRenderer.createTorusImpl(name, innerRadius, outerRadius, innerFaces, outerFaces, app));
 	}
 
+	public static Node createPanel(String name, QuadArray quad, Appearance app) {
+		return (isJmol ? JmolWorldRenderer.createQuadImpl(name, quad, app)
+				: Java3DWorldRenderer.createPanelImpl(name, quad, app));
+		
+	}	
+	
 	public abstract void reset(TransformGroup reset);
 
 	public abstract void notifyRemove(Group parent, Node child);
@@ -102,13 +109,18 @@ public abstract class WorldRenderer {
 
 	
 	protected Map<String, Node> mapRoot = new HashMap<>();
+	public BranchGroup root;
+	public Transform3D topTransform;
 
 	public void complete() {
 		completed = true;
 		if (debugging) {
-		for (Entry<String, Node> en:mapRoot.entrySet()) {
-			dumpRoot("root." + en.getKey(), en.getValue());
-		}
+			for (Entry<String, Node> en : mapRoot.entrySet()) {
+				Node node = en.getValue();
+				dumpRoot("root." + en.getKey(), node);
+			}
+		} else {
+			System.out.println("WR complete");
 		}
 	}
 
@@ -129,5 +141,16 @@ public abstract class WorldRenderer {
 	}
 
 	public abstract TransformGroup newTransformGroup(Transform3D t3d);
-	
+
+	public BranchGroup getRootBranchGroup() {
+		return root = new BranchGroup();
+	}
+
+	public void setTopTransform(TransformGroup tgTop) {
+		Transform3D t = new Transform3D();
+		tgTop.getTransform(t);
+		topTransform = t;
+	}
+
+
 }

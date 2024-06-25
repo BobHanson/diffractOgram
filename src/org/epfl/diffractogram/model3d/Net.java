@@ -270,8 +270,12 @@ public class Net extends BranchGroup implements ColorConstants {
 
 	public void createTranspBox() {
 		Appearance app = new Appearance();
-		app.setMaterial(new Material(white, blue, black, blue, 120.0f));
-		TransparencyAttributes transp = new TransparencyAttributes(TransparencyAttributes.NICEST, .85f);
+		// was app.setMaterial(new Material(white, blue, black, blue, 120.0f));
+		app.setMaterial(new Material(blue, black, blue, white, 120.0f));
+		
+		TransparencyAttributes transp = new TransparencyAttributes(TransparencyAttributes.NICEST, .90f);
+		
+		
 		app.setTransparencyAttributes(transp);
 		Transform3D t3d = new Transform3D();
 		Matrix3d matrix = new Matrix3d();

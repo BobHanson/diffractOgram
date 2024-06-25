@@ -26,6 +26,7 @@ import javax.media.j3d.Group;
 import javax.media.j3d.Node;
 import javax.media.j3d.OrientedShape3D;
 import javax.media.j3d.PickRay;
+import javax.media.j3d.QuadArray;
 import javax.media.j3d.SceneGraphPath;
 import javax.media.j3d.Shape3D;
 import javax.media.j3d.Text3D;
@@ -492,6 +493,10 @@ public class Java3DWorldRenderer extends WorldRenderer {
 	@Override
 	public TransformGroup newTransformGroup(Transform3D t3d) {
 		return (t3d == null ? new TransformGroup() : new TransformGroup(t3d));
+	}
+
+	public static Node createPanelImpl(String name, QuadArray quad, Appearance app) {
+		return new Shape3D(quad, app);
 	}
 
 }

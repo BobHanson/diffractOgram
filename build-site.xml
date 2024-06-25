@@ -48,6 +48,7 @@
 
 	<!-- unzip all libjs zip files into site
 	
+	   but remove html files
 	   all zip files placed in libjs will be processed
 	   
 	 -->
@@ -61,6 +62,11 @@
   	  </sequential>
   	</for>
 
+  	<delete>
+    <fileset dir="${site-resource.dir}" erroronmissingdir="false" >
+    	<include name="*.htm*"/>
+	</fileset>
+	</delete>
   	<!-- unzip SwingJS-site.zip 
   	
   	  we do this separately, as we want it done last 

@@ -9,6 +9,7 @@ import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JToggleButton;
 import javax.swing.border.TitledBorder;
@@ -26,6 +27,10 @@ import org.epfl.diffractogram.model3d.Animator;
 import org.epfl.diffractogram.model3d.Model3d;
 
 public class BottomPanel extends HVPanel.HPanel {
+	
+	final static String angs = DefaultValues.UTF_Angstroms;
+	final static String degs = DefaultValues.UTF_Degrees;
+
 	private Model3d model3d;
 	private LatticePane lPane, rPane;
 	private Parameters paramPane;
@@ -54,13 +59,13 @@ public class BottomPanel extends HVPanel.HPanel {
 		public LatticePane(String name, String suffix, Lattice def) {
 			setBorder(new TitledBorder(name));
 			HVPanel p1 = new HVPanel.VPanel();
-			a = p1.addFloatField("a"+suffix, "Å", 4, (float)def.a, "0.00");
-			b = p1.addFloatField("b"+suffix, "Å", 4, (float)def.b, "0.00");
-			c = p1.addFloatField("c"+suffix, "Å", 4, (float)def.c, "0.00");
+			a = p1.addFloatField("a"+suffix, angs, 4, (float)def.a, "0.00");
+			b = p1.addFloatField("b"+suffix, angs, 4, (float)def.b, "0.00");
+			c = p1.addFloatField("c"+suffix, angs, 4, (float)def.c, "0.00");
 			HVPanel p2 = new HVPanel.VPanel();
-			alpha = p2.addIntField("alpha"+suffix, "°", 3, (int)Math.round(def.alpha));
-			beta = p2.addIntField("beta"+suffix, "°", 3, (int)Math.round(def.beta));
-			gamma = p2.addIntField("gamma"+suffix, "°", 3, (int)Math.round(def.gamma));
+			alpha = p2.addIntField("alpha"+suffix, angs, 3, (int)Math.round(def.alpha));
+			beta = p2.addIntField("beta"+suffix, angs, 3, (int)Math.round(def.beta));
+			gamma = p2.addIntField("gamma"+suffix, angs, 3, (int)Math.round(def.gamma));
 			addSubPane(p1);
 			addSubPane(p2);
 		}
@@ -146,11 +151,11 @@ public class BottomPanel extends HVPanel.HPanel {
 			this.expand(true);
 			HVPanel.VPanel p1 = new HVPanel.VPanel();
 			p1.expand(true);
-			rotX = p1.addSliderAndValueH("Omega", "°", -180, 180, defaultValues.omega, 0, 120);
-			rotY = p1.addSliderAndValueH("Chi", "°", -180, 180, defaultValues.chi, 0, 120);
-			rotZ = p1.addSliderAndValueH("Phi", "°", -180, 180, defaultValues.phi, 0, 120);
-			lambda = p1.addSliderAndValueH("Lambda", "Å", .2f, 3.5f, (float)defaultValues.lambda, 2, 120);
-			precess = p1.addSliderAndValueH("Precession", "°", -180, 180, defaultValues.precession, 0, 120);
+			rotX = p1.addSliderAndValueH("Omega", degs, -180, 180, defaultValues.omega, 0, 120);
+			rotY = p1.addSliderAndValueH("Chi", degs, -180, 180, defaultValues.chi, 0, 120);
+			rotZ = p1.addSliderAndValueH("Phi", degs, -180, 180, defaultValues.phi, 0, 120);
+			lambda = p1.addSliderAndValueH("Lambda", angs, .2f, 3.5f, (float)defaultValues.lambda, 2, 120);
+			precess = p1.addSliderAndValueH("Precession", degs, -180, 180, defaultValues.precession, 0, 120);
 
 			HVPanel.VPanel p3 = new HVPanel.VPanel();
 			p3.putExtraSpace();
@@ -245,11 +250,11 @@ public class BottomPanel extends HVPanel.HPanel {
 			p5.addButton(fromToEnable = new JCheckBox(""));
 			HVPanel.VPanel p61 = new HVPanel.VPanel();
 			p61.expand(false);
-			from = p61.addIntField("", "°", 2, defaultValues.startAngle);
+			from = p61.addIntField("", degs, 2, defaultValues.startAngle);
 			p5.addSubPane(p61);
 			HVPanel.VPanel p62 = new HVPanel.VPanel();
 			p62.expand(false);
-			to = p62.addIntField("-", "°", 2, defaultValues.stopAngle);
+			to = p62.addIntField("-", degs, 2, defaultValues.stopAngle);
 			p5.addSubPane(p62);
 			p5.putExtraSpace();
 			p1.addSubPane(p5);
@@ -267,7 +272,7 @@ public class BottomPanel extends HVPanel.HPanel {
 			p8.addButton(precession=new JToggleButton("Precession"));
 			HVPanel.VPanel p9 = new HVPanel.VPanel();
 			p9.expand(false);
-			angle = p9.addIntFieldSpinner(" Angle", "°", 2, defaultValues.mu);
+			angle = p9.addIntFieldSpinner(" Angle", degs, 2, defaultValues.mu);
 			model3d.setPrecessionDefaults(defaultValues);
 			
 			p8.addSubPane(p9);
@@ -360,6 +365,12 @@ public class BottomPanel extends HVPanel.HPanel {
 			}
 			else if (e.getActionCommand().equals("Sequential")) {
 				if (((JToggleButton)e.getSource()).isSelected()) {
+					if (!fromToEnable.isSelected()) {
+						// BH added 2024.06.24
+						JOptionPane.showMessageDialog(null, "To sequentially scan angles, indicate a range of angles below.");
+						((JToggleButton)e.getSource()).setSelected(false);
+						return;
+					}
 					animator.animateSequential(paramPane.rotX, paramPane.rotY, paramPane.rotZ, paramPane.rotX.getValue(), paramPane.rotY.getValue(), paramPane.rotZ.getValue(), (JToggleButton)e.getSource());
 				}
 				else {

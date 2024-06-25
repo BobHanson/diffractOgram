@@ -1,5 +1,8 @@
 Notes from Bob Hanson's work relating to SwingJS possibilities
 
+2024.06.24 switched to UTF-8 for project, enabling unicode degree and angstrom symbols.
+2024.06.24 enabled box, cylinder, quad, arrow, and sphere (only for creation, not animation)
+2024.06.24 added Jmol; skeleton org/jmol/j3d/geometry
 2024.06.23 Further coding efficiencies; all shape creation isolated
 2024.06.22 Working in JavaScript
 2024.06.22 optimized ProjScreen for ijk search using HashMap<Integer,List<Point3f>>

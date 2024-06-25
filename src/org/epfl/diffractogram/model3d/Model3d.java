@@ -3,19 +3,16 @@ package org.epfl.diffractogram.model3d;
 import java.awt.Graphics;
 import java.awt.Point;
 
-import org.epfl.diffractogram.bottomPanel.HVPanel.SliderAndValue;
+import javax.media.j3d.Transform3D;
+import javax.swing.JPanel;
+import javax.vecmath.Point3d;
+import javax.vecmath.Vector3d;
+
 import org.epfl.diffractogram.diffrac.DefaultValues;
 import org.epfl.diffractogram.diffrac.Lattice;
 import org.epfl.diffractogram.projScreen.ProjScreen;
 import org.epfl.diffractogram.transformations.OrientationClass;
 import org.epfl.diffractogram.transformations.PrecessionClass;
-import javax.vecmath.Point3d;
-import javax.media.j3d.BranchGroup;
-import javax.media.j3d.Group;
-import javax.media.j3d.Node;
-import javax.media.j3d.Transform3D;
-import javax.swing.JPanel;
-import javax.vecmath.Vector3d;
 
 /**
  * The Model3d class comprises all the univers.root shapes.
@@ -68,6 +65,8 @@ public class Model3d implements ColorConstants {
 		univers = new Univers(panel3d);
 		univers.rotX(-90);
 		univers.rotY(-90);
+		univers.setTopTransform();
+
 
 		orientationClass = new OrientationClass();
 		precessionClass = new PrecessionClass();

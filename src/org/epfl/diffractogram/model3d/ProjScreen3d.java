@@ -130,7 +130,7 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 			if (baseRayCyl != null)
 				univers.removeNotify(this, baseRayCyl);
 			baseRayCyl = Utils3d.createCylinder(univers, "baseray", new Point3d(), new Point3d(0, y, 0), .01,
-					Utils3d.createApp(ColorConstants.yellow), 8);
+					Utils3d.createApp(ColorConstants.orange), 8);
 			univers.addNotify(this, baseRayCyl);
 		}
 
@@ -215,56 +215,7 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 
 		public Flat(Univers univers, PrecessionClass precessionClass) {
 			super(univers, precessionClass, "screen.flat");
-			lastTg.addChild(new Shape3D(createQuad(), app));
-		}
-
-		public static QuadArray createQuad() {
-			QuadArray quad = new QuadArray(4,
-					QuadArray.COORDINATES | QuadArray.TEXTURE_COORDINATE_2 | QuadArray.NORMALS);
-			quad.setCoordinate(0, new Point3d(-.5, 0, -.5));
-			quad.setCoordinate(1, new Point3d(-.5, 0, +.5));
-			quad.setCoordinate(2, new Point3d(+.5, 0, +.5));
-			quad.setCoordinate(3, new Point3d(+.5, 0, -.5));
-
-			quad.setNormal(0, new Vector3f(0, 1, 0));
-			quad.setNormal(1, new Vector3f(0, 1, 0));
-			quad.setNormal(2, new Vector3f(0, 1, 0));
-			quad.setNormal(3, new Vector3f(0, 1, 0));
-
-			quad.setTextureCoordinate(0, 0, new TexCoord2f(0.0f, 0.0f));
-			quad.setTextureCoordinate(0, 3, new TexCoord2f(1.0f, 0.0f));
-			quad.setTextureCoordinate(0, 2, new TexCoord2f(1.0f, -1.0f));
-			quad.setTextureCoordinate(0, 1, new TexCoord2f(0.0f, -1.0f));
-			return quad;
-		}
-
-		public static QuadArray createQuad(Vector3d e1, Vector3d e2, Vector3d e3, double w, double h) {
-			Matrix3d m = new Matrix3d();
-			m.setColumn(0, e1);
-			m.setColumn(1, e2);
-			m.setColumn(2, e3);
-
-			Point3d p1 = new Point3d(-w / 2, 0, -h / 2);
-			Point3d p2 = new Point3d(-w / 2, 0, +h / 2);
-			Point3d p3 = new Point3d(+w / 2, 0, +h / 2);
-			Point3d p4 = new Point3d(+w / 2, 0, -h / 2);
-			m.transform(p1);
-			m.transform(p2);
-			m.transform(p3);
-			m.transform(p4);
-
-			QuadArray quad = new QuadArray(4, QuadArray.COORDINATES | QuadArray.NORMALS);
-			quad.setCoordinate(0, p1);
-			quad.setCoordinate(1, p2);
-			quad.setCoordinate(2, p3);
-			quad.setCoordinate(3, p4);
-
-			Vector3f e2f = new Vector3f(e2);
-			quad.setNormal(0, e2f);
-			quad.setNormal(1, e2f);
-			quad.setNormal(2, e2f);
-			quad.setNormal(3, e2f);
-			return quad;
+			lastTg.addChild(WorldRenderer.createPanel("screen:flat", Utils3d.createQuad(), app));
 		}
 
 		private void createLabel(double w, double h) {
@@ -306,7 +257,7 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 			if (baseRayFlat != null)
 				univers.removeNotify(this, baseRayFlat);
 			baseRayFlat = Utils3d.createCylinder(univers, "baserayflat", new Point3d(), new Point3d(0, y, 0), .02,
-					Utils3d.createApp(ColorConstants.yellow), 8);
+					Utils3d.createApp(ColorConstants.orange), 8);
 			univers.addNotify(this, baseRayFlat);
 		}
 

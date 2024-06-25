@@ -1,5 +1,6 @@
 package org.epfl.diffractogram.model3d;
 
+import javax.media.j3d.Appearance;
 import javax.media.j3d.BranchGroup;
 import javax.media.j3d.Group;
 import javax.media.j3d.Node;
@@ -71,7 +72,7 @@ public class Univers {
 
 		// root is the root for all objects in the scene
 		// it is 
-		root = new BranchGroup();
+		root = renderer.getRootBranchGroup();
 		root.setName("root");
 		root.setCapability(BranchGroup.ALLOW_CHILDREN_READ);
 		root.setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
@@ -98,8 +99,6 @@ public class Univers {
 		tgTop.getTransform(cur);
 		cur.mul(t3d, cur);
 		tgTop.setTransform(cur);
-		Transform3D t = new Transform3D();
-		tgTop.getTransform(t);
 	}
 
 	public void rotX(double angle) {
@@ -169,6 +168,10 @@ public class Univers {
 
 	public void complete() {
 		renderer.complete();
+	}
+
+	public void setTopTransform() {
+		renderer.setTopTransform(tgTop);
 	}
 
 }

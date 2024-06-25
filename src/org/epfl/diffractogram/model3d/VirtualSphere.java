@@ -16,6 +16,7 @@ import javax.media.j3d.TextureAttributes;
 import javax.media.j3d.Transform3D;
 import javax.media.j3d.TransformGroup;
 import javax.media.j3d.TransparencyAttributes;
+import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
@@ -73,7 +74,12 @@ public class VirtualSphere extends BranchGroup implements ColorConstants {
 	}
 
 	private void createSphere(String name) {
-		Node s = WorldRenderer.createSphere(name, 1,100, false, app(new Color(1f, .7f, .7f, .5f)));
+		 // was app(new Color(1f, .7f, .7f, .5f));
+		Color3f c = new Color3f(1f, .7f, .7f); 
+		Appearance app = new Appearance();
+		app.setMaterial(new Material(c, black, c, white, 128));
+		app.setTransparencyAttributes(new TransparencyAttributes(TransparencyAttributes.NICEST, 0.5f));
+		Node s = WorldRenderer.createSphere(name, 1,100, false, app);
 		Utils3d.setParents(s, sPositioned, this);
 	}
 

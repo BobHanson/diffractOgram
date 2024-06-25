@@ -13,6 +13,7 @@ import javax.media.j3d.LineStripArray;
 import javax.media.j3d.Material;
 import javax.media.j3d.Node;
 import javax.media.j3d.PolygonAttributes;
+import javax.media.j3d.QuadArray;
 import javax.media.j3d.Shape3D;
 import javax.media.j3d.Transform3D;
 import javax.media.j3d.TransformGroup;
@@ -23,6 +24,7 @@ import javax.vecmath.Matrix3d;
 import javax.vecmath.Matrix4f;
 import javax.vecmath.Point3d;
 import javax.vecmath.Point3f;
+import javax.vecmath.TexCoord2f;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
@@ -392,5 +394,55 @@ public class Utils3d {
 		a.setName(name);
 		return a;
 	}
+
+	public static QuadArray createQuad() {
+		QuadArray quad = new QuadArray(4,
+				QuadArray.COORDINATES | QuadArray.TEXTURE_COORDINATE_2 | QuadArray.NORMALS);
+		quad.setCoordinate(0, new Point3d(-.5, 0, -.5));
+		quad.setCoordinate(1, new Point3d(-.5, 0, +.5));
+		quad.setCoordinate(2, new Point3d(+.5, 0, +.5));
+		quad.setCoordinate(3, new Point3d(+.5, 0, -.5));
+
+		quad.setNormal(0, new Vector3f(0, 1, 0));
+		quad.setNormal(1, new Vector3f(0, 1, 0));
+		quad.setNormal(2, new Vector3f(0, 1, 0));
+		quad.setNormal(3, new Vector3f(0, 1, 0));
+
+		quad.setTextureCoordinate(0, 0, new TexCoord2f(0.0f, 0.0f));
+		quad.setTextureCoordinate(0, 3, new TexCoord2f(1.0f, 0.0f));
+		quad.setTextureCoordinate(0, 2, new TexCoord2f(1.0f, -1.0f));
+		quad.setTextureCoordinate(0, 1, new TexCoord2f(0.0f, -1.0f));
+		return quad;
+	}
+
+	public static QuadArray createQuad(Vector3d e1, Vector3d e2, Vector3d e3, double w, double h) {
+		Matrix3d m = new Matrix3d();
+		m.setColumn(0, e1);
+		m.setColumn(1, e2);
+		m.setColumn(2, e3);
+
+		Point3d p1 = new Point3d(-w / 2, 0, -h / 2);
+		Point3d p2 = new Point3d(-w / 2, 0, +h / 2);
+		Point3d p3 = new Point3d(+w / 2, 0, +h / 2);
+		Point3d p4 = new Point3d(+w / 2, 0, -h / 2);
+		m.transform(p1);
+		m.transform(p2);
+		m.transform(p3);
+		m.transform(p4);
+
+		QuadArray quad = new QuadArray(4, QuadArray.COORDINATES | QuadArray.NORMALS);
+		quad.setCoordinate(0, p1);
+		quad.setCoordinate(1, p2);
+		quad.setCoordinate(2, p3);
+		quad.setCoordinate(3, p4);
+
+		Vector3f e2f = new Vector3f(e2);
+		quad.setNormal(0, e2f);
+		quad.setNormal(1, e2f);
+		quad.setNormal(2, e2f);
+		quad.setNormal(3, e2f);
+		return quad;
+	}
+
 
 }
