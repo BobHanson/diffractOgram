@@ -7,6 +7,10 @@ public class DefaultValues {
 	public static /* not final */ boolean javaJmol = true;
 	public static boolean useJmol = /** @j2sNative true || */javaJmol;
 
+	static {
+		System.err.println("DefalutValues.javaJmol=" + javaJmol);
+	}
+	
 	public final static String UTF_Angstroms = "\u212b";
 	public final static String UTF_Degrees = "\u00b0";
 	

@@ -183,6 +183,11 @@ public class JmolWorldRenderer extends WorldRenderer {
 
 		private Transform3D tlast;
 
+		/**
+		 * Callback for transform changes. All underlying objects
+		 * must be adjusted.
+		 * 
+		 */
 		public void setTransform(Transform3D t3d) {
 			if (!t3d.equals(tlast))
 				super.setTransform(t3d);

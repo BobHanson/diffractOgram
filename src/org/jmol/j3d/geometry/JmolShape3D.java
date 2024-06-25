@@ -44,8 +44,7 @@ public abstract class JmolShape3D extends Shape3D {
 
 	public void setAppearance(Appearance app) {
 		super.setAppearance(app);
-		if (getName() != null && app != null)
-			System.out.println("JS app set " + getName() + " " + app.getName());
+		// TODO this is the catch for appearance changes
 	}
 
 	public abstract String renderScript(JmolWorldRenderer renderer);
