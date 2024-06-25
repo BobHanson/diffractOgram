@@ -112,19 +112,19 @@ public class Net extends BranchGroup implements ColorConstants {
 
 	static int atomid;
 
-	private static BranchGroup createAtom(Vector3d v, Appearance app, float dotSize3d) {
+	private BranchGroup createAtom(Vector3d v, Appearance app, float dotSize3d) {
 		BranchGroup bg = new BranchGroup();
 		bg.setCapability(BranchGroup.ALLOW_CHILDREN_READ);
 		bg.setCapability(BranchGroup.ALLOW_DETACH);
 		TransformGroup tg = Utils3d.getVectorTransformGroup(v.x, v.y, v.z, null);
 		tg.setCapability(TransformGroup.ALLOW_CHILDREN_READ);
 		++atomid;
-		Utils3d.setParents(WorldRenderer.createSphere("atom:sphere" + atomid, dotSize3d, 10, true, app), tg, bg);
+		Utils3d.setParents(univers.renderer.createSphere("atom:sphere" + atomid, dotSize3d, 10, true, app), tg, bg);
 		bg.setName("atom:" + atomid);
 		return bg;
 	}
 
-	private static BranchGroup createAtom(Vector3d v, float dotSize3d) {
+	private BranchGroup createAtom(Vector3d v, float dotSize3d) {
 		return createAtom(v, defaultApp, dotSize3d);
 	}
 
@@ -221,11 +221,11 @@ public class Net extends BranchGroup implements ColorConstants {
 		Transform3D t3l = new Transform3D();
 		t3l.rotZ(Math.PI / 2);
 		TransformGroup tgl = univers.newTransformGroup(t3l);
-		Node txt = Utils3d.createFixedLegend("Reciprocal lattice", new Point3d(0, 0, h + .2), .1f,
+		Node txt = univers.creator.createFixedLegend("Reciprocal lattice", new Point3d(0, 0, h + .2), .1f,
 				Utils3d.createApp(blue), true);
 		txt.setName("leg:reclatt");
 		tgl.addChild(txt);
-		txt = Utils3d.createFixedLegend("points", new Point3d(0, 0, h), .1f, Utils3d.createApp(blue), true);
+		txt = univers.creator.createFixedLegend("points", new Point3d(0, 0, h), .1f, Utils3d.createApp(blue), true);
 		txt.setName("leg:points");
 		tgl.addChild(txt);
 		if (netLabel != null)
@@ -241,7 +241,7 @@ public class Net extends BranchGroup implements ColorConstants {
 		BranchGroup bb = new BranchGroup();
 		bb.setName("bb");
 		bb.setCapability(BranchGroup.ALLOW_DETACH);
-		Node rep = Utils3d.createRepere(cyan, blue, null, new String[] { "a*", "b*", "c*" }, .15f, .02f,
+		Node rep = univers.creator.createRepere(cyan, blue, null, new String[] { "a*", "b*", "c*" }, .15f, .02f,
 				defaultValues.dotSize, -defaultValues.dotSize, (Vector3d) Utils3d.mul(a, defaultValues.scale),
 				(Vector3d) Utils3d.mul(b, defaultValues.scale), (Vector3d) Utils3d.mul(c, defaultValues.scale));
 		rep.setName("rep:abc*");
@@ -258,7 +258,7 @@ public class Net extends BranchGroup implements ColorConstants {
 		r[1].scale(.3);
 		r[2].normalize();
 		r[2].scale(.3);
-		rep = Utils3d.createRepere(red, red, null, new String[] { "a", "b", "c" }, .15f, .02f, defaultValues.dotSize,
+		rep = univers.creator.createRepere(red, red, null, new String[] { "a", "b", "c" }, .15f, .02f, defaultValues.dotSize,
 				-defaultValues.dotSize, (Vector3d) Utils3d.mul(r[0], defaultValues.scale),
 				(Vector3d) Utils3d.mul(r[1], defaultValues.scale), (Vector3d) Utils3d.mul(r[2], defaultValues.scale));
 		rep.setName("repere:abc");
@@ -283,7 +283,7 @@ public class Net extends BranchGroup implements ColorConstants {
 		matrix.setColumn(1, (Vector3d) Utils3d.mul(b, y));
 		matrix.setColumn(2, (Vector3d) Utils3d.mul(c, z));
 		t3d.set(matrix);
-		Node box = WorldRenderer.createBox("netbox", 2, 2, 2, app);
+		Node box = univers.renderer.createBox("netbox", 2, 2, 2, app);
 		Utils3d.setParents(box, univers.newTransformGroup(t3d), netRoot);
 	}
 
@@ -316,9 +316,9 @@ public class Net extends BranchGroup implements ColorConstants {
 		}
 
 		private void buildGadjet(Univers univers, OrientationObject gonio) {
-			Node ring = WorldRenderer.createTorus("ring", .05, .6, 10, 50, Utils3d.createApp(yellow));
-			Node sample = WorldRenderer.createBox("sample", 0.2, 0.2, 0.1, Utils3d.createApp(blue));
-			Node pin = Utils3d.createCylinder(univers, "pin", new Point3d(), new Point3d(0, 0, -.4), .02,
+			Node ring = univers.renderer.createTorus("ring", .05, .6, 10, 50, Utils3d.createApp(yellow));
+			Node sample = univers.renderer.createBox("stage", 0.2, 0.2, 0.1, Utils3d.createApp(blue));
+			Node pin = univers.creator.createCylinder(univers, "pin", new Point3d(), new Point3d(0, 0, -.4), .02,
 					Utils3d.createApp(orange), 5);
 			Utils3d.setParents(ring, gonio.tgOmegaOnly);
 

@@ -79,7 +79,7 @@ public class VirtualSphere extends BranchGroup implements ColorConstants {
 		Appearance app = new Appearance();
 		app.setMaterial(new Material(c, black, c, white, 128));
 		app.setTransparencyAttributes(new TransparencyAttributes(TransparencyAttributes.NICEST, 0.5f));
-		Node s = WorldRenderer.createSphere(name, 1,100, false, app);
+		Node s = univers.renderer.createSphere(name, 1,100, false, app);
 		Utils3d.setParents(s, sPositioned, this);
 	}
 
@@ -87,7 +87,7 @@ public class VirtualSphere extends BranchGroup implements ColorConstants {
 		Appearance app = new Appearance();
 		app.setMaterial(new Material(magenta, black, magenta, white, 128));
 		app.setTransparencyAttributes(new TransparencyAttributes(TransparencyAttributes.NICEST, 0.7f));
-		Node legend = Utils3d.createFixedLegend("Ewald sphere", new Point3d(0, -.9, 0), .05f, app, true);
+		Node legend = univers.creator.createFixedLegend("Ewald sphere", new Point3d(0, -.9, 0), .05f, app, true);
 		legend.setName("legend:ewald");
 		Utils3d.setParents(legend, sPositioned, this);
 	}
@@ -98,7 +98,7 @@ public class VirtualSphere extends BranchGroup implements ColorConstants {
 		t3v1.rotZ(3 * Math.PI / 4);
 		t3v2.rotY(-Math.PI / 4);
 		t3v1.mul(t3v2);
-		Node l = Utils3d.createNamedVector("1/" + DefaultValues.strLambda, new Point3d(0, 0, 0), new Point3d(-.98, 0, 0),
+		Node l = univers.creator.createNamedVector("1/" + DefaultValues.strLambda, new Point3d(0, 0, 0), new Point3d(-.98, 0, 0),
 				new Point3d(-.5, 0, .02), .2f, magenta, magenta);
 		l.setName("vector:lambda");
 		Utils3d.setParents(l, univers.newTransformGroup(t3v1), sPositioned, this);
@@ -107,7 +107,7 @@ public class VirtualSphere extends BranchGroup implements ColorConstants {
 	private void createRepere() {
 		Transform3D t3dRepere = new Transform3D();
 		t3dRepere.set(.3);
-		Node r = Utils3d.createRepere(cyan, green, green, new String[] { "x", "y", "z" }, .15f, .03f, 0, 0,
+		Node r = univers.creator.createRepere(cyan, green, green, new String[] { "x", "y", "z" }, .15f, .03f, 0, 0,
 				new Vector3d(1, 0, 0), new Vector3d(0, 1, 0), new Vector3d(0, 0, 1));
 		r.setName("repere:xyz");
 		Utils3d.setParents(r, univers.newTransformGroup(t3dRepere), sPositioned, this);

@@ -24,7 +24,7 @@
  *
  */
 
-package org.epfl.diffractogram.util;
+package org.jmol.j3d;
 
 import java.awt.Font;
 import java.awt.Shape;
@@ -51,6 +51,9 @@ import javax.vecmath.Point3f;
 import javax.vecmath.Vector3f;
 
 /**
+ * 
+ * UNUSED
+ * 
  * The Font3D object is used to store extruded 2D glyphs. These 3D glyphs can
  * then be used to construct Text3D NodeComponent objects.
  * <P>

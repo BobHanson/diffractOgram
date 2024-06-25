@@ -27,7 +27,7 @@ public abstract class WorldRenderer {
 	protected Univers univers;
 	protected JPanel panel3d;
 	
-	public static boolean completed;
+	public boolean completed;
 	
 	protected boolean debugging = true;
 
@@ -37,6 +37,10 @@ public abstract class WorldRenderer {
 	
 	public static boolean isJmol;
 	
+	protected Map<String, Node> mapRoot = new HashMap<>();
+	public BranchGroup root;
+	public Transform3D topTransform;
+
 	public WorldRenderer(JPanel panel3d, Univers univers) {
 		this.panel3d = panel3d;
 		this.univers = univers;
@@ -57,47 +61,21 @@ public abstract class WorldRenderer {
 
 	public abstract void cleanup();
 
-	protected void applyTransform(Transform3D t3d) {
-		univers.applyTransform(t3d);
-	}
+	public abstract Node createBox(String name, double dx, double dy, double dz, Appearance app);
+	
+	public abstract Node createCylinder(String name, double radius, double height, boolean isHollow, int xdiv, int ydiv, Appearance app);
+	
+	public abstract TransformGroup createArrow(String name, TransformGroup tg, double radiusArrow, double lenArrow, double radius, float height,
+			int precision, Appearance app);
+	
+	public abstract Node createSphere(String name, double radius, int divs, boolean isAtom, Appearance app);
+	
+	public abstract BranchGroup createTextShape(String name, BranchGroup bg, String s, Point3d pos, float size, Font font, int align, int path, Point3d rotPoint,
+			Appearance app);
+	
+	public abstract Node createTorus(String name, double innerRadius, double outerRadius, int innerFaces, int outerFaces, Appearance app);
 
-	public static BranchGroup getTextShape(String name, BranchGroup bg, String s, Point3d pos, float size, Font font, int align, int path, Point3d rotPoint,
-			Appearance app) {
-		return (isJmol ? JmolWorldRenderer.getTextShapeImpl(name, bg, s, pos, size, font, align, path, rotPoint, app)
-				: Java3DWorldRenderer.getTextShapeImpl(name, bg, s, pos, size, font, align, path, rotPoint, app));
-	}
-
-	public static Node createBox(String name, double dx, double dy, double dz, Appearance app) {
-		return (isJmol ? JmolWorldRenderer.createBoxImpl(name, dx, dy, dz, app)
-				: Java3DWorldRenderer.createBoxImpl(name, dx, dy, dz, app));
-	}
-
-	public static Node createCylinder(String name, double radius, double height, boolean isHollow, int xdiv, int ydiv, Appearance app) {
-		return (isJmol ? JmolWorldRenderer.createCylinderImpl(name, radius, height, isHollow, xdiv, ydiv, app)
-				: Java3DWorldRenderer.createCylinderImpl(name, radius, height, isHollow, xdiv, ydiv, app));
-	}
-
-	public static TransformGroup createArrow(String name, TransformGroup tg, double radiusArrow, double lenArrow, double radius, float height,
-			int precision, Appearance app) {
-		return (isJmol ? JmolWorldRenderer.createArrowImpl(name, tg, radiusArrow, lenArrow, radius, height, precision, app)  
-				: Java3DWorldRenderer.createArrowImpl(name, tg, radiusArrow, lenArrow, radius, height, precision, app));
-	}
-
-	public static Node createSphere(String name, double radius, int divs, boolean isAtom, Appearance app) {
-		return (isJmol ? JmolWorldRenderer.createSphereImpl(name, radius, divs, isAtom, app)
-				: Java3DWorldRenderer.createSphereImpl(name, radius, divs, app));
-	}
-
-	public static Node createTorus(String name, double innerRadius, double outerRadius, int innerFaces, int outerFaces, Appearance app) {
-		return (isJmol ? JmolWorldRenderer.createTorusImpl(name, innerRadius, outerRadius, innerFaces, outerFaces, app)
-				: Java3DWorldRenderer.createTorusImpl(name, innerRadius, outerRadius, innerFaces, outerFaces, app));
-	}
-
-	public static Node createPanel(String name, QuadArray quad, Appearance app) {
-		return (isJmol ? JmolWorldRenderer.createQuadImpl(name, quad, app)
-				: Java3DWorldRenderer.createPanelImpl(name, quad, app));
-		
-	}	
+	public abstract Node createQuad(String name, QuadArray quad, Appearance app);
 	
 	public abstract void reset(TransformGroup reset);
 
@@ -106,12 +84,7 @@ public abstract class WorldRenderer {
 	public abstract void notifyAdd(Group parent, Node child);
 
 	public abstract void notifyRemoveAll(Group g);
-
 	
-	protected Map<String, Node> mapRoot = new HashMap<>();
-	public BranchGroup root;
-	public Transform3D topTransform;
-
 	public void complete() {
 		completed = true;
 		if (debugging) {

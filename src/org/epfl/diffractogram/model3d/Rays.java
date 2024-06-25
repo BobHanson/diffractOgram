@@ -60,7 +60,7 @@ public class Rays extends BranchGroup {
 	private BranchGroup ray(Point3d a, Point3d b, Appearance app) {
 		BranchGroup r;
 		if (raysAnt.size() == 0) {
-			r = Utils3d.createCylinder(univers, "ray:" + ++rayid, a, b, .02, app, 4);
+			r = univers.creator.createCylinder(univers, "ray:" + ++rayid, a, b, .02, app, 4);
 			univers.addNotify(this, r);
 		} else {
 			r = (BranchGroup) raysAnt.remove(raysAnt.size() - 1);
@@ -76,7 +76,7 @@ public class Rays extends BranchGroup {
 	public void addRay(Point3d cSphere, Point3d pNet, Point3d pProj) {
 		ray(cSphere, pNet, raysAppRed);
 		ray(o, pProj, raysAppWhite);
-		Node i = Utils3d.atom(pProj, ColorConstants.black, .03f);
+		Node i = univers.creator.createAtom(pProj, ColorConstants.black, .03f);
 		i.setName("impact:" + ++impactid);
 		univers.addNotify(impacts, i);
 	}

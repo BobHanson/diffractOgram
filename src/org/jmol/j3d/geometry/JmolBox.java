@@ -3,6 +3,7 @@ package org.jmol.j3d.geometry;
 import javax.media.j3d.Appearance;
 import javax.vecmath.Point3d;
 
+import org.epfl.diffractogram.util.WorldRenderer;
 import org.jmol.j3d.JmolWorldRenderer;
 
 public class JmolBox extends JmolShape3D {

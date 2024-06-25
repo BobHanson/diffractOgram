@@ -13,6 +13,7 @@ import org.epfl.diffractogram.diffrac.Lattice;
 import org.epfl.diffractogram.projScreen.ProjScreen;
 import org.epfl.diffractogram.transformations.OrientationClass;
 import org.epfl.diffractogram.transformations.PrecessionClass;
+import org.jmol.j3d.JmolUniverse;
 
 /**
  * The Model3d class comprises all the univers.root shapes.
@@ -37,7 +38,7 @@ import org.epfl.diffractogram.transformations.PrecessionClass;
  * 
  * </pre>
  */
-public class Model3d implements ColorConstants {
+public class Model3d {
 	public Univers univers;
 	public VirtualSphere virtualSphere;
 	public ProjScreen3d p3d;
@@ -62,7 +63,7 @@ public class Model3d implements ColorConstants {
 		reciprocal = lattice.reciprocal();
 
 		
-		univers = new Univers(panel3d);
+		univers = (DefaultValues.useJmol ? new JmolUniverse(panel3d) : new Java3DUniverse(panel3d));
 		univers.rotX(-90);
 		univers.rotY(-90);
 		univers.setTopTransform();

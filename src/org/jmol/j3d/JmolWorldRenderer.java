@@ -94,11 +94,17 @@ public class JmolWorldRenderer extends WorldRenderer {
 
 	}
 
-	public static List<Node> allObjects = new ArrayList<>();
+	public List<Node> allObjects = new ArrayList<>();
 
-	public static BranchGroup getTextShapeImpl(String name, BranchGroup bg, String s, Point3d pos, float size,
+	private Node addObject(Node n) {
+		allObjects.add(n);
+		return n;
+	}
+
+	public BranchGroup createTextShape(String name, BranchGroup bg, String s, Point3d pos, float size,
 			Font font, int align, int path, Point3d rotPoint, Appearance app) {
 		Shape3D textShape = new JmolText(name, bg, s, font, align, path);
+		addObject(textShape);
 
 		Transform3D tsize = new Transform3D();
 		tsize.set(size, new Vector3d(pos));
@@ -108,32 +114,32 @@ public class JmolWorldRenderer extends WorldRenderer {
 		return bg;
 	}
 
-	public static Node createTorusImpl(String name, double innerRadius, double outerRadius, int innerFaces,
+	public Node createTorus(String name, double innerRadius, double outerRadius, int innerFaces,
 			int outerFaces, Appearance app) {
-		return new JmolTorus(name, innerRadius, outerRadius, innerFaces, outerFaces, app);
+		return addObject(new JmolTorus(name, innerRadius, outerRadius, innerFaces, outerFaces, app));
 	}
 
-	public static Node createBoxImpl(String name, double dx, double dy, double dz, Appearance app) {
-		return new JmolBox(name, dx, dy, dz, app);
+	public Node createBox(String name, double dx, double dy, double dz, Appearance app) {
+		return addObject(new JmolBox(name, dx, dy, dz, app));
 	}
 
-	public static Node createCylinderImpl(String name, double radius, double height, boolean isHollow, int xdiv,
+	public Node createCylinder(String name, double radius, double height, boolean isHollow, int xdiv,
 			int ydiv, Appearance app) {
-		return new JmolCylinder(name, radius, height, isHollow, xdiv, ydiv, app);
+		return addObject(new JmolCylinder(name, radius, height, isHollow, xdiv, ydiv, app));
 	}
 
-	public static Node createSphereImpl(String name, double radius, int divs, boolean isAtom, Appearance app) {
-		return new JmolSphere(name, radius, divs, isAtom, app);
+	public Node createSphere(String name, double radius, int divs, boolean isAtom, Appearance app) {
+		return addObject(new JmolSphere(name, radius, divs, isAtom, app));
 	}
 
-	public static TransformGroup createArrowImpl(String name, TransformGroup tg, double radiusArrow, double lenArrow,
+	public TransformGroup createArrow(String name, TransformGroup tg, double radiusArrow, double lenArrow,
 			double radius, float height, int precision, Appearance app) {
-		tg.addChild(new JmolArrow(name, radiusArrow, lenArrow, radius, height, precision, app));
+		tg.addChild(addObject(new JmolArrow(name, radiusArrow, lenArrow, radius, height, precision, app)));
 		return tg;
 	}
 
-	public static Node createQuadImpl(String name, QuadArray quad, Appearance app) {
-		return new JmolQuad(name, quad, app);
+	public Node createQuad(String name, QuadArray quad, Appearance app) {
+		return addObject(new JmolQuad(name, quad, app));
 	}
 
 	@Override
@@ -149,6 +155,8 @@ public class JmolWorldRenderer extends WorldRenderer {
 			this.mapRoot.remove(child.getName());
 			break;
 		}
+		if (!completed)
+			return;
 	}
 
 	@Override

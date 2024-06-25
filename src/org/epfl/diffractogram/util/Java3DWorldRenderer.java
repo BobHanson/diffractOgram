@@ -59,12 +59,12 @@ import com.sun.j3d.utils.universe.SimpleUniverse;
 public class Java3DWorldRenderer extends WorldRenderer {
 
 	private Canvas3D canvas3D;
-	private SimpleUniverse u;
+	private SimpleUniverse j3dUniverse;
 	private BranchGroup environment;
 	private Background background;
 	private BoundingSphere bounds;
 
-	Java3DWorldRenderer(JPanel panel3d, Univers univers) {
+	public Java3DWorldRenderer(JPanel panel3d, Univers univers) {
 		super(panel3d, univers);
 		canvas3D = new Canvas3D(SimpleUniverse.getPreferredConfiguration()) {
 			public void paint(Graphics g) {
@@ -72,7 +72,7 @@ public class Java3DWorldRenderer extends WorldRenderer {
 				Toolkit.getDefaultToolkit().sync();
 			}
 		};
-		u = new SimpleUniverse(canvas3D);
+		j3dUniverse = new SimpleUniverse(canvas3D);
 		panel3d.add(canvas3D);
 	}
 
@@ -91,10 +91,10 @@ public class Java3DWorldRenderer extends WorldRenderer {
 		// also use mouse wheel to scale up/down
 		canvas3D.addMouseWheelListener(new WheelMouseBehavior());
 
-		u.getViewingPlatform().setNominalViewingTransform();
+		j3dUniverse.getViewingPlatform().setNominalViewingTransform();
 
 		// show the whole thing up
-		u.addBranchGraph(environment);
+		j3dUniverse.addBranchGraph(environment);
 		// TODO Auto-generated method stub
 		
 		
@@ -152,12 +152,12 @@ public class Java3DWorldRenderer extends WorldRenderer {
 
 	@Override
 	public boolean isParallel() {
-		return u.getViewer().getView().getProjectionPolicy() == View.PARALLEL_PROJECTION;
+		return j3dUniverse.getViewer().getView().getProjectionPolicy() == View.PARALLEL_PROJECTION;
 	}
 
 	@Override
 	public void setParallel(boolean b) {
-		u.getViewer().getView().setProjectionPolicy(b ? View.PARALLEL_PROJECTION : View.PERSPECTIVE_PROJECTION);
+		j3dUniverse.getViewer().getView().setProjectionPolicy(b ? View.PARALLEL_PROJECTION : View.PERSPECTIVE_PROJECTION);
 	}
 
 	@Override
@@ -167,9 +167,14 @@ public class Java3DWorldRenderer extends WorldRenderer {
 
 	@Override
 	public void cleanup() {
-		u.cleanup();
+		j3dUniverse.cleanup();
 	}
 
+	/**
+	 * Java only -- there is no need for tracking the mouse when using Jmol.
+	 * 
+	 *
+	 */
 	protected class UniversBehavior extends Behavior {
 
 		private static final double x_factor = .02;
@@ -253,23 +258,19 @@ public class Java3DWorldRenderer extends WorldRenderer {
 			neg = y - h / 2 > 0 ? !neg : neg;
 			double alpha = p1.angle(p2);
 			t3d.rotZ(neg ? alpha : -alpha);
-			applyTransform(t3d);
+			univers.applyTransform(t3d);
 		}
 
 		private void doZoom() {
 			t3d.set(1.0 + dy / 100d);
-			applyTransform(t3d);
-
-			t3d.set(1.0 + dy / 100d);
-			applyTransform(t3d);
-
+			univers.applyTransform(t3d);
 		}
 
 		private void doRotateXY() {
 			t3d.rotX(dy * y_factor);
-			applyTransform(t3d);
+			univers.applyTransform(t3d);
 			t3d.rotY(dx * x_factor);
-			applyTransform(t3d);
+			univers.applyTransform(t3d);
 
 		}
 
@@ -336,10 +337,10 @@ public class Java3DWorldRenderer extends WorldRenderer {
 			i = e.getWheelRotation() / Math.abs(e.getWheelRotation());
 		Transform3D t3d = new Transform3D();
 		t3d.set(1.0 + ((double) i) / 10d);
-		applyTransform(t3d);
+		univers.applyTransform(t3d);
 	}
 
-	public static BranchGroup getTextShapeImpl(String name, BranchGroup bg, String s, Point3d pos, float size, Font font, int align,
+	public BranchGroup createTextShape(String name, BranchGroup bg, String s, Point3d pos, float size, Font font, int align,
 			int path, Point3d rotPoint, Appearance app) {
 		bg.setCapability(BranchGroup.ALLOW_DETACH);
 		Shape3D textShape;
@@ -408,20 +409,20 @@ public class Java3DWorldRenderer extends WorldRenderer {
 		return bg;
 	}
 
-	public static Node createTorusImpl(String name, double innerRadius, double outerRadius, int innerFaces, int outerFaces,
+	public Node createTorus(String name, double innerRadius, double outerRadius, int innerFaces, int outerFaces,
 			Appearance app) {
 		Node n = new Torus((float) innerRadius, (float) outerRadius, innerFaces, outerFaces, app);
 		n.setName(name);
 		return n;
 	}
 
-	public static Node createBoxImpl(String name, double dx, double dy, double dz, Appearance app) {
+	public Node createBox(String name, double dx, double dy, double dz, Appearance app) {
 		Node n = new Box((float) dx, (float) dy, (float) dz, app);
 		n.setName(name);
 		return n;
 	}
 
-	public static Node createCylinderImpl(String name, double radius, double height, boolean isHollow, int xdiv, int ydiv,
+	public Node createCylinder(String name, double radius, double height, boolean isHollow, int xdiv, int ydiv,
 			Appearance app) {
 		int flags = Cylinder.GENERATE_NORMALS | (isHollow ? Cylinder.GENERATE_TEXTURE_COORDS : 0);
 		Cylinder c = new Cylinder((float) radius, (float) height, flags, xdiv, ydiv, app);
@@ -438,14 +439,14 @@ public class Java3DWorldRenderer extends WorldRenderer {
 		return c;
 	}
 
-	public static Node createSphereImpl(String name, double radius, int divs, Appearance app) {
+	public Node createSphere(String name, double radius, int divs, boolean isAtom, Appearance app) {
 		Sphere s = new Sphere((float) radius, Sphere.GENERATE_NORMALS, divs, app);
 		s.getShape().setCapability(Shape3D.ALLOW_APPEARANCE_WRITE);
 		s.setName(name);
 		return s;
-	}
+	}	
 
-	public static TransformGroup createArrowImpl(String name, TransformGroup tg, double radiusArrow, double lenArrow, double radius,
+	public TransformGroup createArrow(String name, TransformGroup tg, double radiusArrow, double lenArrow, double radius,
 			float height, int precision, Appearance app) {
 		Node cone = new Cone((float) radiusArrow, (float) lenArrow, Cylinder.GENERATE_NORMALS, precision, 1, app);
 		Node cyl = new Cylinder((float) radius, height, Cylinder.GENERATE_NORMALS, precision, 1, app);
@@ -455,6 +456,10 @@ public class Java3DWorldRenderer extends WorldRenderer {
 		tg.addChild(cyl);
 		tg.setName(name);
 		return tg;
+	}
+
+	public Node createQuad(String name, QuadArray quad, Appearance app) {
+		return new Shape3D(quad, app);
 	}
 
 	@Override
@@ -494,9 +499,5 @@ public class Java3DWorldRenderer extends WorldRenderer {
 	public TransformGroup newTransformGroup(Transform3D t3d) {
 		return (t3d == null ? new TransformGroup() : new TransformGroup(t3d));
 	}
-
-	public static Node createPanelImpl(String name, QuadArray quad, Appearance app) {
-		return new Shape3D(quad, app);
-	}
-
+	
 }

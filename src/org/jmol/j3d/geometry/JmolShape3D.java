@@ -37,9 +37,6 @@ public abstract class JmolShape3D extends Shape3D {
 		setCapability(ALLOW_APPEARANCE_WRITE);
 		setName(name);
 		setAppearance(app);
-		if (!WorldRenderer.completed)
-			JmolWorldRenderer.allObjects.add(this);
-
 	}
 
 	public void setAppearance(Appearance app) {
