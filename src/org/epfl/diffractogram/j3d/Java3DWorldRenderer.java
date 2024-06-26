@@ -1,4 +1,4 @@
-package org.epfl.diffractogram.util;
+package org.epfl.diffractogram.j3d;
 
 import java.awt.AWTEvent;
 import java.awt.Color;
@@ -45,7 +45,9 @@ import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
 import org.epfl.diffractogram.model3d.Univers;
+import org.epfl.diffractogram.model3d.WorldRenderer;
 import org.epfl.diffractogram.model3d.Univers.Selectable;
+import org.epfl.diffractogram.util.Utils3d;
 import org.j3d.geom.Torus;
 
 import com.sun.j3d.utils.geometry.Box;

@@ -26,7 +26,7 @@ import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 import org.epfl.diffractogram.gui.MainPane;
-import org.epfl.diffractogram.util.WorldRenderer;
+import org.epfl.diffractogram.model3d.WorldRenderer;
 
 
 @SuppressWarnings("serial")

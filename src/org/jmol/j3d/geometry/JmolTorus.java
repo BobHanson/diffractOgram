@@ -2,7 +2,7 @@ package org.jmol.j3d.geometry;
 
 import javax.media.j3d.Appearance;
 
-import org.jmol.j3d.JmolWorldRenderer;
+import org.jmol.j3d.WorldRendererI;
 
 public class JmolTorus extends JmolShape3D {
 
@@ -20,7 +20,7 @@ public class JmolTorus extends JmolShape3D {
 	}
 	
 	@Override
-	public String renderScript(JmolWorldRenderer renderer) {
+	public String renderScript(WorldRendererI renderer) {
 		// TODO Auto-generated method stub
 		return "";
 	}

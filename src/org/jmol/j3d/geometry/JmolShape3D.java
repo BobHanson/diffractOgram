@@ -1,7 +1,6 @@
 package org.jmol.j3d.geometry;
 
 import javax.media.j3d.Appearance;
-import javax.media.j3d.BranchGroup;
 import javax.media.j3d.Material;
 import javax.media.j3d.Node;
 import javax.media.j3d.Shape3D;
@@ -11,13 +10,12 @@ import javax.media.j3d.TransparencyAttributes;
 import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
 
-import org.epfl.diffractogram.util.WorldRenderer;
-import org.jmol.j3d.JmolWorldRenderer;
+import org.jmol.j3d.WorldRendererI;
 import org.jmol.modelset.Atom;
 import org.jmol.shape.Mesh;
-import org.jmol.shape.Shape;
 import org.jmol.shapespecial.Draw;
 import org.jmol.viewer.JC;
+import org.jmol.viewer.Viewer;
 
 import javajs.util.P3d;
 
@@ -39,7 +37,7 @@ public abstract class JmolShape3D extends Shape3D {
 
 	final static Point3d ptemp = new Point3d();
 	
-	public JmolWorldRenderer renderer;
+	public WorldRendererI renderer;
 
 	private String drawID;
 	
@@ -47,7 +45,7 @@ public abstract class JmolShape3D extends Shape3D {
 	
 	public Mesh shape;
 
-	public abstract String renderScript(JmolWorldRenderer renderer);
+	public abstract String renderScript(WorldRendererI renderer);
 
 	protected final static Transform3D t3d = new Transform3D();
 	protected final static Transform3D t = new Transform3D();
@@ -67,14 +65,15 @@ public abstract class JmolShape3D extends Shape3D {
 		//System.out.println("JS.setApp " + getName() + " " + app);
 	}
 
-	public Transform3D getTransform(JmolWorldRenderer renderer, Transform3D ret) {
+	public Transform3D getTransform(WorldRendererI renderer, Transform3D ret) {
 		if (ret == null)
 			ret = t3d;
 		ret.setIdentity();
 		Node n = this;
+		Transform3D t = renderer.getTopTransform();
 		while ((n = n.getParent()) != null) {
-			if (n == renderer.root) {
-				ret.mul(renderer.topTransform, ret);
+			if (n == renderer.getRoot()) {
+				ret.mul(t, ret);
 				return ret;
 			}
 			if (n instanceof TransformGroup) {
@@ -86,7 +85,7 @@ public abstract class JmolShape3D extends Shape3D {
 		return null;
 	}
 
-	public boolean getJmolVertices(JmolWorldRenderer renderer) {
+	public boolean getJmolVertices(WorldRendererI renderer) {
 		this.renderer = renderer;
 		return transformVertices(getTransform(renderer, null));
 	}
@@ -141,7 +140,7 @@ public abstract class JmolShape3D extends Shape3D {
 		if (drawID == null) {
 			drawID = getName().replace('*', '_').replace('\'','_');
 		} else if (shape == null) {
-			Draw d = (Draw) renderer.viewer.shm.getShape(JC.SHAPE_DRAW);
+			Draw d = (Draw) ((Viewer) renderer.getViewer()).shm.getShape(JC.SHAPE_DRAW);
 			shape = d.getMesh(drawID);
 		}
 		return "draw id '" + drawID + "'";

@@ -4,7 +4,7 @@ import javax.media.j3d.Appearance;
 import javax.media.j3d.QuadArray;
 import javax.vecmath.Point3d;
 
-import org.jmol.j3d.JmolWorldRenderer;
+import org.jmol.j3d.WorldRendererI;
 
 public class JmolQuad extends JmolShape3D {
 
@@ -17,7 +17,7 @@ public class JmolQuad extends JmolShape3D {
 	}
 
 	@Override
-	public String renderScript(JmolWorldRenderer renderer) {
+	public String renderScript(WorldRendererI renderer) {
 		if (!getJmolVertices(renderer))
 			return "";
 		String s = getDrawId()

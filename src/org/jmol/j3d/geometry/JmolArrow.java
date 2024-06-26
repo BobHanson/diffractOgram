@@ -3,7 +3,7 @@ package org.jmol.j3d.geometry;
 import javax.media.j3d.Appearance;
 import javax.vecmath.Point3d;
 
-import org.jmol.j3d.JmolWorldRenderer;
+import org.jmol.j3d.WorldRendererI;
 import org.jmol.shapespecial.DrawMesh;
 
 import javajs.util.T3d;
@@ -30,7 +30,7 @@ public class JmolArrow extends JmolShape3D {
 	}
 	
 	@Override
-	public String renderScript(JmolWorldRenderer renderer) {
+	public String renderScript(WorldRendererI renderer) {
 		if (!getJmolVertices(renderer))
 			return "";
 		

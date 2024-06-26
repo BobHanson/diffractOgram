@@ -18,7 +18,6 @@ import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
 import org.epfl.diffractogram.util.Utils3d;
-import org.epfl.diffractogram.util.WorldRenderer;
 
 /**
  * The Univers class maintains the Canvas3D element and the universe. Fields include:

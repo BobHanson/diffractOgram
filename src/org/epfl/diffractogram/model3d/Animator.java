@@ -4,7 +4,6 @@ import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 
 import org.epfl.diffractogram.gui.HVPanel.SliderAndValue;
-import org.epfl.diffractogram.util.WorldRenderer;
 
 import javajs.async.SwingJSUtils.StateHelper;
 import javajs.async.SwingJSUtils.StateMachine;

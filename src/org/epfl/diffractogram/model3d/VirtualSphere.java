@@ -23,7 +23,6 @@ import javax.vecmath.Vector3d;
 import org.epfl.diffractogram.DefaultValues;
 import org.epfl.diffractogram.util.ColorConstants;
 import org.epfl.diffractogram.util.Utils3d;
-import org.epfl.diffractogram.util.WorldRenderer;
 
 public class VirtualSphere extends BranchGroup implements ColorConstants {
 	TransformGroup sPositioned;

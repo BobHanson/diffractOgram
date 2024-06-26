@@ -1,4 +1,4 @@
-package org.epfl.diffractogram.util;
+package org.epfl.diffractogram.model3d;
 
 import java.awt.Font;
 import java.util.Enumeration;
@@ -18,9 +18,8 @@ import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
 
 import org.epfl.diffractogram.DefaultValues;
-import org.epfl.diffractogram.model3d.Univers;
-
-import org.jmol.j3d.JmolWorldRenderer;
+import org.epfl.diffractogram.j3d.Java3DWorldRenderer;
+import org.epfl.diffractogram.jmol.JmolWorldRenderer;
 
 public abstract class WorldRenderer {
 	

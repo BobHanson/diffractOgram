@@ -1,9 +1,9 @@
-package org.epfl.diffractogram.model3d;
+package org.epfl.diffractogram.j3d;
 
 import javax.swing.JPanel;
 
-import org.epfl.diffractogram.util.Java3DWorldRenderer;
-import org.epfl.diffractogram.util.WorldRenderer;
+import org.epfl.diffractogram.model3d.Univers;
+import org.epfl.diffractogram.model3d.WorldRenderer;
 
 public class Java3DUniverse extends Univers {
 

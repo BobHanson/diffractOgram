@@ -11,8 +11,9 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
 import org.epfl.diffractogram.DefaultValues;
+import org.epfl.diffractogram.j3d.Java3DUniverse;
+import org.epfl.diffractogram.jmol.JmolUniverse;
 import org.epfl.diffractogram.util.Lattice;
-import org.jmol.j3d.JmolUniverse;
 
 /**
  * The Model3d class comprises all the univers.root shapes.

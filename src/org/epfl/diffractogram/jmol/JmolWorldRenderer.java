@@ -1,4 +1,4 @@
-package org.jmol.j3d;
+package org.epfl.diffractogram.jmol;
 
 import java.awt.Dimension;
 import java.awt.Font;
@@ -22,10 +22,11 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
 import org.epfl.diffractogram.model3d.Univers;
+import org.epfl.diffractogram.model3d.WorldRenderer;
 import org.epfl.diffractogram.util.Utils3d;
-import org.epfl.diffractogram.util.WorldRenderer;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.api.JmolViewer;
+import org.jmol.j3d.WorldRendererI;
 import org.jmol.j3d.geometry.JmolArrow;
 import org.jmol.j3d.geometry.JmolBox;
 import org.jmol.j3d.geometry.JmolCylinder;
@@ -46,7 +47,7 @@ import org.jmol.viewer.Viewer;
  * 
  * @author Bob Hanson
  */
-public class JmolWorldRenderer extends WorldRenderer {
+public class JmolWorldRenderer extends WorldRenderer implements WorldRendererI {
 
 	public Viewer viewer;
 
@@ -255,11 +256,26 @@ public class JmolWorldRenderer extends WorldRenderer {
 		viewer.scriptWait(s);
 	}
 	
-    public void renderNode(JmolShape3D n) {
-		String s = n.renderScript(this);
+    public void renderNode(Shape3D n) {
+		String s = ((JmolShape3D) n).renderScript(this);
 		//System.out.println(n + " "  + s);
 		if (s.length() > 0)
 			viewer.scriptWait(s);
+	}
+
+	@Override
+	public Node getRoot() {
+		return root;
+	}
+
+	@Override
+	public Transform3D getTopTransform() {
+		return topTransform;
+	}
+
+	@Override
+	public Object getViewer() {
+		return viewer;
 	}
 
 

@@ -1,9 +1,9 @@
-package org.jmol.j3d;
+package org.epfl.diffractogram.jmol;
 
 import javax.swing.JPanel;
 
 import org.epfl.diffractogram.model3d.Univers;
-import org.epfl.diffractogram.util.WorldRenderer;
+import org.epfl.diffractogram.model3d.WorldRenderer;
 
 public class JmolUniverse extends Univers {
 

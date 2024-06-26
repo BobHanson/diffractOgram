@@ -3,7 +3,7 @@ package org.jmol.j3d.geometry;
 import javax.media.j3d.Appearance;
 import javax.vecmath.Point3d;
 
-import org.jmol.j3d.JmolWorldRenderer;
+import org.jmol.j3d.WorldRendererI;
 
 public class JmolSphere extends JmolShape3D {
 
@@ -20,7 +20,7 @@ public class JmolSphere extends JmolShape3D {
 	}
 
 	@Override
-	public String renderScript(JmolWorldRenderer renderer) {
+	public String renderScript(WorldRendererI renderer) {
 		if (!getJmolVertices(renderer))
 			return "";
 		pt.sub2(jmolVertices[0], jmolVertices[1]);
