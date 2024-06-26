@@ -1,5 +1,8 @@
 Notes from Bob Hanson's work relating to SwingJS possibilities
 
+todo: lots more opportunities for optimization. 
+2024.06.26 animation working in JavaScript; no text labels; no "torus" goniometer ring
+2024.06.25 refactoring, enabling animation
 2024.06.24 switched to UTF-8 for project, enabling unicode degree and angstrom symbols.
 2024.06.24 enabled box, cylinder, quad, arrow, and sphere (only for creation, not animation)
 2024.06.24 added Jmol; skeleton org/jmol/j3d/geometry
