@@ -5,7 +5,7 @@
  * 
  * nicolas.schoeni@epfl.ch
  */
-package org.epfl.diffractogram.diffrac;
+package org.epfl.diffractogram.gui;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -16,8 +16,6 @@ import java.net.URL;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
-
-import org.epfl.diffractogram.bottomPanel.HVPanel;
 
 public class Help {
 	private JFrame frame;

@@ -10,9 +10,8 @@ import javax.swing.JPanel;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
-import org.epfl.diffractogram.diffrac.DefaultValues;
-import org.epfl.diffractogram.diffrac.Lattice;
-import org.epfl.diffractogram.projScreen.ProjScreen;
+import org.epfl.diffractogram.DefaultValues;
+import org.epfl.diffractogram.util.Lattice;
 import org.jmol.j3d.JmolUniverse;
 
 /**

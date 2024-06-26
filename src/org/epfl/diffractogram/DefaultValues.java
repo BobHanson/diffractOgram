@@ -1,6 +1,8 @@
-package org.epfl.diffractogram.diffrac;
+package org.epfl.diffractogram;
 
 import javax.swing.JApplet;
+
+import org.epfl.diffractogram.util.Lattice;
 
 public class DefaultValues {
 

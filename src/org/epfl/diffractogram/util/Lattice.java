@@ -1,4 +1,4 @@
-package org.epfl.diffractogram.diffrac;
+package org.epfl.diffractogram.util;
 
 import javax.vecmath.Matrix3d;
 import javax.vecmath.Point3d;

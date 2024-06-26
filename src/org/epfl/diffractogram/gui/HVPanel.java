@@ -1,4 +1,4 @@
-package org.epfl.diffractogram.bottomPanel;
+package org.epfl.diffractogram.gui;
 
 import java.awt.Component;
 import java.awt.Dimension;

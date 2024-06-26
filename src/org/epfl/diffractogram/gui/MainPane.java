@@ -1,4 +1,4 @@
-package org.epfl.diffractogram.diffrac;
+package org.epfl.diffractogram.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -7,10 +7,9 @@ import java.awt.event.ActionEvent;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
-import org.epfl.diffractogram.bottomPanel.BottomPanel;
-import org.epfl.diffractogram.bottomPanel.HVPanel;
+import org.epfl.diffractogram.DefaultValues;
 import org.epfl.diffractogram.model3d.Model3d;
-import org.epfl.diffractogram.projScreen.ProjScreen;
+import org.epfl.diffractogram.model3d.ProjScreen;
 
 /* TestApplet - MainPane.java
  * 

@@ -1,4 +1,4 @@
-package org.epfl.diffractogram.projScreen;
+package org.epfl.diffractogram.model3d;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;

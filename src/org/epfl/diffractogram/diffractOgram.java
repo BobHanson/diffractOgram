@@ -25,8 +25,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
-import org.epfl.diffractogram.diffrac.DefaultValues;
-import org.epfl.diffractogram.diffrac.MainPane;
+import org.epfl.diffractogram.gui.MainPane;
 import org.epfl.diffractogram.util.WorldRenderer;
 
 

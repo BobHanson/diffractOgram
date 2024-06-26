@@ -17,7 +17,7 @@ import javax.swing.JPanel;
 import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
 
-import org.epfl.diffractogram.diffrac.DefaultValues;
+import org.epfl.diffractogram.DefaultValues;
 import org.epfl.diffractogram.model3d.Univers;
 
 import org.jmol.j3d.JmolWorldRenderer;

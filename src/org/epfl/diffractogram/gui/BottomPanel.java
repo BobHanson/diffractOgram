@@ -1,4 +1,4 @@
-package org.epfl.diffractogram.bottomPanel;
+package org.epfl.diffractogram.gui;
 
 
 import java.awt.Color;
@@ -18,11 +18,14 @@ import javax.swing.text.NumberFormatter;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
-import org.epfl.diffractogram.diffrac.DefaultValues;
-import org.epfl.diffractogram.diffrac.Help;
-import org.epfl.diffractogram.diffrac.Lattice;
+import org.epfl.diffractogram.DefaultValues;
+import org.epfl.diffractogram.gui.HVPanel.EditField;
+import org.epfl.diffractogram.gui.HVPanel.HPanel;
+import org.epfl.diffractogram.gui.HVPanel.SliderAndValue;
+import org.epfl.diffractogram.gui.HVPanel.VPanel;
 import org.epfl.diffractogram.model3d.Animator;
 import org.epfl.diffractogram.model3d.Model3d;
+import org.epfl.diffractogram.util.Lattice;
 
 public class BottomPanel extends HVPanel.HPanel {
 	

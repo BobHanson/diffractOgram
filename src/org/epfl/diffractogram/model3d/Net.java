@@ -17,12 +17,12 @@ import javax.vecmath.Matrix3d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
-import org.epfl.diffractogram.diffrac.DefaultValues;
-import org.epfl.diffractogram.diffrac.Lattice;
+import org.epfl.diffractogram.DefaultValues;
 import org.epfl.diffractogram.model3d.Model3d.Orientation;
 import org.epfl.diffractogram.model3d.Model3d.Precession;
 import org.epfl.diffractogram.util.Calc;
 import org.epfl.diffractogram.util.ColorConstants;
+import org.epfl.diffractogram.util.Lattice;
 import org.epfl.diffractogram.util.Utils3d;
 
 /**
