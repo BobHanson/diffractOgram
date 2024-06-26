@@ -6,6 +6,7 @@ import java.awt.event.KeyEvent;
 
 import javax.media.j3d.Appearance;
 import javax.media.j3d.BranchGroup;
+import javax.media.j3d.Group;
 import javax.media.j3d.Material;
 import javax.media.j3d.Node;
 import javax.media.j3d.Transform3D;
@@ -18,12 +19,11 @@ import javax.vecmath.Vector3d;
 
 import org.epfl.diffractogram.diffrac.DefaultValues;
 import org.epfl.diffractogram.diffrac.Lattice;
-import org.epfl.diffractogram.transformations.OrientationClass;
-import org.epfl.diffractogram.transformations.OrientationClass.OrientationObject;
-import org.epfl.diffractogram.transformations.PrecessionClass;
-import org.epfl.diffractogram.transformations.PrecessionClass.PrecessionObject;
+import org.epfl.diffractogram.model3d.Model3d.Orientation;
+import org.epfl.diffractogram.model3d.Model3d.Precession;
 import org.epfl.diffractogram.util.Calc;
-import org.epfl.diffractogram.util.WorldRenderer;
+import org.epfl.diffractogram.util.ColorConstants;
+import org.epfl.diffractogram.util.Utils3d;
 
 /**
  * the Net class maintains lattice points in the displayed reciprocal lattice,
@@ -33,8 +33,8 @@ import org.epfl.diffractogram.util.WorldRenderer;
  */
 public class Net extends BranchGroup implements ColorConstants {
 	public GonioHead gonioHead;
-	public OrientationObject orientationObject;
-	public PrecessionObject precessionObject;
+	public TransformGroup orientationObject;
+	public TransformGroup precessionObject;
 	private BranchGroup netLabel;
 	public BranchGroup netRoot;
 	public Point3d[][][] points;
@@ -52,7 +52,7 @@ public class Net extends BranchGroup implements ColorConstants {
 	private DefaultValues defaultValues;
 	private Univers univers;
 
-	public Net(Univers univers, OrientationClass orientationClass, PrecessionClass precessionClass,
+	public Net(Univers univers, Orientation orientation, Precession precession,
 			DefaultValues defaultValues, Vector3d a, Vector3d b, Vector3d c, int x, int y, int z) {
 		this.setName("net");
 		this.univers = univers;
@@ -72,19 +72,17 @@ public class Net extends BranchGroup implements ColorConstants {
 			greenApp.setMaterial(new Material(green, black, green, white, 128));
 		}
 
-		TransformGroup tgOmegaOnly = univers.newTransformGroup(null);
-		tgOmegaOnly.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
-		orientationObject = orientationClass.new OrientationObject(tgOmegaOnly);
+		orientationObject = orientation.addOrientationObject(univers.newWritableTransformGroup(null));
 		orientationObject.setCapability(TransformGroup.ALLOW_CHILDREN_EXTEND);
 		orientationObject.setCapability(TransformGroup.ALLOW_CHILDREN_WRITE);
-
-		precessionObject = precessionClass.new PrecessionObject();
-		precessionObject.addChild(orientationObject);
+//		tgOmegaOnly.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+		precessionObject = precession.addPrecessionObject(univers.newWritableTransformGroup(null));
+		precessionObject.addChild((Node) orientationObject);
 
 		createNet(a, b, c, x, y, z);
 
 		univers.addNotify(this, precessionObject);
-		univers.addNotify(this, gonioHead = new GonioHead(univers, orientationClass));
+		univers.addNotify(this, gonioHead = new GonioHead(univers, orientation));
 
 		KeyboardFocusManager kbfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
 		kbfm.addKeyEventDispatcher(new MyKeyboardManager());
@@ -114,10 +112,10 @@ public class Net extends BranchGroup implements ColorConstants {
 
 	private BranchGroup createAtom(Vector3d v, Appearance app, float dotSize3d) {
 		BranchGroup bg = new BranchGroup();
-		bg.setCapability(BranchGroup.ALLOW_CHILDREN_READ);
+		//bg.setCapability(BranchGroup.ALLOW_CHILDREN_READ);
 		bg.setCapability(BranchGroup.ALLOW_DETACH);
 		TransformGroup tg = Utils3d.getVectorTransformGroup(v.x, v.y, v.z, null);
-		tg.setCapability(TransformGroup.ALLOW_CHILDREN_READ);
+		//tg.setCapability(TransformGroup.ALLOW_CHILDREN_READ);
 		++atomid;
 		Utils3d.setParents(univers.renderer.createSphere("atom:sphere" + atomid, dotSize3d, 10, true, app), tg, bg);
 		bg.setName("atom:" + atomid);
@@ -156,7 +154,7 @@ public class Net extends BranchGroup implements ColorConstants {
 		intensity = new float[2 * xMax + 1][2 * yMax + 1][2 * zMax + 1];
 		isProjected = new boolean[2 * xMax + 1][2 * yMax + 1][2 * zMax + 1];
 		if (netRoot != null)
-			univers.removeNotify(orientationObject, netRoot);
+			univers.removeNotify((Group) orientationObject, netRoot);
 
 		for (int i = 0; i < points.length; i++)
 			for (int j = 0; j < points[i].length; j++)
@@ -196,7 +194,7 @@ public class Net extends BranchGroup implements ColorConstants {
 		createRepere();
 		createTranspBox();
 		netRoot.compile();
-		univers.addNotify(orientationObject, netRoot);
+		univers.addNotify((Group) orientationObject, netRoot);
 	}
 
 	private void createPoint(int i, int j, int k, boolean visible) {
@@ -220,7 +218,7 @@ public class Net extends BranchGroup implements ColorConstants {
 		double h = defaultValues.scale * zMax * c.getZ() + 1;
 		Transform3D t3l = new Transform3D();
 		t3l.rotZ(Math.PI / 2);
-		TransformGroup tgl = univers.newTransformGroup(t3l);
+		TransformGroup tgl = univers.newWritableTransformGroup(t3l);
 		Node txt = univers.creator.createFixedLegend("Reciprocal lattice", new Point3d(0, 0, h + .2), .1f,
 				Utils3d.createApp(blue), true);
 		txt.setName("leg:reclatt");
@@ -284,7 +282,7 @@ public class Net extends BranchGroup implements ColorConstants {
 		matrix.setColumn(2, (Vector3d) Utils3d.mul(c, z));
 		t3d.set(matrix);
 		Node box = univers.renderer.createBox("netbox", 2, 2, 2, app);
-		Utils3d.setParents(box, univers.newTransformGroup(t3d), netRoot);
+		Utils3d.setParents(box, univers.newWritableTransformGroup(t3d), netRoot);
 	}
 
 	/**
@@ -292,22 +290,21 @@ public class Net extends BranchGroup implements ColorConstants {
 	 *
 	 */
 	public static class GonioHead extends BranchGroup {
-		private OrientationObject orientationGonio;
+		private TransformGroup orientationGonio;
+		private TransformGroup orientationGonioRing;
 		private Transform3D t3d;
 		private TransformGroup tg;
 
-		public GonioHead(Univers univers, OrientationClass orientationClass) {
+		public GonioHead(Univers univers, Orientation orientation) {
 			setName("goinohead");
 
-			TransformGroup tgOmegaOnly = univers.newTransformGroup(null);
-			tgOmegaOnly.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
-			orientationGonio = orientationClass.new OrientationObject(tgOmegaOnly);
+			orientationGonio = orientation.addOrientationObject(univers.newWritableTransformGroup(null));
+			orientationGonioRing = orientation.addOrientationOmegaOnly(univers.newWritableTransformGroup(null));
 			t3d = new Transform3D();
-			tg = univers.newTransformGroup(t3d);
-			tg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
-			Utils3d.setParents(orientationGonio, tg, this);
-			Utils3d.setParents(orientationGonio.tgOmegaOnly, tg, this);
-			buildGadjet(univers, orientationGonio);
+			tg = univers.newWritableTransformGroup(t3d);
+			Utils3d.setParents((Node) orientationGonio, tg, this);
+			Utils3d.setParents((Node) orientationGonioRing, tg, this);
+			buildGadjet(univers, orientationGonio, orientationGonioRing);
 		}
 
 		public void setY(double y) {
@@ -315,18 +312,17 @@ public class Net extends BranchGroup implements ColorConstants {
 			tg.setTransform(t3d);
 		}
 
-		private void buildGadjet(Univers univers, OrientationObject gonio) {
+		private void buildGadjet(Univers univers, TransformGroup gonio, TransformGroup gonioRing) {
 			Node ring = univers.renderer.createTorus("ring", .05, .6, 10, 50, Utils3d.createApp(yellow));
 			Node sample = univers.renderer.createBox("stage", 0.2, 0.2, 0.1, Utils3d.createApp(blue));
 			Node pin = univers.creator.createCylinder(univers, "pin", new Point3d(), new Point3d(0, 0, -.4), .02,
 					Utils3d.createApp(orange), 5);
-			Utils3d.setParents(ring, gonio.tgOmegaOnly);
-
+			// omega ring
+			Utils3d.setParents(ring, gonioRing);
 			// sample crystal
-			Utils3d.setParents(sample, Utils3d.getVectorTransformGroup(0, 0, -.4, null), gonio);
-
+			Utils3d.setParents(sample, Utils3d.getVectorTransformGroup(0, 0, -.4, null), (Group) gonio);
 			// sample pin
-			Utils3d.setParents(pin, gonio);
+			Utils3d.setParents(pin, (Group) gonio);
 		}
 	}
 

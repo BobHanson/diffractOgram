@@ -7,6 +7,8 @@
  */
 package org.epfl.diffractogram.model3d;
 
+import java.util.Vector;
+
 import javax.media.j3d.BranchGroup;
 import javax.media.j3d.Transform3D;
 import javax.media.j3d.TransformGroup;
@@ -16,8 +18,9 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
 import org.epfl.diffractogram.diffrac.DefaultValues;
-import org.epfl.diffractogram.transformations.PrecessionClass;
-import org.epfl.diffractogram.util.WorldRenderer;
+import org.epfl.diffractogram.model3d.Model3d.Precession;
+import org.epfl.diffractogram.util.ColorConstants;
+import org.epfl.diffractogram.util.Utils3d;
 
 public class Mask3d extends BranchGroup {
 	private TransformGroup rotTg, transTg, resizeTg, torTransTg, pTg;
@@ -25,28 +28,25 @@ public class Mask3d extends BranchGroup {
 	private double y, r;
 	private Point3d center = new Point3d();
 	private DefaultValues defaultValues;
-	private PrecessionClass precessionClass;
+	private Model3d.Precession precession;
 
-	public Mask3d(Univers univers, PrecessionClass precessionClass, DefaultValues defaultValues, double y, double r, double w,
+	public Mask3d(Univers univers, Model3d.Precession precession, DefaultValues defaultValues, double y, double r, double w,
 			double h) {
 		setName("mask3d");
-		this.precessionClass = precessionClass;
+		this.precession = precession;
 		this.defaultValues = defaultValues;
 		setCapability(BranchGroup.ALLOW_DETACH);
 
 		t3d = new Transform3D();
 
-		rotTg = precessionClass.new PrecessionRotObject();
-		pTg = precessionClass.new PrecessionObject();
-		transTg = univers.newTransformGroup(null);
-		resizeTg = univers.newTransformGroup(null);
+    pTg = precession.addPrecessionObject(univers.newWritableTransformGroup(null));
+		rotTg = precession.addPrecessionRotObject(univers.newWritableTransformGroup(null));
+		transTg = univers.newWritableTransformGroup(null);
+		resizeTg = univers.newWritableTransformGroup(null);
 
-		torTransTg = univers.newTransformGroup(null);
-		transTg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
-		resizeTg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+		torTransTg = univers.newWritableTransformGroup(null);
 		rotTg.setCapability(BranchGroup.ALLOW_CHILDREN_EXTEND);
 		rotTg.setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
-		torTransTg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 
 		Utils3d.setParents(univers.renderer.createCylinder("maskcyl", 0.3, 0.1, false, 50, 5,
 				Utils3d.createApp(new Color3f(.8f, .8f, .8f), .5f)), 
@@ -65,7 +65,7 @@ public class Mask3d extends BranchGroup {
 
 	public Point3d center() {
 		center.set(0, 0, r / defaultValues.maskDistFract);
-		precessionClass.applyRot(center);
+		precession.applyRot(center);
 		center.y += y;
 		return center;
 	}
@@ -87,4 +87,5 @@ public class Mask3d extends BranchGroup {
 		t3d.set(m);
 		resizeTg.setTransform(t3d);
 	}
+	
 }

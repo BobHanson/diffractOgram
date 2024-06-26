@@ -1,6 +1,7 @@
 package org.epfl.diffractogram.util;
 
 import java.awt.AWTEvent;
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Label;
@@ -45,7 +46,6 @@ import javax.vecmath.Vector3f;
 
 import org.epfl.diffractogram.model3d.Univers;
 import org.epfl.diffractogram.model3d.Univers.Selectable;
-import org.epfl.diffractogram.model3d.Utils3d;
 import org.j3d.geom.Torus;
 
 import com.sun.j3d.utils.geometry.Box;
@@ -64,6 +64,8 @@ public class Java3DWorldRenderer extends WorldRenderer {
 	private Background background;
 	private BoundingSphere bounds;
 
+	int test = 0;
+	
 	public Java3DWorldRenderer(JPanel panel3d, Univers univers) {
 		super(panel3d, univers);
 		canvas3D = new Canvas3D(SimpleUniverse.getPreferredConfiguration()) {

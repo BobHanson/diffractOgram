@@ -41,7 +41,7 @@ public class PrecessionClass {
 
 	private Transform3D t3dx, t3dz, t3dy, t3dReverse, t3dRot;
 	private double angleX, angleZ;
-	private Vector<PrecessionObject> v;
+	private Vector<TransformGroup> vpo, vpro;
 	private final static boolean mathOnly = false;
 
 	public PrecessionClass() {
@@ -51,49 +51,22 @@ public class PrecessionClass {
 		t3dReverse = new Transform3D();
 		t3dy = new Transform3D();
 		t3dRot = new Transform3D();
-		v = new Vector<PrecessionObject>(10, 10);
+		vpo = new Vector<>(10, 10);
+		vpro = new Vector<>(10, 10);
 	}
 
-	public class PrecessionObject extends TransformGroup {
-		public PrecessionObject() {
-			setName("precessionobject");
-			setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
-			v.add(this);
-		}
-
-		public void update() {
-			super.setTransform(t3d);
-		}
+	public TransformGroup addPrecessionObject(TransformGroup o) {
+		o.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+		vpo.add(o);
+		return o;
 	}
 
-	public class PrecessionRotObject extends PrecessionObject {
-		public PrecessionRotObject() {
-			setName("precessionrotobject");
-		}
-
-		public void update() {
-			super.setTransform(t3dRot);
-		}
+	public TransformGroup addPrecessionRotObject(TransformGroup o) {
+		vpro.add(o);
+		return o;
 	}
 
-	public void setAngle(double mu) {
-		this.mu = Math.PI * mu / 180;
-		calculateTransform();
-		if (!mathOnly)
-			for (int i = 0; i < v.size(); i++) {
-				((PrecessionObject) v.get(i)).update();
-			}
-	}
-
-	public void setRotation(double alpha) {
-		this.alpha = Math.PI * alpha / 180;
-		calculateTransform();
-		if (!mathOnly)
-			for (int i = 0; i < v.size(); i++)
-				((PrecessionObject) v.get(i)).update();
-	}
-
-	private void calculateTransform() {
+	private void updateObjects() {
 		angleX = mu * Math.cos(alpha);
 		angleZ = mu * Math.sin(alpha);
 		t3dx.rotX(angleX);
@@ -104,6 +77,24 @@ public class PrecessionClass {
 		t3dz.rotZ(-angleZ);
 		t3dReverse.mul(t3dx, t3dz);
 		t3dRot.mul(t3d, t3dy);
+		if (!mathOnly) {
+			for (int i = 0; i < vpo.size(); i++) {
+					vpo.get(i).setTransform(t3d);
+			}
+			for (int i = 0; i < vpro.size(); i++) {
+				vpro.get(i).setTransform(t3dRot);
+			}
+		}
+	}
+
+	public void setAngle(double mu) {
+		this.mu = Math.PI * mu / 180;
+		updateObjects();
+	}
+
+	public void setRotation(double alpha) {
+		this.alpha = Math.PI * alpha / 180;
+		updateObjects();
 	}
 
 	public void apply(Point3d p) {
@@ -141,4 +132,5 @@ public class PrecessionClass {
 			t3dRot.transform(v);
 		}
 	}
+
 }

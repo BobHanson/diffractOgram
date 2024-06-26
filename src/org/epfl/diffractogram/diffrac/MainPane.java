@@ -63,10 +63,19 @@ public class MainPane extends HVPanel.VPanel {
 		}
 	}
 	
+	/**
+	 * Added by Bob Hanson 2024.06.25 to return to the previous setting.
+	 */
+	private int[] splitPaneLoc = new int[] {-1, -1};
+	
 	private void changeSplitPane(int orientation, double weight) {
+		splitPaneLoc[1 - orientation] = splitPane.getDividerLocation();
 		splitPane.setOrientation(orientation);
 		splitPane.setResizeWeight(weight);
 		splitPane.resetToPreferredSizes();
+		if (splitPaneLoc[orientation] > 0) {
+			splitPane.setDividerLocation(splitPaneLoc[orientation] );
+		}
 		projected.setImageDefaultOrigin(orientation==JSplitPane.VERTICAL_SPLIT);
 		projected.repaint();
 	}

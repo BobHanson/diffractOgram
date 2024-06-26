@@ -6,8 +6,6 @@ import java.awt.geom.Point2D.Double;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
-import org.epfl.diffractogram.model3d.Utils3d;
-
 public class Calc {
 
 	public static synchronized float calcIntensity(Vector3d a, Vector3d b, Vector3d c, int h, int k, int l) {

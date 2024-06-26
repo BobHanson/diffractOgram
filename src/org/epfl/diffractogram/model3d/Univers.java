@@ -17,7 +17,7 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
-import org.epfl.diffractogram.util.Java3DWorldRenderer;
+import org.epfl.diffractogram.util.Utils3d;
 import org.epfl.diffractogram.util.WorldRenderer;
 
 /**
@@ -59,7 +59,7 @@ import org.epfl.diffractogram.util.WorldRenderer;
  *</pre>  
  */
 public abstract class Univers {
-	WorldRenderer renderer;
+	public WorldRenderer renderer;
 	private TransformGroup tgReset;
 	private TransformGroup tgTop;
 	private BranchGroup root;
@@ -95,8 +95,10 @@ public abstract class Univers {
 	
 	abstract protected WorldRenderer getRenderer(JPanel panel3d);
 
-	public TransformGroup newTransformGroup(Transform3D t3d) {
-		return renderer.newTransformGroup(t3d);
+	public TransformGroup newWritableTransformGroup(Transform3D t3d) {
+		TransformGroup g = renderer.newTransformGroup(t3d);
+		g.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+		return g;
 	}
 
 	public boolean isParallel() {
@@ -107,6 +109,7 @@ public abstract class Univers {
 		renderer.setParallel(b);
 	}
 
+	
 	/**
 	 * Apply the view transform
 	 * @param t3d
@@ -207,20 +210,26 @@ public abstract class Univers {
 			Vector3f center = new Vector3f();
 			Vector3f unit = new Vector3f();
 			float height = Utils3d.calculateHeight(b, a, center, unit);
-			TransformGroup tg = univers.newTransformGroup(null);
-			tg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+			TransformGroup tg = univers.newWritableTransformGroup(null);
 			tg.setCapability(TransformGroup.ALLOW_CHILDREN_READ);
 			Utils3d.createMatrix(tg, center, unit);
 			Transform3D th = new Transform3D();
 			th.set(new Matrix3d(1, 0, 0, 0, height, 0, 0, 0, 1));
-			TransformGroup tgh = univers.newTransformGroup(th);
-			tgh.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+			TransformGroup tgh = univers.newWritableTransformGroup(th);
 			tgh.setCapability(TransformGroup.ALLOW_CHILDREN_READ);
 			Utils3d.setParents(renderer.createCylinder(name + ":cyl", radius, 1, false, precision, 1, cylApp), tgh, tg, cylBg);
 			cylBg.setName(name);
 			return cylBg;
 		}
 
+		/**
+		 * from Rays
+		 * 
+		 * @param p
+		 * @param color
+		 * @param r
+		 * @return
+		 */
 		public BranchGroup createAtom(Point3d p, Color3f color, double r) {
 			return createAtom(p, Utils3d.createApp(color), r, 20);
 		}

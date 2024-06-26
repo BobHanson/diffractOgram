@@ -13,6 +13,11 @@ import javax.vecmath.Point3d;
 
 import org.epfl.diffractogram.util.WorldRenderer;
 import org.jmol.j3d.JmolWorldRenderer;
+import org.jmol.modelset.Atom;
+import org.jmol.shape.Mesh;
+import org.jmol.shape.Shape;
+import org.jmol.shapespecial.Draw;
+import org.jmol.viewer.JC;
 
 import javajs.util.P3d;
 
@@ -32,6 +37,22 @@ public abstract class JmolShape3D extends Shape3D {
 
 	int type;
 
+	final static Point3d ptemp = new Point3d();
+	
+	public JmolWorldRenderer renderer;
+
+	private String drawID;
+	
+	public Atom atom;
+	
+	public Mesh shape;
+
+	public abstract String renderScript(JmolWorldRenderer renderer);
+
+	protected final static Transform3D t3d = new Transform3D();
+	protected final static Transform3D t = new Transform3D();
+
+	
 	JmolShape3D(String name, Appearance app, int type) {
 		this.type = type;
 		setCapability(ALLOW_APPEARANCE_WRITE);
@@ -41,13 +62,10 @@ public abstract class JmolShape3D extends Shape3D {
 
 	public void setAppearance(Appearance app) {
 		super.setAppearance(app);
-		// TODO this is the catch for appearance changes
+		if (renderer != null)
+			renderer.renderNode(this);
+		//System.out.println("JS.setApp " + getName() + " " + app);
 	}
-
-	public abstract String renderScript(JmolWorldRenderer renderer);
-
-	protected final static Transform3D t3d = new Transform3D();
-	protected final static Transform3D t = new Transform3D();
 
 	public Transform3D getTransform(JmolWorldRenderer renderer, Transform3D ret) {
 		if (ret == null)
@@ -68,9 +86,8 @@ public abstract class JmolShape3D extends Shape3D {
 		return null;
 	}
 
-	final static Point3d ptemp = new Point3d();
-
 	public boolean getJmolVertices(JmolWorldRenderer renderer) {
+		this.renderer = renderer;
 		return transformVertices(getTransform(renderer, null));
 	}
 
@@ -121,7 +138,13 @@ public abstract class JmolShape3D extends Shape3D {
 	}
 
 	public String getDrawId() {
-		return "draw id '" + getName().replace('*', '_').replace('\'','_') + "'";
+		if (drawID == null) {
+			drawID = getName().replace('*', '_').replace('\'','_');
+		} else if (shape == null) {
+			Draw d = (Draw) renderer.viewer.shm.getShape(JC.SHAPE_DRAW);
+			shape = d.getMesh(drawID);
+		}
+		return "draw id '" + drawID + "'";
 	}
 
 	//

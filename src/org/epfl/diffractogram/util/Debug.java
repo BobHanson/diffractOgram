@@ -5,7 +5,7 @@
  * 
  * nicolas.schoeni@epfl.ch
  */
-package org.epfl.diffractogram.model3d;
+package org.epfl.diffractogram.util;
 
 public class Debug {
 	//public static BranchGroup root, MpMo;

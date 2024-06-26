@@ -1029,4 +1029,8 @@ public class Appearance extends NodeComponent {
 	return false;
     }
 
+    public String toString() {
+    	TransparencyAttributes ta = getTransparencyAttributes();
+    	return (ta == null ? "" : ta.getTransparency()) + " " + this.getMaterial();
+    }
 }

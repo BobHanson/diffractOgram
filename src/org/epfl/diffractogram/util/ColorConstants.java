@@ -1,4 +1,4 @@
-package org.epfl.diffractogram.model3d;
+package org.epfl.diffractogram.util;
 
 import javax.vecmath.Color3f;
 

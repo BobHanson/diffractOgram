@@ -8,6 +8,8 @@ import org.jmol.j3d.JmolWorldRenderer;
 public class JmolSphere extends JmolShape3D {
 
 	private double radius;
+	private int atomIndex;
+	
 
 	public JmolSphere(String name, double radius, int divs, boolean isAtom, Appearance app) {
 		super(name, app, isAtom ? JMOL_SHAPE_ATOM : JMOL_SHAPE_SPHERE);
@@ -23,6 +25,8 @@ public class JmolSphere extends JmolShape3D {
 			return "";
 		pt.sub2(jmolVertices[0], jmolVertices[1]);
 		double r = pt.length();
+		
+		
 		String s = getDrawId() 
 				+ " width " + r*2 + " " + jmolVertices[0] 
 				+ getJmolDrawApp(true);

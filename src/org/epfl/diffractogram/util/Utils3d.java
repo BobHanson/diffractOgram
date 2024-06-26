@@ -1,9 +1,6 @@
-package org.epfl.diffractogram.model3d;
+package org.epfl.diffractogram.util;
 
-import java.awt.Font;
-import java.awt.Label;
 import java.awt.Point;
-import java.awt.event.KeyEvent;
 
 import javax.media.j3d.Appearance;
 import javax.media.j3d.Behavior;
@@ -28,13 +25,11 @@ import javax.vecmath.TexCoord2f;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
-import org.epfl.diffractogram.util.WorldRenderer;
-
 public class Utils3d {
 
 	public static void changeCylinder(BranchGroup cyl, Point3d b, Point3d a) {
-		TransformGroup tg = getTransformGroup(cyl);
-		TransformGroup tgh = getTransformGroup(tg);
+		TransformGroup tg = findTransformGroup(cyl);
+		TransformGroup tgh = findTransformGroup(tg);
 		Vector3f center = new Vector3f();
 		Vector3f unit = new Vector3f();
 		double height = calculateHeight(b, a, center, unit);
@@ -48,7 +43,7 @@ public class Utils3d {
 		getShapeChild(cyl).setAppearance(app);
 	}
 
-	public static TransformGroup getTransformGroup(Group g) {
+	public static TransformGroup findTransformGroup(Group g) {
 		for (int i = 0;i < 2; i++) {
 			Node n = g.getChild(i);
 			if (n instanceof TransformGroup)
@@ -124,7 +119,6 @@ public class Utils3d {
 		return app;
 	}
 
-	private static Color3f tc = new Color3f();
 	public static Appearance createApp(Material mat, float transp) {
 		Appearance app = new Appearance();
 		app.setMaterial(mat);

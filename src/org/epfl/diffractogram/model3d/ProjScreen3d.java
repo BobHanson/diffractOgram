@@ -4,29 +4,26 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 
-import org.epfl.diffractogram.transformations.PrecessionClass;
-import org.epfl.diffractogram.util.Calc;
-import org.epfl.diffractogram.util.WorldRenderer;
-
 import javax.media.j3d.Appearance;
 import javax.media.j3d.BranchGroup;
-import javax.vecmath.Color3f;
 import javax.media.j3d.ImageComponent2D;
 import javax.media.j3d.Material;
 import javax.media.j3d.Node;
-import javax.vecmath.Matrix3d;
-import javax.vecmath.Point3d;
 import javax.media.j3d.PolygonAttributes;
 import javax.media.j3d.QuadArray;
-import javax.media.j3d.Shape3D;
-import javax.vecmath.TexCoord2f;
 import javax.media.j3d.Texture;
 import javax.media.j3d.Texture2D;
 import javax.media.j3d.Transform3D;
 import javax.media.j3d.TransformGroup;
 import javax.media.j3d.TransparencyAttributes;
+import javax.vecmath.Color3f;
+import javax.vecmath.Matrix3d;
+import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
-import javax.vecmath.Vector3f;
+
+import org.epfl.diffractogram.util.Calc;
+import org.epfl.diffractogram.util.ColorConstants;
+import org.epfl.diffractogram.util.Utils3d;
 
 public abstract class ProjScreen3d extends BranchGroup implements ColorConstants {
 	protected Texture2D texture;
@@ -39,18 +36,16 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 	public Vector3d OyO;
     protected Univers univers;
 
-	public ProjScreen3d(Univers univers, PrecessionClass precessionClass, String name) {
+	public ProjScreen3d(Univers univers, Model3d.Precession precessionClass, String name) {
 		setName(name);
 		this.univers = univers;
 		setCapability(BranchGroup.ALLOW_DETACH);
 		setCapability(BranchGroup.ALLOW_CHILDREN_EXTEND);
 		setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
 
-		rotTg = precessionClass.new PrecessionObject();
-		transTg = univers.newTransformGroup(null);
-		resizeTg = univers.newTransformGroup(null);
-		transTg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
-		resizeTg.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+		rotTg = precessionClass.addPrecessionObject(univers.newWritableTransformGroup(null));
+		transTg = univers.newWritableTransformGroup(null);
+		resizeTg = univers.newWritableTransformGroup(null);
 		rotTg.setCapability(BranchGroup.ALLOW_CHILDREN_EXTEND);
 		rotTg.setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
 
@@ -94,14 +89,14 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 	static public class Cylindric extends ProjScreen3d {
 		private BranchGroup cadre, baseRayCyl;
 
-		public Cylindric(Univers univers, PrecessionClass precessionClass) {
-			super(univers, precessionClass, "screen.cyl");
+		public Cylindric(Univers univers, Model3d.Precession precession) {
+			super(univers, precession, "screen.cyl");
 			Node c = univers.renderer.createCylinder("screeen:cyl", 1.0, 0.5, true, 100, 1, app);
 			Transform3D t = new Transform3D();
 			t.rotX(Math.PI / 2);
-			TransformGroup tg = univers.newTransformGroup(t);
+			TransformGroup tg = univers.newWritableTransformGroup(t);
 			t.rotX(Math.PI);
-			TransformGroup tginv = univers.newTransformGroup(t);
+			TransformGroup tginv = univers.newWritableTransformGroup(t);
 			tg.addChild(c);
 			tginv.addChild(tg);
 			lastTg.addChild(tginv);
@@ -118,7 +113,7 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 			TransformGroup tgtor1 = Utils3d.getVectorTransformGroup(0, h / 4, 0, t);
 			TransformGroup tgtor2 = Utils3d.getVectorTransformGroup(0, -h / 4, 0, t);
 			t.rotX(Math.PI / 2);
-			TransformGroup tgtor3 = univers.newTransformGroup(t);
+			TransformGroup tgtor3 = univers.newWritableTransformGroup(t);
 			++cadreid;
 			Node t1 = univers.renderer.createTorus("frame:cyl1_" + cadreid ,.03, y, 10, 50, Utils3d.createApp(black));
 			Node t2 = univers.renderer.createTorus("frame:cyl2_" + cadreid,.03, y, 10, 50, Utils3d.createApp(black));
@@ -213,16 +208,15 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 		private TransformGroup tgLabel;
 		private Transform3D t3dLabel;
 
-		public Flat(Univers univers, PrecessionClass precessionClass) {
-			super(univers, precessionClass, "screen.flat");
+		public Flat(Univers univers, Model3d.Precession precession) {
+			super(univers, precession, "screen.flat");
 			lastTg.addChild(univers.renderer.createQuad("screen:flat", Utils3d.createQuad(), app));
 		}
 
 		private void createLabel(double w, double h) {
 			if (tgLabel == null) {
 				t3dLabel = new Transform3D();
-				tgLabel = univers.newTransformGroup(null);
-				tgLabel.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+				tgLabel = univers.newWritableTransformGroup(null);
 				Appearance appLabel = new Appearance();
 				appLabel.setMaterial(new Material(black, black, black, white, 128));
 				Node l = univers.creator.createFixedLegend("Diffraction screen", new Point3d(0, y, 0), .2f, appLabel, true);

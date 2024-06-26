@@ -15,11 +15,9 @@ import javax.swing.JToggleButton;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.DefaultFormatter;
 import javax.swing.text.NumberFormatter;
-
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
-import org.epfl.diffractogram.bottomPanel.HVPanel.SliderAndValue;
 import org.epfl.diffractogram.diffrac.DefaultValues;
 import org.epfl.diffractogram.diffrac.Help;
 import org.epfl.diffractogram.diffrac.Lattice;
@@ -383,8 +381,8 @@ public class BottomPanel extends HVPanel.HPanel {
 			}
 			else if (e.getActionCommand().equals(" Angle")) {
 				double mu = angle.getFloatValue();
-				model3d.precessionClass.setAngle(mu);
-				model3d.mask3d.setR(Math.sin(model3d.precessionClass.mu)*(model3d.p3d.y*defaultValues.maskDistFract));
+				model3d.precession.setAngle(mu);
+				model3d.mask3d.setR(Math.sin(model3d.precession.mu)*(model3d.p3d.y*defaultValues.maskDistFract));
 				model3d.doRays(false);
 			}
 			else if (e.getActionCommand().equals("Mask")) {
@@ -452,8 +450,8 @@ public class BottomPanel extends HVPanel.HPanel {
 				w.setValue(new Double(model3d.p3d.w));
 
 				model3d.univers.scale(2);
-				model3d.precessionClass.setAngle(animPane.angle.getFloatValue());
-				model3d.precessionClass.setRotation(paramPane.precess.getValue());
+				model3d.precession.setAngle(animPane.angle.getFloatValue());
+				model3d.precession.setRotation(paramPane.precess.getValue());
 				paramPane.precess.setEnabled(true);
 				animPane.angle.setEnable(true);
 				animPane.precession.setEnabled(true);
@@ -471,8 +469,8 @@ public class BottomPanel extends HVPanel.HPanel {
 				w.edit.setText("");
 
 				model3d.univers.scale(.5);
-				model3d.precessionClass.setAngle(0);
-				model3d.precessionClass.setRotation(0);
+				model3d.precession.setAngle(0);
+				model3d.precession.setRotation(0);
 				paramPane.precess.setEnabled(false);
 				animPane.angle.setEnable(false);
 				animPane.precession.setEnabled(false);

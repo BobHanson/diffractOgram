@@ -15,6 +15,9 @@ import javax.media.j3d.Node;
 import javax.media.j3d.TransparencyAttributes;
 import javax.vecmath.Point3d;
 
+import org.epfl.diffractogram.util.ColorConstants;
+import org.epfl.diffractogram.util.Utils3d;
+
 
 public class Rays extends BranchGroup {
 	private Vector<BranchGroup> raysAnt, raysUsed;
@@ -57,9 +60,11 @@ public class Rays extends BranchGroup {
 	
 	private static int rayid;
 	
-	private BranchGroup ray(Point3d a, Point3d b, Appearance app) {
+	private BranchGroup createRay(Point3d a, Point3d b, Appearance app) {
 		BranchGroup r;
 		if (raysAnt.size() == 0) {
+			System.out.println("Rays-createRay " + raysUsed.size());
+			
 			r = univers.creator.createCylinder(univers, "ray:" + ++rayid, a, b, .02, app, 4);
 			univers.addNotify(this, r);
 		} else {
@@ -73,9 +78,9 @@ public class Rays extends BranchGroup {
 	
 	static int impactid;
 	
-	public void addRay(Point3d cSphere, Point3d pNet, Point3d pProj) {
-		ray(cSphere, pNet, raysAppRed);
-		ray(o, pProj, raysAppWhite);
+	public void addImpactRay(Point3d cSphere, Point3d pNet, Point3d pProj) {
+		createRay(cSphere, pNet, raysAppRed);
+		createRay(o, pProj, raysAppWhite);
 		Node i = univers.creator.createAtom(pProj, ColorConstants.black, .03f);
 		i.setName("impact:" + ++impactid);
 		univers.addNotify(impacts, i);

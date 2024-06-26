@@ -21,6 +21,8 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
 import org.epfl.diffractogram.diffrac.DefaultValues;
+import org.epfl.diffractogram.util.ColorConstants;
+import org.epfl.diffractogram.util.Utils3d;
 import org.epfl.diffractogram.util.WorldRenderer;
 
 public class VirtualSphere extends BranchGroup implements ColorConstants {
@@ -35,8 +37,7 @@ public class VirtualSphere extends BranchGroup implements ColorConstants {
 		setName("virtualsphere");
 		this.defaultValues = defaultValues;
 		center = new Point3d();
-		sPositioned = univers.newTransformGroup(null);
-		sPositioned.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+		sPositioned = univers.newWritableTransformGroup(null);
 
 		setLambda(lambda);
 		createSphere("vsphere");
@@ -101,7 +102,7 @@ public class VirtualSphere extends BranchGroup implements ColorConstants {
 		Node l = univers.creator.createNamedVector("1/" + DefaultValues.strLambda, new Point3d(0, 0, 0), new Point3d(-.98, 0, 0),
 				new Point3d(-.5, 0, .02), .2f, magenta, magenta);
 		l.setName("vector:lambda");
-		Utils3d.setParents(l, univers.newTransformGroup(t3v1), sPositioned, this);
+		Utils3d.setParents(l, univers.newWritableTransformGroup(t3v1), sPositioned, this);
 	}
 
 	private void createRepere() {
@@ -110,7 +111,7 @@ public class VirtualSphere extends BranchGroup implements ColorConstants {
 		Node r = univers.creator.createRepere(cyan, green, green, new String[] { "x", "y", "z" }, .15f, .03f, 0, 0,
 				new Vector3d(1, 0, 0), new Vector3d(0, 1, 0), new Vector3d(0, 0, 1));
 		r.setName("repere:xyz");
-		Utils3d.setParents(r, univers.newTransformGroup(t3dRepere), sPositioned, this);
+		Utils3d.setParents(r, univers.newWritableTransformGroup(t3dRepere), sPositioned, this);
 	}
 
 	public double lambdaToRadius(double l) {

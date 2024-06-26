@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 import javax.media.j3d.Appearance;
@@ -15,12 +16,13 @@ import javax.media.j3d.Shape3D;
 import javax.media.j3d.Transform3D;
 import javax.media.j3d.TransformGroup;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
 import org.epfl.diffractogram.model3d.Univers;
-import org.epfl.diffractogram.model3d.Utils3d;
+import org.epfl.diffractogram.util.Utils3d;
 import org.epfl.diffractogram.util.WorldRenderer;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.api.JmolViewer;
@@ -32,6 +34,7 @@ import org.jmol.j3d.geometry.JmolShape3D;
 import org.jmol.j3d.geometry.JmolSphere;
 import org.jmol.j3d.geometry.JmolText;
 import org.jmol.j3d.geometry.JmolTorus;
+import org.jmol.viewer.Viewer;
 
 /**
  * A class to leverage Jmol's g3d engine and perspective model. 
@@ -45,13 +48,15 @@ import org.jmol.j3d.geometry.JmolTorus;
  */
 public class JmolWorldRenderer extends WorldRenderer {
 
+	public Viewer viewer;
+
 	@SuppressWarnings("serial")
 	class JmolPanel extends JPanel {
 
 		private final Dimension currentSize = new Dimension();
 
 		JmolPanel() {
-			viewer = JmolViewer.allocateViewer(this, new SmarterJmolAdapter(), null, null, null, null, null);
+			viewer = (Viewer) JmolViewer.allocateViewer(this, new SmarterJmolAdapter(), null, null, null, null, null);
 		}
 
 		@Override
@@ -61,7 +66,6 @@ public class JmolWorldRenderer extends WorldRenderer {
 		}
 	}
 
-	JmolViewer viewer;
 
 	public JmolWorldRenderer(JPanel panel3d, Univers univers) {
 		super(panel3d, univers);
@@ -98,6 +102,10 @@ public class JmolWorldRenderer extends WorldRenderer {
 
 	private Node addObject(Node n) {
 		allObjects.add(n);
+		if (completed)
+			SwingUtilities.invokeLater(()->{
+				renderNode((JmolShape3D)n);				
+			});
 		return n;
 	}
 
@@ -149,7 +157,8 @@ public class JmolWorldRenderer extends WorldRenderer {
 
 	@Override
 	public void notifyRemove(Group parent, Node child) {
-		System.out.println("removed " + child.getName() + " from " + parent.getName());
+		//System.out.println("removed " + child.getName() + " from " + parent.getName());
+		
 		switch(parent.getName()) {
 		case "root":
 			this.mapRoot.remove(child.getName());
@@ -157,6 +166,17 @@ public class JmolWorldRenderer extends WorldRenderer {
 		}
 		if (!completed)
 			return;
+		setShapeVisibility(child, false);
+	}
+
+	private void setShapeVisibility(Node child, boolean b) {
+		JmolShape3D n = (JmolShape3D) (child instanceof Group ? Utils3d.getShapeChild((Group) child) : child);
+		if (n == null)
+			return;
+		n.getDrawId();
+		if (n.shape == null)
+			return;
+		n.shape.visible = b;
 	}
 
 	@Override
@@ -167,6 +187,9 @@ public class JmolWorldRenderer extends WorldRenderer {
 			this.mapRoot.put(child.getName(), child);
 			break;
 		}
+		if (!completed)
+			return;
+		setShapeVisibility(child, true);
 	}
 
 	@Override
@@ -180,7 +203,7 @@ public class JmolWorldRenderer extends WorldRenderer {
 		return (t3d == null ? new JmolTransformGroup() : new JmolTransformGroup(t3d));
 	}
 
-	public static class JmolTransformGroup extends TransformGroup {
+	public class JmolTransformGroup extends TransformGroup {
 
 		public JmolTransformGroup() {
 			super();
@@ -201,31 +224,44 @@ public class JmolWorldRenderer extends WorldRenderer {
 				super.setTransform(t3d);
 			if (tlast == null) {
 				tlast = new Transform3D();
-			} else {
-				Shape3D n = null;
-				try {
-					n = Utils3d.getShapeChild(this);
-//					System.out.println("TG " + (n != null ? n.getName() : getName()) + " " + t3d);
-				} catch (Exception e) {
-
-				}
+			} else if (completed) {
+				renderAllChilden(this);
 			}
 			tlast.set(t3d);
+		}
+
+		private void renderAllChilden(Group g) {
+			Enumeration<Node> e = g.getAllChildren();
+			while (e.hasMoreElements()) {
+				Node n = e.nextElement();
+				if (n instanceof JmolShape3D) {
+					renderNode((JmolShape3D) n);
+				} else if (n instanceof Group){
+					renderAllChilden((Group) n);
+				}
+			}
 		}
 	}
 
 	public void complete() {
-		String s = "background white;";
+		completed = true;
+		String s = "background white;set history 0;set preservestate false;";
 		for (int i = 0, n = allObjects.size(); i < n; i++) {
 			Node node = allObjects.get(i);
 			if (node instanceof JmolShape3D) {
 				s += ((JmolShape3D) node).renderScript(this);
 			}
 		}
-		viewer.script(s);
-
-		
-		
+		viewer.scriptWait(s);
 	}
+	
+    public void renderNode(JmolShape3D n) {
+		String s = n.renderScript(this);
+		//System.out.println(n + " "  + s);
+		if (s.length() > 0)
+			viewer.scriptWait(s);
+	}
+
+
 
 }
