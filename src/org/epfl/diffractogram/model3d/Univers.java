@@ -50,11 +50,13 @@ import org.epfl.diffractogram.util.Utils3d;
  *                tg TransformGroup
  *                 \
  *                  root BranchGroup
- *                   \  \
- *                    \  UniversBehavior (mouse event processing)
- *                     \
- *                      Model3d shapes          
- *
+ *                 / \  \
+ *                /   \  Java3DWorldRenderer.UniversBehavior (mouse event processing)
+ *               /     \
+ * JmolTransformGroup   TransformGroup3D
+ *             /         \
+ *      JmolShape3D       Shape3D          
+ *                        
  *</pre>  
  */
 public abstract class Univers {
