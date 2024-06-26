@@ -37,8 +37,8 @@ public abstract class WorldRenderer {
 	public static boolean isJmol;
 	
 	protected Map<String, Node> mapRoot = new HashMap<>();
-	public BranchGroup root;
-	public Transform3D topTransform;
+	protected BranchGroup root;
+	protected Transform3D topTransform;
 
 	public WorldRenderer(JPanel panel3d, Univers univers) {
 		this.panel3d = panel3d;
@@ -114,11 +114,11 @@ public abstract class WorldRenderer {
 
 	public abstract TransformGroup newTransformGroup(Transform3D t3d);
 
-	public BranchGroup getRootBranchGroup() {
+	public BranchGroup createRootBranchGroup() {
 		return root = new BranchGroup();
 	}
 
-	public void setTopTransform(TransformGroup tgTop) {
+	public void getTopTransform(TransformGroup tgTop) {
 		Transform3D t = new Transform3D();
 		tgTop.getTransform(t);
 		topTransform = t;

@@ -28,6 +28,8 @@ public class MainPane extends HVPanel.VPanel {
 	private DefaultValues defaultValues;
 	
 	public MainPane(DefaultValues defaultValues) {
+		
+		try {
 		this.defaultValues = defaultValues;
 		projected = new ProjScreen();
 		projected.setMinimumSize(new Dimension(0, 0));
@@ -52,6 +54,11 @@ public class MainPane extends HVPanel.VPanel {
 		addSubPane(bottomPanel);
 		
 		model3d.complete();
+		
+		
+		} catch (Throwable t) {
+			t.printStackTrace();
+		}
 	}
 	public void actionPerformed(ActionEvent e) {
 		if (e.getActionCommand().equals("horizontal")) {

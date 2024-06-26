@@ -2,10 +2,8 @@ package org.jmol.j3d.geometry;
 
 import javax.media.j3d.Appearance;
 import javax.media.j3d.Material;
-import javax.media.j3d.Node;
 import javax.media.j3d.Shape3D;
 import javax.media.j3d.Transform3D;
-import javax.media.j3d.TransformGroup;
 import javax.media.j3d.TransparencyAttributes;
 import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
@@ -47,7 +45,6 @@ public abstract class JmolShape3D extends Shape3D {
 
 	public abstract String renderScript(WorldRendererI renderer);
 
-	protected final static Transform3D t3d = new Transform3D();
 	protected final static Transform3D t = new Transform3D();
 
 	
@@ -65,33 +62,12 @@ public abstract class JmolShape3D extends Shape3D {
 		//System.out.println("JS.setApp " + getName() + " " + app);
 	}
 
-	public Transform3D getTransform(WorldRendererI renderer, Transform3D ret) {
-		if (ret == null)
-			ret = t3d;
-		ret.setIdentity();
-		Node n = this;
-		Transform3D t = renderer.getTopTransform();
-		while ((n = n.getParent()) != null) {
-			if (n == renderer.getRoot()) {
-				ret.mul(t, ret);
-				return ret;
-			}
-			if (n instanceof TransformGroup) {
-				TransformGroup tg = (TransformGroup) n;
-				tg.getTransform(t);
-				ret.mul(t, ret);
-			}
-		}
-		return null;
-	}
-
 	public boolean getJmolVertices(WorldRendererI renderer) {
+		if (vertices == null)
+			return false;
 		this.renderer = renderer;
-		return transformVertices(getTransform(renderer, null));
-	}
-
-	public boolean transformVertices(Transform3D t) {
-		if (vertices == null || t == null)
+		Transform3D t = renderer.getTransform(this);
+		if (t == null)
 			return false;
 		if (jmolVertices == null)
 			jmolVertices = new P3d[vertices.length];

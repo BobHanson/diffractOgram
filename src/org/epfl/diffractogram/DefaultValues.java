@@ -6,7 +6,7 @@ import org.epfl.diffractogram.util.Lattice;
 
 public class DefaultValues {
 
-	public static /* not final */ boolean javaJmol = false;
+	public static /* not final */ boolean javaJmol = true;//false;
 	public static boolean useJmol = /** @j2sNative true || */javaJmol;
 
 	static {

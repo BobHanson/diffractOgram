@@ -182,6 +182,8 @@ public class JmolWorldRenderer extends WorldRenderer implements WorldRendererI {
 
 	@Override
 	public void notifyAdd(Group parent, Node child) {
+		if (parent.getName() == null)
+			System.out.println("???");
 		switch(parent.getName()) {
 		case "root":
 			System.out.println("added " + child.getName() + " to " + parent.getName());
@@ -253,6 +255,7 @@ public class JmolWorldRenderer extends WorldRenderer implements WorldRendererI {
 				s += ((JmolShape3D) node).renderScript(this);
 			}
 		}
+	//	System.out.println(s);
 		viewer.scriptWait(s);
 	}
 	
@@ -264,18 +267,30 @@ public class JmolWorldRenderer extends WorldRenderer implements WorldRendererI {
 	}
 
 	@Override
-	public Node getRoot() {
-		return root;
-	}
-
-	@Override
-	public Transform3D getTopTransform() {
-		return topTransform;
-	}
-
-	@Override
 	public Object getViewer() {
 		return viewer;
+	}
+
+	private final static Transform3D t = new Transform3D();
+
+	@Override
+	public Transform3D getTransform(JmolShape3D shape) {
+		Transform3D ret = t;
+		ret.setIdentity();
+		Node n = shape;
+		Transform3D t = new Transform3D();// renderer.getTopTransform();
+		while ((n = n.getParent()) != null) {
+			if (n == root) {
+				ret.mul(topTransform, ret);
+				return ret;
+			}
+			if (n instanceof TransformGroup) {
+				TransformGroup tg = (TransformGroup) n;
+				tg.getTransform(t);
+				ret.mul(t, ret);
+			}
+		}
+		return null;
 	}
 
 

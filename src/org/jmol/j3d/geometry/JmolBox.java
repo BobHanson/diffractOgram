@@ -34,7 +34,7 @@ public class JmolBox extends JmolShape3D {
 		String c = pt.toString();
 		String s = getDrawId() + " unitcell [ " + jmolVertices[0] + a + b + c + " ]" + getJmolDrawApp(false)
 				+ " fill nomesh\n";
-		System.out.println(s);
+//		System.out.println(s);
 		return s;
 	}
 

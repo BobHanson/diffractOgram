@@ -4,6 +4,7 @@ import javax.vecmath.Color3f;
 
 public interface ColorConstants {
 	static final Color3f black = new Color3f(0f, 0f, 0f);
+	static final Color3f gray = new Color3f(0.7f, 0.7f, 0.7f);
 	static final Color3f white = new Color3f(1f, 1f, 1f);
 	static final Color3f blue = new Color3f(0f, 0f, 1f);
 	static final Color3f red = new Color3f(1f, 0f, 0f);

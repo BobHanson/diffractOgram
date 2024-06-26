@@ -73,10 +73,12 @@ public class Net extends BranchGroup implements ColorConstants {
 		}
 
 		orientationObject = orientation.addOrientationObject(univers.newWritableTransformGroup(null));
+		orientationObject.setName("orientation");
 		orientationObject.setCapability(TransformGroup.ALLOW_CHILDREN_EXTEND);
 		orientationObject.setCapability(TransformGroup.ALLOW_CHILDREN_WRITE);
 //		tgOmegaOnly.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 		precessionObject = precession.addPrecessionObject(univers.newWritableTransformGroup(null));
+		precessionObject.setName("precession");
 		precessionObject.addChild((Node) orientationObject);
 
 		createNet(a, b, c, x, y, z);

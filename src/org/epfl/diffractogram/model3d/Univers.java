@@ -84,7 +84,7 @@ public abstract class Univers {
 
 		// root is the root for all objects in the scene
 		// it is 
-		root = renderer.getRootBranchGroup();
+		root = renderer.createRootBranchGroup();
 		root.setName("root");
 		root.setCapability(BranchGroup.ALLOW_CHILDREN_READ);
 		root.setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
@@ -197,7 +197,7 @@ public abstract class Univers {
 	}
 
 	public void setTopTransform() {
-		renderer.setTopTransform(tgTop);
+		renderer.getTopTransform(tgTop);
 	}
 	
 
