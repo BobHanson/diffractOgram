@@ -167,7 +167,11 @@ public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendere
 		}
 		if (!completed)
 			return;
-		setShapeVisibility(child, false);
+		if (child.getName().endsWith(":")) {
+			notifyRemoveAll((Group)child);
+		} else {
+			setShapeVisibility(child, false);
+		}
 	}
 
 	private void setShapeVisibility(Node child, boolean b) {

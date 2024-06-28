@@ -119,8 +119,8 @@ public class Net extends BranchGroup implements ColorConstants {
 		TransformGroup tg = Utils3d.getVectorTransformGroup(v.x, v.y, v.z, null);
 		//tg.setCapability(TransformGroup.ALLOW_CHILDREN_READ);
 		++atomid;
-		Utils3d.setParents(univers.renderer.createSphere("atom:sphere" + atomid, dotSize3d, 10, true, app), tg, bg);
-		bg.setName("atom:" + atomid);
+		Utils3d.setParents(univers.renderer.createSphere("netroot:atom:sphere" + atomid, dotSize3d, 10, true, app), tg, bg);
+		bg.setName("netroot:atom:" + atomid);
 		return bg;
 	}
 
@@ -166,7 +166,7 @@ public class Net extends BranchGroup implements ColorConstants {
 				}
 
 		netRoot = new BranchGroup();
-		netRoot.setName("netroot");
+		netRoot.setName("netroot:");
 		netRoot.setCapability(BranchGroup.ALLOW_DETACH);
 		netRoot.setCapability(BranchGroup.ALLOW_CHILDREN_EXTEND);
 		netRoot.setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
@@ -284,7 +284,7 @@ public class Net extends BranchGroup implements ColorConstants {
 		matrix.setColumn(1, (Vector3d) Utils3d.mul(b, y));
 		matrix.setColumn(2, (Vector3d) Utils3d.mul(c, z));
 		t3d.set(matrix);
-		Node box = univers.renderer.createBox("netbox", 2, 2, 2, app);
+		Node box = univers.renderer.createBox("netroot:netbox", 2, 2, 2, app);
 		Utils3d.setParents(box, univers.newWritableTransformGroup(t3d), netRoot);
 	}
 
