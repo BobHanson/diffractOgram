@@ -1,9 +1,21 @@
 Notes from Bob Hanson's work relating to SwingJS possibilities
 
-todo: lots more opportunities for optimization. 
-2024.06.26 animation working in JavaScript; no text labels; no "torus" goniometer ring
+todo: textShape; compressed core packaging 
+
+2024.06.27 adds compressed core packaging
+2024.06.27 JavaScript optimized by bypassing Viewer.scriptWait() for most rendering
+2024.06.27 JavaScript optimized by bypassing Viewer.scriptWait() for most rendering
+2024.06.27 measured speeds in Animator: Java/Jmol ave 62.49 ms of 145; Java/J3d ave 62.54 ms of 244; Javascript ave 170.6 ms of 636
+2024.06.27 added source and source ray
+2024.06.27 fixed issue in ProjScreen.showIndex producing duplicates in shown string
+2024.06.27 added persistance for 3d screen impacts (?? hologram via precession ??
+2024.06.27 fixed Jmol issues with switching flat/cylindrical screens
+2024.06.27 "clear" made to clear screen when More/Less are clicked
+2024.06.27 DRAW command optimized for direct shape manager production 
+2024.06.26 animation working in JavaScript; no text labels; goniometer ring added
 2024.06.25 refactoring, enabling animation
-2024.06.24 switched to UTF-8 for project, enabling unicode degree and angstrom symbols.
+2024.06.25 bug fix for switch from circular to flat not returning to previous split pane divider location
+2024.06.24 switched to UTF-8 f 	or project, enabling unicode degree and angstrom symbols.
 2024.06.24 enabled box, cylinder, quad, arrow, and sphere (only for creation, not animation)
 2024.06.24 added Jmol; skeleton org/jmol/j3d/geometry
 2024.06.23 Further coding efficiencies; all shape creation isolated

@@ -1,0 +1,137 @@
+<?xml version="1.0"?>
+<!--
+ BH 2018.08.12
+
+ - requires tools/ant-contrib.jar
+  
+ - creates the site/ directory if it does not exist
+ - unzip libjs/*.zip into site/swingjs/j2s
+ - unzips swingjs/SwingJS-site.zip into site/
+ - copies non-java resources from resources/ into site/swingjs/j2s
+ 
+-->
+
+<project name="swingjs-project" default="tosite" basedir="."
+ xmlns:if="ant:if"
+    xmlns:unless="ant:unless">
+	
+  <target name="tosite">
+  	  	
+  	<!-- input directories -->
+  	
+  	<!-- location of ant-contrib.jar -->
+  	<property name="tools.dir" value = "tools" />
+
+ 	<!-- SwingjS_site zip file (could be varied if versioning is needed) -->
+  	<property name="swingjs.zip" value="swingjs/SwingJS-site.zip" />
+
+  	<!-- location of third-party jar contents as precompiled zipped .js files to copy to site/ -->
+  	<property name="libjs.dir" value="libjs" />
+ 
+  	<!-- non-Java resources to copy to SwingJS library in site/ -->
+    <property name="resource.dir" value="resources" />  	
+  	
+  	<!-- non-Java resources to copy to site/ -->
+    <property name="site-resource.dir" value="site-resources" />  	  	
+
+	<!-- output directories -->
+
+  	<property name="site.dir" value="site" />
+  	<property name="j2s.dir" value="${site.dir}/swingjs/j2s" />
+  	 
+    <!-- <for  ...> construct needs ant-contrib.jar -->
+    <taskdef resource="net/sf/antcontrib/antlib.xml">
+      <classpath>
+        <pathelement location="${tools.dir}/ant-contrib.jar" />
+      </classpath>
+    </taskdef>
+
+	<!-- unzip all libjs zip files into site
+	
+	   but remove html files
+	   all zip files placed in libjs will be processed
+	   
+	 -->
+
+  	<for param="file.zip">
+  	  <path>
+  	    <fileset dir="${libjs.dir}" includes="*.zip"/>
+  	  </path>
+  	  <sequential>
+  	  	 	<unzip src="@{file.zip}" dest="${site.dir}" overwrite="true"/>  	
+  	  </sequential>
+  	</for>
+
+  	
+  	<!-- unzip SwingJS-site.zip 
+  	
+  	  we do this separately, as we want it done last 
+  	
+  	-->
+
+  	<unzip src="${swingjs.zip}" dest="${site.dir}/" overwrite="true"/>  	
+
+  	
+  	<echo>Deleting unnecessary packages</echo>
+
+		<delete dir="${site.dir}/test" />
+  		<delete dir="${site.dir}/swingjs/data" />
+  		<delete dir="${site.dir}/swingjs/inchi" />
+		<delete dir="${site.dir}/swingjs/jcse" />
+		<delete dir="${site.dir}/swingjs/klotho" />
+		<delete dir="${site.dir}/swingjs/php" />
+	<delete dir="${j2s.dir}/com/actelion" />
+	<delete dir="${j2s.dir}/com/integratedgraphics" />
+	<delete dir="${j2s.dir}/data" />
+	<delete dir="${j2s.dir}/gnu" />
+	<delete dir="${j2s.dir}/gov" />
+	<delete dir="${j2s.dir}/html" />
+	<delete dir="${j2s.dir}/info" />
+	<delete dir="${j2s.dir}/jme" />
+	<delete dir="${j2s.dir}/jspecview" />
+	<delete dir="${j2s.dir}/netscape" />
+	<delete dir="${j2s.dir}/resources" />
+	<delete dir="${j2s.dir}/smile" />
+	<delete dir="${j2s.dir}/testing" />
+	<delete dir="${j2s.dir}/_" />
+	<delete dir="${j2s.dir}/_ES6" />
+	<delete dir="${j2s.dir}/_WASM" />
+
+
+  	<delete>	
+    <fileset dir="${site.dir}" erroronmissingdir="false" >
+       	<include name="obf*"/>
+       	<include name="com*.htm*"/>
+       	<include name="JME*.htm*"/>
+       	<include name="jme*.htm*"/>
+       	<include name="javajs*.htm*"/>
+       	<include name="jspecview*.htm*"/>
+       	<include name="org_jmol*.htm*"/>
+       	<include name="org_open*.htm*"/>
+       	<include name="swingjs*.htm*"/>
+       	<include name="test*"/>
+       	<include name="swingjs/*.htm*"/>
+       	<include name="swingjs/j2s/core/core_j*"/>
+	</fileset>
+	</delete>
+	
+
+ 	<!-- transfer resources -->
+
+  	<echo> Copying ${site-resource.dir} files into ${site.dir} </echo>
+  	<copy todir="${site.dir}">
+      <fileset dir="${site-resource.dir}" erroronmissingdir="false" >
+      	<include name="**"/>
+  	</fileset>
+    </copy>
+  	<echo> Copying ${resource.dir} files into ${j2s.dir} </echo>
+   	<copy todir="${j2s.dir}">
+      <fileset dir="${resource.dir}">
+      	<include name="**"/>
+  	</fileset>
+    </copy>
+      		
+</target>
+	
+
+</project>

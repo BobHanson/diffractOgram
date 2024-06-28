@@ -30,7 +30,7 @@ import javax.swing.text.DefaultFormatter;
 import javax.swing.text.NumberFormatter;
 
 public abstract class HVPanel implements ActionListener {
-	public static boolean quiet = false;
+	public static boolean quiet = true;
 	private ButtonGroup group;
 	private ActionListener listener;
 	protected JPanel jPanel;
@@ -232,14 +232,11 @@ public abstract class HVPanel implements ActionListener {
 		}
 	}
 	
-	public static void main(String[] args) {
-	}
-
-	public class EditField implements PropertyChangeListener, ActionListener {
+	public class EditField implements PropertyChangeListener/*, ActionListener*/ {
 		private ActionListener listener;
 		private JSpinner jspinner;
 		public JFormattedTextField edit;
-		public JLabel name, unit;
+		public JLabel nameLabel, unit;
 		
 		public EditField(String name, String unit, int nbcol, String defValue, AbstractFormatter f, ActionListener listener, boolean spinner) {
 			createField(name, unit, nbcol, defValue, f, listener, spinner);
@@ -268,26 +265,27 @@ public abstract class HVPanel implements ActionListener {
 			createField(name, unit, nbcol, new Float(defValue), f, listener, spinner);
 		}
 
-		private void createField(String name, String unit, int nbcol, Object defValue, AbstractFormatter format, ActionListener listener, boolean spinner) {
+		private void createField(String name, String unit, int nbcol, Object defValue, AbstractFormatter format,
+				ActionListener listener, boolean spinner) {
 			this.listener = listener;
 			if (spinner) {
 				jspinner = new JSpinner();
-				edit = ((DefaultEditor)jspinner.getEditor()).getTextField();
-			}
-			else {
+				jspinner.setName(name);
+				edit = ((DefaultEditor) jspinner.getEditor()).getTextField();
+			} else {
 				edit = new JFormattedTextField(format);
 			}
 			edit.setValue(defValue);
 			edit.setColumns(nbcol);
-			edit.addActionListener(this);
+//			edit.addActionListener(this);
 			edit.addPropertyChangeListener(this);
 			edit.setMinimumSize(new Dimension(30, 20));
-			this.name = new JLabel(name);
-			jPanel.add(this.name, c());
+			nameLabel = new JLabel(name);
+			jPanel.add(this.nameLabel, c());
 			c().gridx++;
-			jPanel.add(spinner?(Component)jspinner:edit, c());
+			jPanel.add(spinner ? (Component) jspinner : edit, c());
 			c().gridx++;
-			if (unit!=null) {
+			if (unit != null) {
 				this.unit = new JLabel(unit);
 				jPanel.add(this.unit, c());
 				c().gridx++;
@@ -295,14 +293,21 @@ public abstract class HVPanel implements ActionListener {
 			increment();
 		}
 
-		public void actionPerformed(ActionEvent e) { 
-			//System.out.println(e);
-			//listener.actionPerformed(new ActionEvent(this, 0, name.getText()));
-		}
+//		public void actionPerformed(ActionEvent e) { 
+//			// ENTER pressed
+//			System.out.println("HVP:AP >" + nameLabel.getName() + "<" + e);
+//			//listener.actionPerformed(new ActionEvent(this, 0, name.getText()));
+//		}
 		
 		public void propertyChange(PropertyChangeEvent evt) {
-			if (!quiet && evt.getPropertyName().equals("value") && !edit.getText().equals(evt.getNewValue())) {
-				listener.actionPerformed(new ActionEvent(this, 0, name.getText()));
+//			System.out.println("HVP.PCE:" + getName() + " " + evt.getPropertyName() + "=" + evt.getNewValue() + "/" + edit.getText()
+//			+ " " + evt.getNewValue().getClass().getName()
+//					);
+			// BH bug: odd requirement here with the expectation that 
+			// the editor value is unchanged, but the test is for a String equaling an Integer, which is never true.
+//			boolean sameValue = false;
+			if (!quiet && evt.getPropertyName().equals("value")) {
+				listener.actionPerformed(new ActionEvent(this, 0, nameLabel.getText()));
 			}
 		}
 		
@@ -321,7 +326,7 @@ public abstract class HVPanel implements ActionListener {
 			if (jspinner!=null) jspinner.setEnabled(b);
 			edit.setEditable(b);
 			edit.setEnabled(b);
-			if (name!=null) name.setEnabled(b);
+			if (nameLabel!=null) nameLabel.setEnabled(b);
 			if (unit!=null) unit.setEnabled(b);
 		}
 	}	

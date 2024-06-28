@@ -113,7 +113,7 @@ import javax.vecmath.Vector4f;
 
 public class Transform3D {
 
-    double[] mat = new double[16];
+    public double[] mat = new double[16];
     //double[] rot = new double[9];
     //double[] scales = new double[3];
     // allocate the memory only when it is needed. Following three places will allocate the memory,

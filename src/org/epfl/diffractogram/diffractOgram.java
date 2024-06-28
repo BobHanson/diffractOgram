@@ -133,7 +133,7 @@ public class diffractOgram extends JApplet implements Runnable {
 	private void showMainPane() {
 		frame.getContentPane().add(mainPane.toJPanel());
 		frame.validate();
-		frame.setTitle(title);
+		frame.setTitle(title + (DefaultValues.useJmol ? "/Jmol" : ""));
 	  frame.setVisible(true);
 	  frame.toFront();
 	}

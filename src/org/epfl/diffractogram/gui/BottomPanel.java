@@ -19,12 +19,8 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
 import org.epfl.diffractogram.DefaultValues;
-import org.epfl.diffractogram.gui.HVPanel.EditField;
-import org.epfl.diffractogram.gui.HVPanel.HPanel;
-import org.epfl.diffractogram.gui.HVPanel.SliderAndValue;
-import org.epfl.diffractogram.gui.HVPanel.VPanel;
-import org.epfl.diffractogram.model3d.Animator;
 import org.epfl.diffractogram.model3d.Model3d;
+import org.epfl.diffractogram.util.Animator;
 import org.epfl.diffractogram.util.Lattice;
 
 public class BottomPanel extends HVPanel.HPanel {
@@ -44,7 +40,8 @@ public class BottomPanel extends HVPanel.HPanel {
 		super();
 		this.defaultValues = defaultValues;
 		this.model3d = model3d;
-		help = new Help();
+		
+		quiet = true;
 		
 		addSubPane(lPane = new LatticePane("Unit cell", "", model3d.lattice));
 		addSubPane(rPane = new LatticePane("Reciprocal lattice", "*", model3d.reciprocal));
@@ -52,6 +49,8 @@ public class BottomPanel extends HVPanel.HPanel {
 		addSubPane(paramPane = new Parameters());
 		addSubPane(animPane=new Animation());
 		addSubPane(new Screen());
+		
+		quiet = false;
 	}
 	
 	private boolean sync = true;
@@ -139,6 +138,7 @@ public class BottomPanel extends HVPanel.HPanel {
 				z.setValue(new Integer((a=(int)z.getFloatValue())==0?0:a-1));
 				HVPanel.quiet = false;
 			}
+			model3d.clearImage();
 			model3d.net.setCrystalSize((int)x.getFloatValue(), (int)y.getFloatValue(), (int)z.getFloatValue());
 			model3d.doRays(false);
 		}
@@ -191,7 +191,7 @@ public class BottomPanel extends HVPanel.HPanel {
 //				HVPanel.quiet = true;
 //				uvw.edit.setText("0 1 0");
 //				HVPanel.quiet = false;
-				model3d.projScreen.clearImage();
+				model3d.clearImage();
 				break;
 			case "u v w":
 				HVPanel.quiet = true;
@@ -297,9 +297,10 @@ public class BottomPanel extends HVPanel.HPanel {
 
 		public void setSpeed() {
 			if (fromToEnable.isSelected()) {
-				int d = Math.round(to.getFloatValue()-from.getFloatValue());
-				animator.speed = (int)Math.round(speed.getValue()*d/360);
-				if (animator.speed==0) animator.speed=1;
+				int d = Math.round(to.getFloatValue() - from.getFloatValue());
+				animator.speed = (int) Math.round(speed.getValue() * d / 360);
+				if (animator.speed == 0)
+					animator.speed = 1;
 			}
 		}
 		
@@ -361,7 +362,7 @@ public class BottomPanel extends HVPanel.HPanel {
 				}
 			}
 			else if (e.getActionCommand().equals("Laue")) {
-				model3d.projScreen.clearImage();
+				model3d.clearImage();
 				model3d.doLaue();
 			}
 			else if (e.getActionCommand().equals("Sequential")) {
@@ -405,7 +406,6 @@ public class BottomPanel extends HVPanel.HPanel {
 	
 	class Screen extends HVPanel.VPanel {
 		private EditField w, h, y;
-		private JCheckBox persistant;
 		private boolean flat;
 		public Screen() {
 			setBorder(new TitledBorder("Screen"));
@@ -423,8 +423,9 @@ public class BottomPanel extends HVPanel.HPanel {
 			p11.addButtonGroupped(new JRadioButton("Flat"));
 			p11.addButtonGroupped(new JRadioButton("Cylindric"));
 			addSubPane(p11);
-			addButton(persistant = new JCheckBox("Persistant"));
-			persistant.setSelected(true);
+			JCheckBox persistent= new JCheckBox("Persistent");
+			persistent.setSelected(true);
+			addButton(persistent);
 			HVPanel p2 = new HVPanel.HPanel();
 			p2.addButton(new JButton("Clear"));
 			//p2.addButton(new JButton("Snap"));
@@ -438,7 +439,7 @@ public class BottomPanel extends HVPanel.HPanel {
 				model3d.setScreenSize(dw, dh);
 			}
 			else if (e.getActionCommand().equals("Distance ")) {
-				model3d.projScreen.clearImage();
+				model3d.clearImage();
 				double d = y.getFloatValue();
 				model3d.p3d.setPos(d);
 				model3d.mask3d.setY(d);
@@ -466,7 +467,7 @@ public class BottomPanel extends HVPanel.HPanel {
 				flat=false;
 				super.actionPerformed(new ActionEvent(this, 0, "vertical"));
 				w.setEnable(false);
-				w.name.setEnabled(true);
+				w.nameLabel.setEnabled(true);
 				model3d.setCylindricScreen();
 				h.setValue(new Double(model3d.p3d.h));
 				w.edit.setText("");
@@ -480,13 +481,15 @@ public class BottomPanel extends HVPanel.HPanel {
 				animPane.mask.setEnabled(false);
 				model3d.setMask(false);
 			}
-			else if (e.getActionCommand().equals("Persistant")) {
-				model3d.persistant = ((JCheckBox)e.getSource()).isSelected();
+			else if (e.getActionCommand().equals("Persistent")) {
+				model3d.persistent = ((JCheckBox)e.getSource()).isSelected();
 			}
 			else if (e.getActionCommand().equals("Clear")) {
-				model3d.projScreen.clearImage();
+				model3d.clearImage();
 			}
 			else if (e.getActionCommand().equals("Help")) {
+				if (help == null)
+					help = new Help();
 				help.show(true);
 			}
 			model3d.doRays(false);
@@ -566,15 +569,7 @@ public class BottomPanel extends HVPanel.HPanel {
 			return ((int[])v)[0]+" "+((int[])v)[1]+" "+((int[])v)[2];
 		}
 	}
-	
-	
-	public static void main(String[] a) {
-		String[] ss = "2357".split("");
-		for (int i=0; i<ss.length; i++) {
-			System.out.println("*"+ss[i]);
-		}
 		
-	}
 	public static Point3d round(Point3d p) {
 		return new Point3d(Math.round(1000*p.getX())/1000d, Math.round(1000*p.getY())/1000d, Math.round(1000*p.getZ())/1000d);
 	}

@@ -4,7 +4,7 @@ import java.awt.Font;
 
 import javax.media.j3d.BranchGroup;
 
-import org.jmol.j3d.WorldRendererI;
+import org.jmol.j3d.JmolWorldRendererI;
 
 public class JmolText extends JmolShape3D {
 	String text;
@@ -21,7 +21,7 @@ public class JmolText extends JmolShape3D {
 	}
 
 	@Override
-	public String renderScript(WorldRendererI renderer) {
+	public String renderScript(JmolWorldRendererI renderer) {
 		// TODO Auto-generated method stub
 		return "";
 	}

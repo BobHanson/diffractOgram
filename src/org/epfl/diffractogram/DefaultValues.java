@@ -6,7 +6,14 @@ import org.epfl.diffractogram.util.Lattice;
 
 public class DefaultValues {
 
+	// 2024.06.27 measured in Animator
+	// Java/Jmol  ave 62.49 ms of 145
+	// Java/J3d   ave 62.54 ms of 244		
+	// Javascript ave 170.6 ms of 636
+
+
 	public static /* not final */ boolean javaJmol = true;//false;
+	
 	public static boolean useJmol = /** @j2sNative true || */javaJmol;
 
 	static {
@@ -105,7 +112,7 @@ public class DefaultValues {
 		animate=omega|chi|phi|seq|debye|lambda|precession
 		drawlaue=on|off
 		screen=flat|cylindric
-		persistant=off|on		
+		persistent=off|on		
 */		
 	}
 	

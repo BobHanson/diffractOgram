@@ -45,7 +45,7 @@ public class Model3d {
 	public ProjScreen3d p3d;
 	public Net net;
 	public ProjScreen projScreen;
-	public boolean persistant = true;
+	public boolean persistent = true;
 	public Mask3d mask3d;
 	public boolean mask = false;
 	public Rays rays;
@@ -105,9 +105,9 @@ public class Model3d {
 	}
 
 	public synchronized void clearAllRays() {
-		if (!persistant)
-			projScreen.clearImage();
-		rays.removeAllRays();
+		if (!persistent)
+			clearImage();
+		rays.removeAllRays(persistent);
 		for (int i = -net.xMax; i <= net.xMax; i++)
 			for (int j = -net.yMax; j <= net.yMax; j++)
 				for (int k = -net.zMax; k <= net.zMax; k++) {
@@ -115,25 +115,38 @@ public class Model3d {
 				}
 	}
 
+	public void clearImage() {
+		projScreen.clearImage();
+		if (persistent)
+			rays.removeAllRays(false);
+	}
+	
+	private Vector3d n = new Vector3d();
+	private Vector3d e1 = new Vector3d();
+	private Vector3d e3 = new Vector3d();
+	private Vector3d c = new Vector3d();
+	private Point3d q = new Point3d();
+	private Point3d v = new Point3d();
+	private Vector3d u = new Vector3d();
+	private Transform3D tPrecOrient = new Transform3D();
+	private Point3d sReversed = new Point3d();
+
+
+
 	public synchronized void doRays(boolean adjustR) {
 		clearAllRays();
-		Vector3d n = new Vector3d(0, 1, 0);
-		Vector3d e1 = new Vector3d(1, 0, 0);
-		Vector3d e3 = new Vector3d(0, 0, 1);
+		n.set(0, 1, 0);
+		e1.set(1, 0, 0);
+		e3.set(0, 0, 1);
 		precession.apply(n);
 		precession.apply(e1);
 		precession.apply(e3);
-		Vector3d c = new Vector3d(0, p3d.y, 0);
+
+		c.set(0, p3d.y, 0);
 		double cn = c.dot(n);
 		
-		Point3d q = new Point3d();
-		Point3d v = new Point3d();
-		Vector3d u = new Vector3d();
-
-
-		Transform3D tPrecOrient = new Transform3D();
 		tPrecOrient.mul(precession.t3d, orientation.t3d);
-		Point3d sReversed = new Point3d(virtualSphere.center);
+		sReversed.set(virtualSphere.center);
 		precession.reverse(sReversed);
 		orientation.reverse(sReversed);
 		double rMask = Math.sin(precession.mu) * p3d.y;
@@ -191,7 +204,13 @@ public class Model3d {
 				}
 		if (mg != null)
 			mg.dispose();
+//		long t = System.currentTimeMillis();
+//		System.out.println("Model3d.doRays " + (t - lasttime));
+//		lasttime = t;
+//
 	}
+
+	long lasttime;
 
 	public void doLaue() {
 		Vector3d n = new Vector3d(0, 1, 0);

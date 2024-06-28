@@ -26,7 +26,7 @@ import org.epfl.diffractogram.model3d.WorldRenderer;
 import org.epfl.diffractogram.util.Utils3d;
 import org.jmol.adapter.smarter.SmarterJmolAdapter;
 import org.jmol.api.JmolViewer;
-import org.jmol.j3d.WorldRendererI;
+import org.jmol.j3d.JmolWorldRendererI;
 import org.jmol.j3d.geometry.JmolArrow;
 import org.jmol.j3d.geometry.JmolBox;
 import org.jmol.j3d.geometry.JmolCylinder;
@@ -47,7 +47,7 @@ import org.jmol.viewer.Viewer;
  * 
  * @author Bob Hanson
  */
-public class JmolWorldRenderer extends WorldRenderer implements WorldRendererI {
+public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendererI {
 
 	public Viewer viewer;
 
@@ -103,6 +103,7 @@ public class JmolWorldRenderer extends WorldRenderer implements WorldRendererI {
 
 	private Node addObject(Node n) {
 		allObjects.add(n);
+		((JmolShape3D) n).renderer = this;
 		if (completed)
 			SwingUtilities.invokeLater(()->{
 				renderNode((JmolShape3D)n);				
@@ -158,11 +159,10 @@ public class JmolWorldRenderer extends WorldRenderer implements WorldRendererI {
 
 	@Override
 	public void notifyRemove(Group parent, Node child) {
-		//System.out.println("removed " + child.getName() + " from " + parent.getName());
-		
 		switch(parent.getName()) {
 		case "root":
 			this.mapRoot.remove(child.getName());
+			System.out.println("removed " + child.getName() + " from " + parent.getName());
 			break;
 		}
 		if (!completed)
@@ -174,16 +174,11 @@ public class JmolWorldRenderer extends WorldRenderer implements WorldRendererI {
 		JmolShape3D n = (JmolShape3D) (child instanceof Group ? Utils3d.getShapeChild((Group) child) : child);
 		if (n == null)
 			return;
-		n.getDrawId();
-		if (n.shape == null)
-			return;
-		n.shape.visible = b;
+		n.setJmolShapeVisibility(b);
 	}
 
 	@Override
 	public void notifyAdd(Group parent, Node child) {
-		if (parent.getName() == null)
-			System.out.println("???");
 		switch(parent.getName()) {
 		case "root":
 			System.out.println("added " + child.getName() + " to " + parent.getName());
@@ -197,8 +192,7 @@ public class JmolWorldRenderer extends WorldRenderer implements WorldRendererI {
 
 	@Override
 	public void notifyRemoveAll(Group g) {
-		// TODO Auto-generated method stub
-
+		JmolShape3D.removeAll(this, g);
 	}
 
 	@Override
@@ -256,19 +250,23 @@ public class JmolWorldRenderer extends WorldRenderer implements WorldRendererI {
 			}
 		}
 	//	System.out.println(s);
-		viewer.scriptWait(s);
+		scriptWait(s);
 	}
 	
     public void renderNode(Shape3D n) {
 		String s = ((JmolShape3D) n).renderScript(this);
-		//System.out.println(n + " "  + s);
-		if (s.length() > 0)
-			viewer.scriptWait(s);
+		scriptWait(s);
 	}
 
 	@Override
 	public Object getViewer() {
 		return viewer;
+	}
+
+	@Override
+	public void scriptWait(String s) {
+		//System.out.println(s);
+		viewer.scriptWait(s);
 	}
 
 	private final static Transform3D t = new Transform3D();
@@ -292,7 +290,5 @@ public class JmolWorldRenderer extends WorldRenderer implements WorldRendererI {
 		}
 		return null;
 	}
-
-
 
 }

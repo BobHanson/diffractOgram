@@ -11,7 +11,6 @@ import java.util.Vector;
 
 import javax.media.j3d.Appearance;
 import javax.media.j3d.BranchGroup;
-import javax.media.j3d.Node;
 import javax.media.j3d.TransparencyAttributes;
 import javax.vecmath.Point3d;
 
@@ -40,16 +39,17 @@ public class Rays extends BranchGroup {
 		raysAppTransp.setTransparencyAttributes(new TransparencyAttributes(TransparencyAttributes.FASTEST,1f));
 
 		impacts = new BranchGroup();
-		impacts.setName("impacts");
+		impacts.setName("impact:");
 		impacts.setCapability(BranchGroup.ALLOW_CHILDREN_EXTEND);
 		impacts.setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
 		univers.addNotify(this, impacts);
 	}
 	
 	
-	public void removeAllRays() {
+	public void removeAllRays(boolean persistent) {
 		BranchGroup r;
-		univers.removeAllNotify(impacts);
+		if (!persistent)
+			univers.removeAllNotify(impacts);
 		for (int i=raysUsed.size()-1; i>=0; i--) {
 			r = (BranchGroup)raysUsed.get(i);
 			Utils3d.changeCylinderApp(r, raysAppTransp);
@@ -63,8 +63,6 @@ public class Rays extends BranchGroup {
 	private BranchGroup createRay(Point3d a, Point3d b, Appearance app) {
 		BranchGroup r;
 		if (raysAnt.size() == 0) {
-			System.out.println("Rays-createRay " + raysUsed.size());
-			
 			r = univers.creator.createCylinder(univers, "ray:" + ++rayid, a, b, .02, app, 4);
 			univers.addNotify(this, r);
 		} else {
@@ -81,9 +79,7 @@ public class Rays extends BranchGroup {
 	public void addImpactRay(Point3d cSphere, Point3d pNet, Point3d pProj) {
 		createRay(cSphere, pNet, raysAppRed);
 		createRay(o, pProj, raysAppWhite);
-		Node i = univers.creator.createAtom(pProj, ColorConstants.black, .03f);
-		i.setName("impact:" + ++impactid);
-		univers.addNotify(impacts, i);
+		univers.addNotify(impacts, univers.creator.createAtom("impact:" + ++impactid, pProj, ColorConstants.black, .03f));
 	}
 	
 

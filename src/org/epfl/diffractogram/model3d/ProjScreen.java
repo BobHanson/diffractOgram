@@ -120,7 +120,13 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 			if (Math.abs(((Point.Double)points.get(i)).x-xx)<e && Math.abs(((Point.Double)points.get(i)).y-yy)<e) {
 				indexVect.add(new Integer(i));
 				int index = ((Integer)index_ijk.get(i)).intValue();
-				s+="("+(((index>>16)&0xff)-128)+" "+(((index>>8)&0xff)-128)+" "+((index&0xff)-128)+") ";
+				String sindex = "("+(((index>>16)&0xff)-128)+" "+(((index>>8)&0xff)-128)+" "+((index&0xff)-128)+") ";
+				if (s.contains(sindex)) {
+					// BH 2024.06.27 duplicates here during precession
+					//System.out.println("PJS WHOAH" + sindex);
+				} else {
+					s+=sindex;
+				}
 			}
 		}
 		if (!s.equals(index)) {

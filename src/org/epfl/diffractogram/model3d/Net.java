@@ -195,7 +195,8 @@ public class Net extends BranchGroup implements ColorConstants {
 		createLegend();
 		createRepere();
 		createTranspBox();
-		netRoot.compile();
+		if (!DefaultValues.javaJmol)
+			netRoot.compile();
 		univers.addNotify((Group) orientationObject, netRoot);
 	}
 

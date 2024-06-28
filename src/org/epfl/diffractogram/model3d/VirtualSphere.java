@@ -81,6 +81,15 @@ public class VirtualSphere extends BranchGroup implements ColorConstants {
 		app.setTransparencyAttributes(new TransparencyAttributes(TransparencyAttributes.NICEST, 0.5f));
 		Node s = univers.renderer.createSphere(name, 1,100, false, app);
 		Utils3d.setParents(s, sPositioned, this);
+		
+		BranchGroup baseRay = univers.creator.createCylinder(univers, "sourceray", new Point3d(0, -1.5, 0), new Point3d(0, 1, 0),  .005,
+				Utils3d.createApp(ColorConstants.orange), 8);
+		Utils3d.setParents(baseRay, sPositioned, this);
+		BranchGroup source = univers.creator.createCylinder(univers, "source", new Point3d(0, -1.5, 0), new Point3d(0, -1.3, 0),  .025,
+				Utils3d.createApp(ColorConstants.yellow), 8);
+		Utils3d.setParents(source, sPositioned, this);
+
+		
 	}
 
 	private void createLegend() {
@@ -118,9 +127,9 @@ public class VirtualSphere extends BranchGroup implements ColorConstants {
 	}
 
 	public void setLambda(double lambda) {
-		center.set(0, -lambdaToRadius(lambda), 0);
-		Transform3D t = new Transform3D();
 		radius = lambdaToRadius(lambda);
+		center.set(0, -radius, 0);
+		Transform3D t = new Transform3D();
 		t.set(radius, new Vector3d(center));
 		sPositioned.setTransform(t);
 	}

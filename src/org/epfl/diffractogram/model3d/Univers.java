@@ -231,16 +231,16 @@ public abstract class Univers {
 		 * @param r
 		 * @return
 		 */
-		public BranchGroup createAtom(Point3d p, Color3f color, double r) {
-			return createAtom(p, Utils3d.createApp(color), r, 20);
-		}
+		public BranchGroup createAtom(String name, Point3d p, Color3f color, double r) {
+			return createAtom(name, p, Utils3d.createApp(color), r, 20);
+	  }
 
 		private int atomid;
 		
-		public BranchGroup createAtom(Point3d p, Appearance app, double r, int facets) {
+		public BranchGroup createAtom(String name, Point3d p, Appearance app, double r, int facets) {
 			BranchGroup bg = new BranchGroup();
 			bg.setCapability(BranchGroup.ALLOW_DETACH);
-			Utils3d.setParents(renderer.createSphere("atom:" + ++atomid, r, facets, true, app), Utils3d.getVectorTransformGroup(p.x, p.y, p.z, null), bg);
+			Utils3d.setParents(renderer.createSphere(name == null ? "atom:" + ++atomid : name, r, facets, true, app), Utils3d.getVectorTransformGroup(p.x, p.y, p.z, null), bg);
 			return bg;
 		}
 
