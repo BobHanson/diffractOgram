@@ -93,6 +93,7 @@ java/awt/event/MouseListener.js
 java/awt/event/MouseMotionAdapter.js
 java/awt/event/MouseMotionListener.js
 java/awt/event/MouseWheelListener.js
+java/awt/event/MouseWheelEvent.js
 java/awt/event/TextListener.js
 java/awt/event/WindowAdapter.js
 java/awt/event/WindowEvent.js
@@ -260,6 +261,7 @@ javax/media/j3d/BoundingSphere.js
 javax/media/j3d/Bounds.js
 javax/media/j3d/BranchGroup.js
 javax/media/j3d/BranchGroupRetained.js
+javax/media/j3d/CompileState.js
 javax/media/j3d/FreeListManager.js
 javax/media/j3d/Geometry.js
 javax/media/j3d/GeometryArray.js
@@ -798,3 +800,13 @@ sun/util/locale/provider/AuxLocaleProviderAdapter.js
 sun/util/locale/provider/JRELocaleProviderAdapter.js
 sun/util/locale/provider/ResourceBundleBasedAdapter.js
 sun/util/locale/provider/SPILocaleProviderAdapter.js
+java/io/InputStreamReader.js
+java/io/Reader.js
+java/lang/Readable.js
+java/net/ContentHandler.js
+java/net/HttpURLConnection.js
+java/net/URLConnection.js
+javajs/api/GenericLineReader.js
+javajs/util/AjaxURLConnection.js
+javajs/util/Rdr.js
+org/epfl/diffractogram/gui/Help.js
