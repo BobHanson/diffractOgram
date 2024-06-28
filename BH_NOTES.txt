@@ -1,6 +1,6 @@
 Notes from Bob Hanson's work relating to SwingJS possibilities
 
-todo: textShape; compressed core packaging 
+todo: textShape; fix More/Less action
 
 2024.06.27 adds compressed core packaging
 2024.06.27 JavaScript optimized by bypassing Viewer.scriptWait() for most rendering
