@@ -286,7 +286,7 @@ public abstract class Univers {
 
 		public BranchGroup createRepere(Color3f colorText, Color3f colorArrows, Color3f colorCenter, String[] names,
 				float sizeText, float sizeArrows, double deltaText, double deltaArrows, Vector3d x, Vector3d y,
-				Vector3d z) {
+				Vector3d z, boolean fullRange) {
 			Appearance app1 = Utils3d.createApp(colorText);
 			Appearance app2 = Utils3d.createApp(colorArrows);
 			BranchGroup repere = new BranchGroup();
@@ -295,11 +295,21 @@ public abstract class Univers {
 				repere.addChild(renderer.createSphere("axes:o" + names[0], .05, 10, false, Utils3d.createApp(colorCenter)));
 
 			Point3d o = new Point3d(0, 0, 0);
-			repere.addChild(createArrow("axes:" + names[0], o, new Point3d(Utils3d.mul(x, (x.length() + deltaArrows) / x.length())), sizeArrows,
+			Point3d pt0 = new Point3d(o);
+			Point3d pt = new Point3d(Utils3d.mul(x, (x.length() + deltaArrows) / x.length()));
+			if (fullRange)
+				pt0.scaleAdd(-1, pt, o);
+			repere.addChild(createArrow("axes:" + names[0], pt0, pt, sizeArrows,
 					sizeArrows * 2f, sizeArrows * 6f, app2, 12));
-			repere.addChild(createArrow("axes:" + names[1], o, new Point3d(Utils3d.mul(y, (y.length() + deltaArrows) / y.length())), sizeArrows,
+			pt.set(Utils3d.mul(y, (y.length() + deltaArrows) / y.length()));
+			if (fullRange)
+				pt0.scaleAdd(-1, pt, o);
+			repere.addChild(createArrow("axes:" + names[1], pt0, pt, sizeArrows,
 					sizeArrows * 2f, sizeArrows * 6f, app2, 12));
-			repere.addChild(createArrow("axes:" + names[2], o, new Point3d(Utils3d.mul(z, (z.length() + deltaArrows) / z.length())), sizeArrows,
+			pt.set(Utils3d.mul(z, (z.length() + deltaArrows) / z.length()));
+			if (fullRange)
+				pt0.scaleAdd(-1, pt, o);
+			repere.addChild(createArrow("axes:" + names[2], pt0, pt, sizeArrows,
 					sizeArrows * 2f, sizeArrows * 6f, app2, 12));
 
 			repere.addChild(createLegend(names[0], new Point3d(Utils3d.mul(x, (x.length() + deltaText) / x.length())), o, sizeText,
@@ -311,13 +321,14 @@ public abstract class Univers {
 			return repere;
 		}
 
-		public BranchGroup createNamedVector(String name, Point3d p1, Point3d p2, Point3d p3, float size,
+		public BranchGroup createNamedVector(String name, 
+				Point3d p1, Point3d p2, Point3d p3, float size, float fontSize,
 				Color3f colorText, Color3f colorArrow) {
 			Appearance app1 = Utils3d.createApp(colorText);
 			Appearance app2 = Utils3d.createApp(colorArrow);
 			BranchGroup group = new BranchGroup();
 			group.addChild(createArrow(name, p1, p2, .03 * size, .1 * size, .4 * size, app2, 12));
-			group.addChild(createFixedLegend(name, p3, .15f * size, app1, true));
+			group.addChild(createFixedLegend(name, p3, fontSize, app1, true));
 			return group;
 		}
 	}

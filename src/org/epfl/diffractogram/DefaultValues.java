@@ -12,7 +12,7 @@ public class DefaultValues {
 	// Javascript ave 170.6 ms of 636
 
 
-	public static /* not final */ boolean javaJmol = true;//false;
+	public static /* not final */ boolean javaJmol = false;
 	
 	public static boolean useJmol = /** @j2sNative true || */javaJmol;
 
@@ -23,25 +23,26 @@ public class DefaultValues {
 	public final static String UTF_Angstroms = "\u212b";
 	public final static String UTF_Degrees = "\u00b0";
 	
-	public static String strLambda = (useJmol ? "\u03bb" : "lambda");
+	public static String strLambda = (true || useJmol ? "\u03bb" : "lambda");
 
 	public double zScreen = 4;
 	public double wScreen = 10;
 	public double hFlatScreen = 10;
 	public double hCylScreen = 4;
-	public double lambda = 0.5;
+	public double lambda = 1.5;//was 0.5;
 	public int omega = 0;
 	public int chi = 0;
 	public int phi = 0;
 	
 	public int[] uvw = {0, 1, 0};
-	public Lattice lattice = new Lattice(5, 5, 5, 90, 90, 90, uvw[0], uvw[1], uvw[2]);
+	public Lattice lattice = new Lattice(15, 15, 15, 90, 90, 90, uvw[0], uvw[1], uvw[2]);
+			//new Lattice(5, 5, 5, 90, 90, 90, uvw[0], uvw[1], uvw[2]);
 //	public int[] uvw = {0, 0, 1};
 //	public Lattice lattice = new Lattice(4.75, 4.75, 12.89, 90, 90, 120, uvw[0], uvw[1], uvw[2]);
 	public int crystalX = 3;
 	public int crystalY = 3;
 	public int crystalZ = 3;
-	public double scale = 2;
+	public final static double scale = 2;//5;
 	public float dotSize = .01f;
 	public float dotSize3d = .05f;
 	public int mu = 0;

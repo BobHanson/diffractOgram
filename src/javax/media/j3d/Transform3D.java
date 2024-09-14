@@ -3085,7 +3085,6 @@ public class Transform3D {
     final void invertGeneral(Transform3D t1) {
 	double tmp[] = new double[16];
 	int row_perm[] = new int[4];
-	int i, r, c;
 
 	// Use LU decomposition and backsubstitution code specifically
 	// for floating-point 4x4 matrices.
@@ -4587,15 +4586,9 @@ public class Transform3D {
 			    double zNear, double zFar) {
 	double sine, cotangent, deltaZ;
 	double half_fov = fovx * 0.5;
-	double x, y;
-	Vector3d v1, v2, v3, v4;
-	Vector3d norm = new Vector3d();
 
 	deltaZ = zFar - zNear;
 	sine = Math.sin(half_fov);
-//	if ((deltaZ == 0.0) || (sine == 0.0) || (aspect == 0.0)) {
-//	    return;
-//	}
 	cotangent = Math.cos(half_fov) / sine;
 
 	mat[0] = cotangent;
@@ -4726,23 +4719,23 @@ public class Transform3D {
     }
 
 
-    final static private void multipleScale(double m[] , double s[]) {
-	m[0]  *= s[0];
-	m[1]  *= s[0];
-	m[2]  *= s[0];
-	m[4]  *= s[1];
-	m[5]  *= s[1];
-	m[6]  *= s[1];
-	m[8]  *= s[2];
-	m[9]  *= s[2];
-	m[10] *= s[2];
-    }
-
+//    final static private void multipleScale(double m[] , double s[]) {
+//	m[0]  *= s[0];
+//	m[1]  *= s[0];
+//	m[2]  *= s[0];
+//	m[4]  *= s[1];
+//	m[5]  *= s[1];
+//	m[6]  *= s[1];
+//	m[8]  *= s[2];
+//	m[9]  *= s[2];
+//	m[10] *= s[2];
+//    }
+//
     private void compute_svd(Transform3D matrix, double[] outScale,
 			     double[] outRot) {
 
-	int i,j;
-	double g,scale;
+	int i;//,j;
+	double g;//,scale;
 	double m[] = new double[9];
 
 	// if (!svdAllocd) {
@@ -4762,14 +4755,15 @@ public class Transform3D {
 	// XXXX: initialize to 0's if alread allocd? Should not have to, since
 	// no operations depend on these being init'd to zero.
 
-	int converged, negCnt=0;
-	double cs,sn;
+	//int converged;
+	int negCnt=0;
+	//double cs,sn;
 	double c1,c2,c3,c4;
 	double s1,s2,s3,s4;
-	double cl1,cl2,cl3;
+	//double cl1,cl2,cl3;
 
 
-        svdRot[0] = m[0] = matrix.mat[0];
+    svdRot[0] = m[0] = matrix.mat[0];
 	svdRot[1] = m[1] = matrix.mat[1];
 	svdRot[2] = m[2] = matrix.mat[2];
 	svdRot[3] = m[3] = matrix.mat[4];
@@ -5163,9 +5157,11 @@ public class Transform3D {
     }
 
     private int compute_qr( double[] s, double[] e, double[] u, double[] v) {
-	int i,j,k;
+	//int i,j;
+	int k;
 	boolean converged;
-	double shift,ssmin,ssmax,r;
+	double shift,r;
+	//ssmin,ssmax,r;
 
 	double utemp,vtemp;
 	double f,g;
@@ -5181,7 +5177,7 @@ public class Transform3D {
 
 
 	double c_b48 = 1.;
-	double c_b71 = -1.;
+	//double c_b71 = -1.;
 	int first;
 	converged = false;
 
@@ -5578,8 +5574,8 @@ public class Transform3D {
     }
 
     static  double compute_rot( double f, double g, double[] sin, double[] cos, int index, int first) {
-	int i__1;
-	double d__1, d__2;
+//	int i__1;
+//	double d__1, d__2;
 	double cs,sn;
 	int i;
 	double scale;
@@ -5612,7 +5608,7 @@ public class Transform3D {
 		r = Math.sqrt(f1*f1 + g1*g1);
 		cs = f1 / r;
 		sn = g1 / r;
-		i__1 = count;
+		//i__1 = count;
 		for (i = 1; i <= count; ++i) {
 		    r *= safmx2;
 		}
@@ -5627,7 +5623,7 @@ public class Transform3D {
 		r = Math.sqrt(f1*f1 + g1*g1);
 		cs = f1 / r;
 		sn = g1 / r;
-		i__1 = count;
+		//i__1 = count;
 		for (i = 1; i <= count; ++i) {
 		    r *= safmn2;
 		}

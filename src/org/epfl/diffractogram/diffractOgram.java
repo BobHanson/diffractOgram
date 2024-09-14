@@ -31,7 +31,7 @@ import org.epfl.diffractogram.model3d.WorldRenderer;
 
 @SuppressWarnings("serial")
 public class diffractOgram extends JApplet implements Runnable {
-	static final String title = "DiffractOgram";
+	static final String title = "DiffractOgram2";
 	static final String titleInit = title+" is starting up. Please wait...";
 	static final int width=1050, height=750;
 	private static final String defCodeBase = "http://escher.epfl.ch/crystalOgraph/";

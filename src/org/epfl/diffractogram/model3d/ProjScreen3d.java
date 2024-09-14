@@ -268,13 +268,13 @@ public abstract class ProjScreen3d extends BranchGroup implements ColorConstants
 			createLabel(w, h);
 		}
 
-		public void setPos(double y) {
-			this.y = y;
-			OyO = new Vector3d(0, y, 0);
+		public void setPos(double screenDistance) {
+			this.y = screenDistance;
+			OyO = new Vector3d(0, screenDistance, 0);
 			Transform3D t = new Transform3D();
 			t.set(OyO);
 			transTg.setTransform(t);
-			createBaseRay(y);
+			createBaseRay(screenDistance);
 		}
 
 		public boolean projPoint(Point3d v, Vector3d n, double d) {

@@ -273,26 +273,4 @@ public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendere
 		viewer.scriptWait(s);
 	}
 
-	private final static Transform3D t = new Transform3D();
-
-	@Override
-	public Transform3D getTransform(JmolShape3D shape) {
-		Transform3D ret = t;
-		ret.setIdentity();
-		Node n = shape;
-		Transform3D t = new Transform3D();// renderer.getTopTransform();
-		while ((n = n.getParent()) != null) {
-			if (n == root) {
-				ret.mul(topTransform, ret);
-				return ret;
-			}
-			if (n instanceof TransformGroup) {
-				TransformGroup tg = (TransformGroup) n;
-				tg.getTransform(t);
-				ret.mul(t, ret);
-			}
-		}
-		return null;
-	}
-
 }

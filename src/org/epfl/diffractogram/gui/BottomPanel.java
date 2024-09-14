@@ -305,6 +305,7 @@ public class BottomPanel extends HVPanel.HPanel {
 		}
 		
 		public void actionPerformed(ActionEvent e) {
+			animator.stopAnimation();
 			if (e.getSource() == fromToEnable) {
 				boolean b = ((JCheckBox)e.getSource()).isSelected();
 				animator.fromToEnable = b;
@@ -325,40 +326,26 @@ public class BottomPanel extends HVPanel.HPanel {
 				if (((JToggleButton)e.getSource()).isSelected()) {
 					animator.animateSingleAngle(paramPane.rotX, paramPane.rotX.getValue(), (JToggleButton)e.getSource());
 				}
-				else {
-					animator.stopAnimation();
-				}
 			}
 			else if (e.getActionCommand().equals("Chi")) {
 				if (((JToggleButton)e.getSource()).isSelected()) {
 					animator.animateSingleAngle(paramPane.rotY, paramPane.rotY.getValue(), (JToggleButton)e.getSource());
 				}
-				else {
-					animator.stopAnimation();
-				}
+
 			}
 			else if (e.getActionCommand().equals("Phi")) {
 				if (((JToggleButton)e.getSource()).isSelected()) {
 					animator.animateSingleAngle(paramPane.rotZ, paramPane.rotZ.getValue(), (JToggleButton)e.getSource());
-				}
-				else {
-					animator.stopAnimation();
 				}
 			}
 			else if (e.getActionCommand().equals("Lambda")) {
 				if (((JToggleButton)e.getSource()).isSelected()) {
 					animator.animateLambda(paramPane.lambda, paramPane.lambda.getMin(), paramPane.lambda.getMax(), (JToggleButton)e.getSource());
 				}
-				else {
-					animator.stopAnimation();
-				}
 			}
 			else if (e.getActionCommand().equals("Debye-Scherrer")) {
 				if (((JToggleButton)e.getSource()).isSelected()) {
 					animator.animateRandom(paramPane.rotX, paramPane.rotY, paramPane.rotZ, (JToggleButton)e.getSource());
-				}
-				else {
-					animator.stopAnimation();
 				}
 			}
 			else if (e.getActionCommand().equals("Laue")) {

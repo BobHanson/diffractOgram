@@ -22,6 +22,7 @@ import javax.vecmath.Matrix4f;
 import javax.vecmath.Point3d;
 import javax.vecmath.Point3f;
 import javax.vecmath.TexCoord2f;
+import javax.vecmath.Tuple3d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
@@ -326,6 +327,31 @@ public class Utils3d {
 		quad.setNormal(2, e2f);
 		quad.setNormal(3, e2f);
 		return quad;
+	}
+
+	public static Matrix3d getRotationMatrix(double angle, Vector3d v) {
+		double c = Math.cos(angle);
+		double s = Math.sin(angle);
+		double t = 1 - c;
+		double n = v.length();
+		double vx = v.getX() / n;
+		double vy = v.getY() / n;
+		double vz = v.getZ() / n;
+		Matrix3d m = new Matrix3d();
+		m.m00 = t * vx * vx + c;
+		m.m01 = t * vy * vx + s * vz;
+		m.m02 = t * vz * vx - s * vy;
+		m.m10 = t * vx * vy - s * vz;
+		m.m11 = t * vy * vy + c;
+		m.m12 = t * vz * vy + s * vx;
+		m.m20 = t * vx * vz + s * vy;
+		m.m21 = t * vy * vz - s * vx;
+		m.m22 = t * vz * vz + c;
+		return m;
+	}
+
+	public static double dot(Tuple3d v, Tuple3d p) {
+		return v.x * p.x + v.y * p.y + v.z * p.z;
 	}
 
 

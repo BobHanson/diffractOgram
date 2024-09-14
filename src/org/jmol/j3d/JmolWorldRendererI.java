@@ -1,9 +1,8 @@
 package org.jmol.j3d;
 
+import javax.media.j3d.Node;
 import javax.media.j3d.Shape3D;
 import javax.media.j3d.Transform3D;
-
-import org.jmol.j3d.geometry.JmolShape3D;
 
 public interface JmolWorldRendererI {
 
@@ -11,7 +10,7 @@ public interface JmolWorldRendererI {
 
 	Object getViewer();
 
-	Transform3D getTransform(JmolShape3D shape);
+	Transform3D getTransform(Node shape);
 
 	void scriptWait(String s);
 

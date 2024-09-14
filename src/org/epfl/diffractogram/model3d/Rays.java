@@ -19,14 +19,15 @@ import org.epfl.diffractogram.util.Utils3d;
 
 
 public class Rays extends BranchGroup {
+	
 	private Vector<BranchGroup> raysAnt, raysUsed;
 	private final Appearance raysAppRed, raysAppWhite, raysAppTransp;
 	private BranchGroup impacts;
-	private Univers univers;
+	private Model3d model3d;
 	public static final Point3d o = new Point3d(0, 0, 0);
 	
-	public Rays(Univers univers) {
-		this.univers = univers;
+	public Rays(Model3d model3d) {
+		this.model3d = model3d;
 		setName("rays");
 		raysAnt = new Vector<BranchGroup>(100, 100);
 		raysUsed = new Vector<BranchGroup>(100, 100);
@@ -42,14 +43,14 @@ public class Rays extends BranchGroup {
 		impacts.setName("impact:");
 		impacts.setCapability(BranchGroup.ALLOW_CHILDREN_EXTEND);
 		impacts.setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
-		univers.addNotify(this, impacts);
+		model3d.univers.addNotify(this, impacts);
 	}
 	
 	
 	public void removeAllRays(boolean persistent) {
 		BranchGroup r;
 		if (!persistent)
-			univers.removeAllNotify(impacts);
+			model3d.univers.removeAllNotify(impacts);
 		for (int i=raysUsed.size()-1; i>=0; i--) {
 			r = (BranchGroup)raysUsed.get(i);
 			Utils3d.changeCylinderApp(r, raysAppTransp);
@@ -60,11 +61,11 @@ public class Rays extends BranchGroup {
 	
 	private static int rayid;
 	
-	private BranchGroup createRay(Point3d a, Point3d b, Appearance app) {
+ BranchGroup createRay(Point3d a, Point3d b, Appearance app) {
 		BranchGroup r;
 		if (raysAnt.size() == 0) {
-			r = univers.creator.createCylinder(univers, "ray:" + ++rayid, a, b, .02, app, 4);
-			univers.addNotify(this, r);
+			r = model3d.univers.creator.createCylinder(model3d.univers, "ray:" + ++rayid, a, b, .02, app, 4);
+			model3d.univers.addNotify(this, r);
 		} else {
 			r = (BranchGroup) raysAnt.remove(raysAnt.size() - 1);
 			Utils3d.changeCylinder(r, a, b);
@@ -76,11 +77,12 @@ public class Rays extends BranchGroup {
 	
 	static int impactid;
 	
-	public void addImpactRay(Point3d cSphere, Point3d pNet, Point3d pProj) {
+	public void addImpactRay(Point3d cSphere, Point3d pNet, Point3d pOrigin, Point3d pProj) {
 		createRay(cSphere, pNet, raysAppRed);
-		createRay(o, pProj, raysAppWhite);
-		univers.addNotify(impacts, univers.creator.createAtom("impact:" + ++impactid, pProj, ColorConstants.black, .03f));
+		createRay(pOrigin, pProj, raysAppRed);
+		model3d.univers.addNotify(impacts, model3d.univers.creator.createAtom("impact:" + ++impactid, pProj, ColorConstants.black, .03f));
 	}
+
 	
 
 }

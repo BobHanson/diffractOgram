@@ -124,5 +124,24 @@ public abstract class WorldRenderer {
 		topTransform = t;
 	}
 
+	private final static Transform3D t = new Transform3D();
+
+	public Transform3D getTransform(Node n) {
+		Transform3D ret = t;
+		Transform3D t = new Transform3D();
+		ret.setIdentity();
+		while ((n = n.getParent()) != null) {
+			if (n == root) {
+				ret.mul(topTransform, ret);
+				return ret;
+			}
+			if (n instanceof TransformGroup) {
+				TransformGroup tg = (TransformGroup) n;
+				tg.getTransform(t);
+				ret.mul(t, ret);
+			}
+		}
+		return null;
+	}
 
 }
