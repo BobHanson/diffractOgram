@@ -1,0 +1,2 @@
+Specification-Version: 1.8
+Main-Class: org.epfl.diffractogram.DiffractOgram2

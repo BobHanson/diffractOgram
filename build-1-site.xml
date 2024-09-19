@@ -66,10 +66,13 @@
   	<!-- unzip SwingJS-site.zip 
   	
   	  we do this separately, as we want it done last 
-  	
+  	  
+  	  actually, we have this in JmolSwingJS?
+
   	-->
 
   	<unzip src="${swingjs.zip}" dest="${site.dir}/" overwrite="true"/>  	
+  	
 
   	
   	<echo>Deleting unnecessary packages</echo>
@@ -80,6 +83,7 @@
 		<delete dir="${site.dir}/swingjs/jcse" />
 		<delete dir="${site.dir}/swingjs/klotho" />
 		<delete dir="${site.dir}/swingjs/php" />
+		<delete file="${j2s.dir}/core/package.js" />
 	<delete dir="${j2s.dir}/com/actelion" />
 	<delete dir="${j2s.dir}/com/integratedgraphics" />
 	<delete dir="${j2s.dir}/data" />

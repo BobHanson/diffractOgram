@@ -131,14 +131,14 @@ public abstract class JmolShape3D extends Shape3D {
 	}
 	public String getThisID() {
 		if (thisID == null) {
-			thisID = fixJ3dName(getName());
+			thisID = fixJ3dId(getName());
 		} else if (shape == null && shapes == null) {
 			getShapes();
 		}
 		return "draw id '" + thisID + "'";
 	}
 
-	private static String fixJ3dName(String name) {
+	private static String fixJ3dId(String name) {
 		return name.replace('*', '_').replace('\'','_');
 	}
 
@@ -200,7 +200,7 @@ public abstract class JmolShape3D extends Shape3D {
 		//System.out.println("removeAll " + g.getName());
 		Object[][] val = new Object[][] {
 	           { "init", "jmolvis" },
-	           { "thisID", fixJ3dName(g.getName()) + "*" },
+	           { "thisID", fixJ3dId(g.getName()) + "*" },
 			   { "token", Integer.valueOf(T.off) },
 	           { "thisID", null }
 		};

@@ -214,7 +214,20 @@ public class Lattice extends Matrix3d {
 		r[0].scale(iv);
 		r[1].scale(iv);
 		r[2].scale(iv);
-		return r;
+		// note that these lattice vector lengths
+		// are all >= 1/a, 1/b, and 1/c. 
+//		System.out.println("latt " + r[0].length() * x.length());
+//		System.out.println("latt " + r[1].length() * y.length());
+//		System.out.println("latt " + r[2].length() * z.length());
+		// beta = 120
+		// latt 1.1547005383792512
+		// latt 0.9999999999999999
+		// latt 1.1547005383792515
+		//
+		// this is becuase they must project onto the
+		// a, b, and c axes to give the necessary 
+		// n lambda / a distance.
+				return r;
 	}
 
 	private static double sin(double a) { // arguments in degrees !!

@@ -142,9 +142,9 @@ public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendere
 		return addObject(new JmolSphere(name, radius, divs, isAtom, app));
 	}
 
-	public TransformGroup createArrow(String name, TransformGroup tg, double radiusArrow, double lenArrow,
+	public TransformGroup createArrow(String name, String text, TransformGroup tg, double radiusArrow, double lenArrow,
 			double radius, float height, int precision, Appearance app) {
-		tg.addChild(addObject(new JmolArrow(name, radiusArrow, lenArrow, radius, height, precision, app)));
+		tg.addChild(addObject(new JmolArrow(name, text, radiusArrow, lenArrow, radius, height, precision, app)));
 		return tg;
 	}
 
@@ -159,10 +159,14 @@ public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendere
 
 	@Override
 	public void notifyRemove(Group parent, Node child) {
-		switch(parent.getName()) {
+		if (child == null)
+			return;
+		String pname = parent.getName();
+		//System.out.println("JWR removing " + child.getName());
+		switch(pname == null ? "" : pname) {
 		case "root":
 			this.mapRoot.remove(child.getName());
-			System.out.println("removed " + child.getName() + " from " + parent.getName());
+			//System.out.println("removed " + child.getName() + " from " + parent.getName());
 			break;
 		}
 		if (!completed)
@@ -176,16 +180,15 @@ public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendere
 
 	private void setShapeVisibility(Node child, boolean b) {
 		JmolShape3D n = (JmolShape3D) (child instanceof Group ? Utils3d.getShapeChild((Group) child) : child);
-		if (n == null)
-			return;
-		n.setJmolShapeVisibility(b);
+		if (n != null)
+			n.setJmolShapeVisibility(b);
 	}
 
 	@Override
-	public void notifyAdd(Group parent, Node child) {
+	synchronized public void notifyAdd(Group parent, Node child) {
 		switch(parent.getName()) {
 		case "root":
-			System.out.println("added " + child.getName() + " to " + parent.getName());
+			//System.out.println("added " + child.getName() + " to " + parent.getName());
 			this.mapRoot.put(child.getName(), child);
 			break;
 		}

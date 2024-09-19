@@ -261,17 +261,21 @@ public class Utils3d {
 		return new TransformGroup(t);
 	}
 
-	public  static Shape3D getShapeChild(Group a) {
+	public static Shape3D getShapeChild(Group a) {
 		Node g = a;
-		while (!(g instanceof Shape3D)) {
-			Node c = ((Group) g).getChild(0);
-			if (c instanceof Behavior) {
-				g = ((Group) g).getChild(1);
-			} else {
-				g = c;
+		try {
+			while (!(g instanceof Shape3D)) {
+				Node c = ((Group) g).getChild(0);
+				if (c instanceof Behavior) {
+					g = ((Group) g).getChild(1);
+				} else {
+					g = c;
+				}
 			}
+			return (Shape3D) g;
+		} catch (Exception e) {
+			return null;
 		}
-		return (Shape3D) g;
 	}
 
 	public  static Appearance newAppearance(String name) {
@@ -352,6 +356,10 @@ public class Utils3d {
 
 	public static double dot(Tuple3d v, Tuple3d p) {
 		return v.x * p.x + v.y * p.y + v.z * p.z;
+	}
+
+	public static double len(Tuple3d p) {
+		return Math.sqrt(dot(p, p));
 	}
 
 

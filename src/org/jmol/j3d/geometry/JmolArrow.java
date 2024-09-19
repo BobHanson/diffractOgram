@@ -9,10 +9,12 @@ import org.jmol.shapespecial.DrawMesh;
 public class JmolArrow extends JmolShape3D {
 
 	
-	public JmolArrow(String name, double radiusArrow, double lenArrow, double radius, float height, int precision,
+	private String text;
+
+	public JmolArrow(String name, String text, double radiusArrow, double lenArrow, double radius, float height, int precision,
 			Appearance app) {
 		super(name, app, JMOL_SHAPE_ARROW);
-
+		this.text = ">" + text;
 		vertices = new Point3d[4];
 		vertices[0] = new Point3d(0, - height / 2, 0);
 		vertices[1] = new Point3d(0, height / 2 + lenArrow, 0);
@@ -43,6 +45,7 @@ public class JmolArrow extends JmolShape3D {
 		           { "color", Integer.valueOf(argb) },
 		           { "translucentLevel", Double.valueOf(translucency) },
 		           { "translucency", "translucent" },
+		           { "title", text },
 		           { "thisID", null }
 		    });
 		    return "";

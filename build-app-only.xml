@@ -1,0 +1,138 @@
+<project name="Jmol" default="main" basedir=".">
+  <!--
+      DocumentId  $Id: build.xml 21793 2018-01-02 16:58:31Z hansonr $
+  -->
+	
+  <!-- Contributions -->
+  <!-- <for list ...> construct needs ant-contrib.jar -->
+  <taskdef resource="net/sf/antcontrib/antlib.xml">
+    <classpath>
+      <pathelement location="tools/ant-contrib.jar" />
+    </classpath>
+  </taskdef>
+
+  <property name="site.dir" value="site" />
+  <property name="dist.dir" value="dist" />
+  <property name="lib.dir" value="lib" />
+
+  <property name="appjars.dir" value="build/appjars" />
+  <property name="classes.dir" value="build/classes" />
+	
+	  <path id="project.class.path">
+	    <fileset dir="${lib.dir}">
+	      <include name="*.jar" />
+	    </fileset>
+	  </path>
+	  
+
+  <target name="main" id="main" depends="init,jar"/>
+  
+  <target name="init" id="init">
+    <tstamp/>
+  </target>
+
+
+  <target id="classes" name="classes" depends="init">
+    <mkdir dir="${classes.dir}"/>
+    <javac srcdir="src" destdir="${classes.dir}" encoding="UTF8"
+           source="1.8" target="1.8">
+      <classpath refid="project.class.path" />
+    </javac>
+    <copy todir="${classes.dir}" >
+      <fileset dir="src">
+        <include name="**/license.txt" />
+        <include name="**/*.jpg" />
+        <include name="**/*.gif" />
+      	<include name="**/*.png" />
+        <include name="**/*.html" />
+        <include name="**/*.js" />
+        <include name="**/*.dtd" />
+        <include name="**/*.properties" />
+        <include name="**/Properties/*" />
+        <include name="**/Data/*" />
+        <include name="**/*.txt" />
+        <include name="**/*.json" />
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="check.libjars" id="check.libjars">
+    <condition property="libjars.uptodate">
+      <and>
+        <uptodate targetfile="${appjars.dir}">
+          <srcfiles dir="${lib.dir}" includes="diffractOgram.jar"/>
+          <srcfiles dir="${lib.dir}" includes="JmolD.jar"/>
+        </uptodate>
+        <uptodate targetfile="build/libjars.timestamp"
+                  srcfile="${appjars.dir}"/>
+      </and>
+    </condition>
+  </target>
+
+
+  <target name="libjars" id="libjars" depends="check.libjars" unless="libjars.uptodate">
+    <delete file="build/libjars.timestamp"/>
+    <mkdir dir="${appjars.dir}"/>
+    <unjar dest="${appjars.dir}" src="${lib.dir}/diffractOgram.jar"/>
+    <unjar dest="${appjars.dir}" src="${lib.dir}/JmolD.jar"/>
+  	<delete file="${appjars.dir}/META-INF/MANIFEST.MF" />
+  	<!-- the following mitigation is in accord with https://logging.apache.org/log4j/2.x/security.html
+  	     despite the fact that the org/apache/logging package is not included in Jmol.
+  	     It is added here in case JNI-InChI is ever upgraded to Log4J2 (which requires Java 7+) -->  
+  	<delete file="${appjars.dir}/org/apache/logging/log4j/core/lookup/JndiLookup.class" />
+    <touch file="build/libjars.timestamp"/>
+  </target>
+
+  <target name="jar" id="jar"
+          depends="init,classes,libjars">
+     <jar destfile="build/diffractOgram2.jar"
+         manifest="manifest/dog2.txt">
+      <fileset dir="${appjars.dir}" includes="**/*"/>
+      <fileset dir="${classes.dir}" >
+        <exclude name="**/.*" />
+        <exclude name="**/*.dx" />
+        <exclude name="ant/**" />
+        <include name="com/**" />
+        <include name="javajs/async/**" />
+        <include name="javax/**" />
+        <include name="org/**" />
+        <include name="jmol/**" />
+      </fileset>
+    </jar>
+    <jar destfile="build/diffractOgram.jar"
+          manifest="manifest/dog.txt">
+     <fileset dir="${appjars.dir}" includes="**/*"/>
+     <fileset dir="${classes.dir}" >
+       <exclude name="**/.*" />
+       <exclude name="**/*.dx" />
+       <exclude name="ant/**" />
+       <include name="com/**" />
+       <include name="javajs/async/**" />
+       <include name="javax/**" />
+       <include name="org/**" />
+       <include name="jmol/**" />
+     </fileset>
+   </jar>
+  	<copy file="build/diffractOgram.jar" tofile="dist/diffractOgram.jar" />
+  	<copy file="build/diffractOgram2.jar" tofile="dist/diffractOgram2.jar" />
+  	
+    <zip basedir="${site.dir}" 
+    	 includes="**/*"
+   	     destfile="${dist.dir}/DiffractOgram-SwingJS.zip" 
+    />
+  	
+  	
+  </target>
+
+  <target name="clean" id="clean">
+    <delete dir="${classes.dir}"/>
+    <delete dir="${appjars.dir}"/>
+    <delete dir="build/dist"/>
+    <delete>
+      <fileset dir="build">
+        <include name="*.jar" />
+      </fileset>
+    </delete>
+  </target>
+
+</project>

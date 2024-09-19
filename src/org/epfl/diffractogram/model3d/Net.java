@@ -1,7 +1,9 @@
 package org.epfl.diffractogram.model3d;
 
 import java.awt.DefaultKeyboardFocusManager;
+import java.awt.Graphics;
 import java.awt.KeyboardFocusManager;
+import java.awt.Point;
 import java.awt.event.KeyEvent;
 
 import javax.media.j3d.Appearance;
@@ -12,14 +14,16 @@ import javax.media.j3d.Node;
 import javax.media.j3d.Transform3D;
 import javax.media.j3d.TransformGroup;
 import javax.media.j3d.TransparencyAttributes;
-import javax.vecmath.Color3f;
 import javax.vecmath.Matrix3d;
 import javax.vecmath.Point3d;
+import javax.vecmath.Point3i;
 import javax.vecmath.Vector3d;
 
 import org.epfl.diffractogram.DefaultValues;
+import org.epfl.diffractogram.model3d.Model3d.Orientation;
+import org.epfl.diffractogram.model3d.Model3d.Precession;
 import org.epfl.diffractogram.util.Calc;
-import org.epfl.diffractogram.util.ColorConstants;
+import org.epfl.diffractogram.util.Colors;
 import org.epfl.diffractogram.util.Lattice;
 import org.epfl.diffractogram.util.Utils3d;
 
@@ -30,73 +34,90 @@ import org.epfl.diffractogram.util.Utils3d;
  * 
  */
 public class Net extends BranchGroup {
-	
-	/**
-	 * TRUE to develop the reciprocal lattice as we go;
-	 * FALSE for orginal functionality
-	 */
-	final static boolean developNet = true;
 
-	
+	private static class Atom extends BranchGroup {
+
+		static int atomid;
+
+		boolean isSpecial;
+		Point3d point;
+		boolean isSelected;
+		boolean isVisible;
+		float intensity;
+
+		private int id;
+
+		Point3i hkl;
+
+		Atom(int h, int k, int l, Vector3d v, boolean isSpecial, boolean isVisible, float intensity) {
+			this.id = ++atomid;
+			this.hkl = new Point3i(h, k, l);
+			this.point = new Point3d(v);
+			this.isSpecial = isSpecial;
+			this.isVisible = isVisible;
+			this.intensity = intensity;
+			setName("netroot:atom:" + id);
+			setCapability(BranchGroup.ALLOW_DETACH);
+		}
+
+		int getID() {
+			return id;
+		}
+		
+		public String toString() {
+			return "Atom[" + hkl + " " + isSpecial + "]";
+		}
+
+	}
+
 //	public UnitCell unitCell2;
 	public TransformGroup orientationObject;
 	public TransformGroup precessionObject;
 	private BranchGroup netLabel;
 	public BranchGroup netRoot;
-	public Point3d[][][] points;
-	private BranchGroup[][][] atoms;
-	private boolean[][][] isSelected;
-	private boolean[][][] dontdraw;
-	private float[][][] intensity;
-	public boolean[][][] isProjected;
 	private static Appearance defaultApp, redApp, greenApp;
-	private Vector3d a, b, c;
-	public int x, y, z;
-	public int xMax, yMax, zMax;
+	private Vector3d aStar, bStar, cStar;
+	public int hMax, kMax, lMax;
+	public int hRange, kRange, lRange;
 	BranchGroup directRepere;
 
-
 	private BranchGroup unitCell;
-	private boolean showDirect, showUnitCell;
-	private DefaultValues defaultValues;
+	private boolean showDirect, showRLAxes;
 	private Univers univers;
-	
-	
+
 	double scaling;
 	private Model3d model3d;
 	private TransformGroup unitcellObject;
 	public Lattice rl;
 
-
 	private Transform3D directTR;
 	public Transform3D directTRInv;
-	
+	private TransformGroup netBox;
+
+	private Atom[][][] atoms;
+
 	public Net(Model3d model3d, DefaultValues defaultValues) {
-	
-		rl = defaultValues.lattice.reciprocal();
+
+		rl = defaultValues.param_lattice.reciprocal();
 		this.model3d = model3d;
 		this.univers = model3d.univers;
-		int x = defaultValues.crystalX;
-		int y = defaultValues.crystalY; 
-		int z = defaultValues.crystalZ;
+		int hMax = defaultValues.param_crystalX;
+		int kMax = defaultValues.param_crystalY;
+		int lMax = defaultValues.param_crystalZ;
 		this.setName("net");
-		this.defaultValues = defaultValues;
 		setCapability(TransformGroup.ALLOW_CHILDREN_EXTEND);
 		setCapability(TransformGroup.ALLOW_CHILDREN_WRITE);
 		if (defaultApp == null) {
 			defaultApp = Utils3d.newAppearance("color:blue");
-			defaultApp.setMaterial(new Material(ColorConstants.blue, ColorConstants.black, 
-					ColorConstants.blue, ColorConstants.white, 128));
+			defaultApp.setMaterial(new Material(Colors.blue, Colors.black, Colors.blue, Colors.white, 128));
 		}
 		if (redApp == null) {
 			redApp = Utils3d.newAppearance("color:red");
-			redApp.setMaterial(new Material(ColorConstants.red, ColorConstants.black, 
-					ColorConstants.red, ColorConstants.white, 128));
+			redApp.setMaterial(new Material(Colors.red, Colors.black, Colors.red, Colors.white, 128));
 		}
 		if (greenApp == null) {
 			greenApp = Utils3d.newAppearance("color:green");
-			greenApp.setMaterial(new Material(ColorConstants.green, ColorConstants.black, 
-					ColorConstants.green, ColorConstants.white, 128));
+			greenApp.setMaterial(new Material(Colors.green, Colors.black, Colors.green, Colors.white, 128));
 		}
 		orientationObject = model3d.orientation.addOrientationObject(univers.newWritableTransformGroup(null));
 		orientationObject.setName("orientation");
@@ -108,7 +129,7 @@ public class Net extends BranchGroup {
 		precessionObject.addChild(orientationObject);
 		precessionObject.addChild(unitcellObject);
 
-		createNet(rl.x, rl.y, rl.z, x, y, z);
+		createNet(rl.x, rl.y, rl.z, hMax, kMax, lMax);
 
 		univers.addNotify(this, precessionObject);
 		KeyboardFocusManager kbfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
@@ -121,7 +142,7 @@ public class Net extends BranchGroup {
 				toggleDirect();
 			}
 			if (e.getKeyCode() == KeyEvent.VK_F2 && e.getID() == KeyEvent.KEY_PRESSED) {
-				toggleUnitCell();
+				toggleReciprocalAxes();
 			}
 			return super.dispatchKeyEvent(e);
 		}
@@ -133,83 +154,68 @@ public class Net extends BranchGroup {
 //		return a;
 //	}
 //
-	public void toggleUnitCell() {
-		if (showUnitCell) {
+	/**
+	 * VK_F3
+	 */
+	public void toggleReciprocalAxes() {
+		if (showRLAxes || !model3d.showReciprocalLattice) {
 			univers.removeNotify(netRoot, unitCell);
-		} else if (showUnitCell) {
+		} else if (showRLAxes) {
 			univers.addNotify(netRoot, unitCell);
 		}
-		if (!showDirect)
+		if (!showDirect && model3d.showReciprocalLattice)
 			toggleDirect();
-		showUnitCell = !showUnitCell;
+		showRLAxes = model3d.showReciprocalLattice && !showRLAxes;
 	}
 
+	/**
+	 * VK_F2
+	 */
 	public void toggleDirect() {
-		if (showDirect) {
+		if (showDirect || !model3d.showReciprocalLattice) {
 			univers.removeNotify(netRoot, directRepere);
 		} else {
 			univers.addNotify(netRoot, directRepere);
 		}
-		showDirect = !showDirect;
+		showDirect = model3d.showReciprocalLattice && !showDirect;
 	}
 
-	static int atomid;
-
-	private BranchGroup createAtom(Vector3d v, Appearance app, float dotSize3d) {
-		BranchGroup bg = new BranchGroup();
-		//bg.setCapability(BranchGroup.ALLOW_CHILDREN_READ);
-		bg.setCapability(BranchGroup.ALLOW_DETACH);
-		TransformGroup tg = Utils3d.getVectorTransformGroup(v.x, v.y, v.z, null);
-		//tg.setCapability(TransformGroup.ALLOW_CHILDREN_READ);
-		++atomid;
-		Utils3d.setParents(univers.renderer.createSphere("netroot:atom:sphere" + atomid, dotSize3d, 10, true, app), tg, bg);
-		bg.setName("netroot:atom:" + atomid);
-		return bg;
-	}
-
-	private void changeAtomApp(BranchGroup a, Appearance app) {
+	private void changeAtomApp(Atom a, Appearance app) {
+		if (a == null)
+			return;
 		Utils3d.getShapeChild(a).setAppearance(app);
 	}
 
 	public void setLambda(double val) {
-		createNet(a, b, c, x, y, z);
+		createNet(aStar, bStar, cStar, hMax, kMax, lMax);
 	}
-	
-	public synchronized void createNet(Vector3d a, Vector3d b, Vector3d c, int x, int y, int z) {
-		this.a = a;
-		this.b = b;
-		this.c = c;
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		
+
+	public synchronized void createNet(Vector3d aStar, Vector3d bStar, Vector3d cStar, int hMax, int kMax, int lMax) {
+		this.aStar = aStar;
+		this.bStar = bStar;
+		this.cStar = cStar;
+		this.hMax = hMax;
+		this.kMax = kMax;
+		this.lMax = lMax;
+
 		directTR = null;
-		scaling =  DefaultValues.scale * (model3d.isUnitSphere ? model3d.getLambda() : 1);
+		scaling = DefaultValues.scale * (DefaultValues.isUnitSphere ? model3d.getLambda() : 1);
 
-		boolean special = false;
-		if (Math.abs(a.length() - b.length()) < 0.001 && Math.round(b.angle(a) * 180 / Math.PI) == 60
-				&& Math.round(b.angle(c) * 180 / Math.PI) == 90 && Math.round(c.angle(a) * 180 / Math.PI) == 90)
-			special = true;
+		boolean trigonal = (Math.abs(aStar.length() - bStar.length()) < 0.001
+				&& Math.round(bStar.angle(aStar) * 180 / Math.PI) == 60
+				&& Math.round(bStar.angle(cStar) * 180 / Math.PI) == 90
+				&& Math.round(cStar.angle(aStar) * 180 / Math.PI) == 90);
 
-		xMax = x * (special ? (2 * x + 1) : x);
-		yMax = y * (special ? (2 * y + 1) : y);
-		zMax = z;
+		// xMax, yMax, and zMax set the ranges for the point search
+		// which for trigonal systems adds symmetry-equivalent extensions (and
+		// duplicates!)
+		hRange = hMax * (trigonal ? (2 * hMax + 1) : hMax);
+		kRange = kMax * (trigonal ? (2 * kMax + 1) : kMax);
+		lRange = lMax;
 
-		points = new Point3d[2 * xMax + 1][2 * yMax + 1][2 * zMax + 1];
-		atoms = new BranchGroup[2 * xMax + 1][2 * yMax + 1][2 * zMax + 1];
-		isSelected = new boolean[2 * xMax + 1][2 * yMax + 1][2 * zMax + 1];
-		dontdraw = new boolean[2 * xMax + 1][2 * yMax + 1][2 * zMax + 1];
-		intensity = new float[2 * xMax + 1][2 * yMax + 1][2 * zMax + 1];
-		isProjected = new boolean[2 * xMax + 1][2 * yMax + 1][2 * zMax + 1];
+		atoms = new Atom[2 * hRange + 1][2 * kRange + 1][2 * lRange + 1];
 		if (netRoot != null)
 			univers.removeNotify((Group) orientationObject, netRoot);
-
-		for (int i = 0; i < points.length; i++)
-			for (int j = 0; j < points[i].length; j++)
-				for (int k = 0; k < points[i][j].length; k++) {
-					points[i][j][k] = null;
-					dontdraw[i][j][k] = true;
-				}
 
 		netRoot = new BranchGroup();
 		netRoot.setName("netroot:");
@@ -217,22 +223,27 @@ public class Net extends BranchGroup {
 		netRoot.setCapability(BranchGroup.ALLOW_CHILDREN_EXTEND);
 		netRoot.setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
 
-		for (int i = -x; i <= x; i++) {
-			for (int j = -y; j <= y; j++) {
-				for (int k = -z; k <= z; k++) {
-					// dontdraw[i+xMax][j+yMax][k+zMax] = true;
-					// dontdraw[i+xMax][j+yMax][k+zMax] = ((i!=-x && i!=x) || (j!=-y && j!=y) ||
-					// (k!=-z && k!=z));
-					// dontdraw[i+xMax][j+yMax][k+zMax] = (i!=-x && i!=x && j!=-y && j!=y && k!=-z
-					// && k!=z);
-					// dontdraw[i+xMax][j+yMax][k+zMax] = !(i==-x && i!=x && j!=-y && j!=y && k!=-z
-					// && k!=z);
-					// dontdraw[i+xMax][j+yMax][k+zMax] = (j!=-y && j!=y && k!=-z && k!=z);
-					boolean v = !(i != -x && i != x && j != -y && j != y && k != -z && k != z);
-					createPoint(i, j, k, !developNet && v);
-					if (special) {
-						createPoint(-(i + j), i, k, false);
-						createPoint(j, -(i + j), k, false);
+		for (int h = -hMax; h <= hMax; h++) {
+			for (int k = -kMax; k <= kMax; k++) {
+				for (int l = -lMax; l <= lMax; l++) {
+					boolean visible = !(h != -hMax && h != hMax && k != -kMax && k != kMax && l != -lMax && l != lMax);
+					createAtom(h, k, l, false, !DefaultValues.developNet && visible);
+				}
+			}
+		}
+		if (trigonal) {
+			// leave out trigonal rotations
+			// Q: What is this for? The range is too low?
+			// but what about other orientations,
+			// such as unique b instead of unique c?
+			for (int h = -hMax; h <= hMax; h++) {
+				for (int k = -kMax; k <= kMax; k++) {
+					for (int l = -lMax; l <= lMax; l++) {
+						int hk = h + k;
+						if (getAtom(-hk, h, l) == null)
+							createAtom(-hk, h, l, true, false);
+						if (getAtom(k, -hk, l) == null)
+							createAtom(k, -hk, l, true, false);
 					}
 				}
 			}
@@ -246,36 +257,39 @@ public class Net extends BranchGroup {
 		univers.addNotify((Group) orientationObject, netRoot);
 	}
 
-	private void createPoint(int i, int j, int k, boolean visible) {
+	private void createAtom(int h, int k, int l, boolean isSpecial, boolean visible) {
 		Vector3d v = new Vector3d(); // (rotated) Cartesian, but same as abc
-		v.scaleAdd(scaling * i, a, v); // (scaling is scale * lambda/a)
-		v.scaleAdd(scaling * j, b, v);
-		v.scaleAdd(scaling * k, c, v);
-		BranchGroup atom = createAtom(v, defaultApp, defaultValues.dotSize3d);
-		points[i + xMax][j + yMax][k + zMax] = new Point3d(v);
-		atoms[i + xMax][j + yMax][k + zMax] = atom;
-		isSelected[i + xMax][j + yMax][k + zMax] = false;
-		intensity[i + xMax][j + yMax][k + zMax] = Calc.calcIntensity(a, b, c, i, j, k);
-		dontdraw[i + xMax][j + yMax][k + zMax] = !visible;
-		isProjected[i + xMax][j + yMax][k + zMax] = false;
-		if (visible)
+		v.scaleAdd(scaling * h, aStar, v); // (scaling is overallScale * lambda;)
+		v.scaleAdd(scaling * k, bStar, v);
+		v.scaleAdd(scaling * l, cStar, v);
+		
+		Atom atom = atoms[h + hRange][k + kRange][l + lRange] 
+				= new Atom(h, k, l, v, isSpecial, visible, Calc.calcIntensity(aStar, bStar, cStar, h, k, l));
+		Appearance app = isSpecial ? greenApp : defaultApp;
+		float dotSize = DefaultValues.dotSize3d * (isSpecial ? 0.8f : 1);
+		TransformGroup tg = Utils3d.getVectorTransformGroup(v.x, v.y, v.z, null);
+		Utils3d.setParents(univers.renderer.createSphere("netroot:atom:sphere" + atom.getID(), dotSize, 10, true, app),
+				tg, atom);
+		if (visible && model3d.showReciprocalLattice)
 			univers.addNotify(netRoot, atom);
 	}
 
 	public void createLegend() {
-		double h = DefaultValues.scale * zMax * c.getZ() + 1;
+		if (!model3d.showReciprocalLattice) {
+			univers.removeNotify(this, netLabel);
+			return;
+		}
+		double h = DefaultValues.scale * lRange * cStar.getZ() + 1;
 		Transform3D t3l = new Transform3D();
 		t3l.rotZ(Math.PI / 2);
 		TransformGroup tgl = univers.newWritableTransformGroup(t3l);
-		Node txt = univers.creator.createFixedLegend("Reciprocal lattice", new Point3d(0, 0, h + .2), .1f,
-				Utils3d.createApp(ColorConstants.blue), true);
+		Node txt = univers.creator.createFixedLegend("rl1", "Reciprocal lattice", new Point3d(0, 0, h + .2), .1f,
+				Colors.appBlue, true);
 		txt.setName("leg:reclatt");
 		tgl.addChild(txt);
-		txt = univers.creator.createFixedLegend("points" 
-				+ (model3d.isUnitSphere ? 
-				"*" + DefaultValues.strLambda 
-				: ""), 
-				new Point3d(0, 0, h), .1f, Utils3d.createApp(ColorConstants.blue), true);
+		txt = univers.creator.createFixedLegend("rl2",
+				"points" + (DefaultValues.isUnitSphere ? "*" + DefaultValues.strLambda : ""), new Point3d(0, 0, h), .1f,
+				Colors.appBlue, true);
 		txt.setName("leg:points");
 		tgl.addChild(txt);
 		if (netLabel != null)
@@ -288,44 +302,40 @@ public class Net extends BranchGroup {
 	}
 
 	public void createRepere() {
-		BranchGroup bb = new BranchGroup();
-		bb.setName("bb");
-		bb.setCapability(BranchGroup.ALLOW_DETACH);
-		Node rep = univers.creator.createRepere(ColorConstants.cyan, ColorConstants.blue, 
-				null, new String[] { "a*", "b*", "c*" }, .1f, .02f,
-				defaultValues.dotSize, -defaultValues.dotSize, 
-				(Vector3d) Utils3d.mul(a, 2*DefaultValues.scale),
-				(Vector3d) Utils3d.mul(b, 2*DefaultValues.scale), 
-				(Vector3d) Utils3d.mul(c, 2*DefaultValues.scale), false);
-		rep.setName("rep:abc*");
-		univers.addNotify(bb, rep);
-		univers.addNotify(netRoot, bb);
+		if (!model3d.showReciprocalLattice)
+			return;
+		unitCell = new BranchGroup();
+		unitCell.setName("unitCell:");
+		unitCell.setCapability(BranchGroup.ALLOW_DETACH);
+		BranchGroup axes = univers.creator.createRepere("unitCell:", Colors.cyan, Colors.blue, null,
+				new String[] { "a*", "b*", "c*" }, .1f, .02f, DefaultValues.axisOffsets, -DefaultValues.axisOffsets,
+				(Vector3d) Utils3d.mul(aStar, 2 * DefaultValues.scale),
+				(Vector3d) Utils3d.mul(bStar, 2 * DefaultValues.scale),
+				(Vector3d) Utils3d.mul(cStar, 2 * DefaultValues.scale), false);
+		if (model3d.showReciprocalLattice) {
+			univers.addNotify(unitCell, axes);
+			univers.addNotify(netRoot, unitCell);
+		}
 
 		directRepere = new BranchGroup();
-		directRepere.setName("directrepere");
+		directRepere.setName("directrepere:");
 		directRepere.setCapability(BranchGroup.ALLOW_DETACH);
-		unitCell = new BranchGroup();
-		unitCell.setName("unitCell");
-		unitCell.setCapability(BranchGroup.ALLOW_DETACH);
-		Vector3d[] r = Lattice.reciprocal(a, b, c);
+		Vector3d[] r = Lattice.reciprocal(aStar, bStar, cStar);
 		r[0].normalize();
 		r[0].scale(.3 * DefaultValues.scale);
 		r[1].normalize();
 		r[1].scale(.3 * DefaultValues.scale);
 		r[2].normalize();
 		r[2].scale(.3 * DefaultValues.scale);
-		rep = univers.creator.createRepere(ColorConstants.red, ColorConstants.red, 
-				null, new String[] { "a", "b", "c" }, .15f, .02f, 
-				defaultValues.dotSize, -defaultValues.dotSize, 
-				r[0], r[1], r[2], false
-				);
-		rep.setName("repere:abc");
-		univers.addNotify(directRepere, rep);
+		axes = univers.creator.createRepere("directRepere:", Colors.red, Colors.red, null,
+				new String[] { "a", "b", "c" }, .15f, .02f, DefaultValues.axisOffsets, -DefaultValues.axisOffsets, r[0],
+				r[1], r[2], false);
+		univers.addNotify(directRepere, axes);
 		if (showDirect) {
 			netRoot.addChild(directRepere);
 		}
 	}
-	
+
 	public Transform3D getDirectTransform() {
 		if (directTR != null)
 			return directTR;
@@ -334,68 +344,182 @@ public class Net extends BranchGroup {
 		directTR = univers.renderer.getTransform(directRepere);
 		directTRInv = new Transform3D(directTR);
 		directTRInv.invert();
-		if (!showDirect) {
-			netRoot.removeChild(directRepere);
-		}
-		
+		if (!showDirect)
+			univers.removeNotify(netRoot, directRepere);
 		return directTR;
 	}
+
 	public void createTranspBox() {
+		if (!model3d.showReciprocalLattice || DefaultValues.developNet) {
+			univers.removeNotify(netRoot, netBox);
+			return;
+		}
 		Appearance app = new Appearance();
 		// was app.setMaterial(new Material(white, blue, black, blue, 120.0f));
-		app.setMaterial(new Material(ColorConstants.blue, ColorConstants.black, 
-				ColorConstants.blue, ColorConstants.white, 120.0f));
-		
+		app.setMaterial(new Material(Colors.blue, Colors.black, Colors.blue, Colors.white, 120.0f));
 		TransparencyAttributes transp = new TransparencyAttributes(TransparencyAttributes.NICEST, .90f);
-		
-		
 		app.setTransparencyAttributes(transp);
 		Transform3D t3d = new Transform3D();
 		Matrix3d matrix = new Matrix3d();
-		matrix.setColumn(0, (Vector3d) Utils3d.mul(a, x));
-		matrix.setColumn(1, (Vector3d) Utils3d.mul(b, y));
-		matrix.setColumn(2, (Vector3d) Utils3d.mul(c, z));
+		matrix.setColumn(0, (Vector3d) Utils3d.mul(aStar, hMax));
+		matrix.setColumn(1, (Vector3d) Utils3d.mul(bStar, lMax));
+		matrix.setColumn(2, (Vector3d) Utils3d.mul(cStar, kMax));
 		t3d.set(matrix);
-		Node box = univers.renderer.createBox("netroot:netbox", 2, 2, 2, app);
-		Utils3d.setParents(box, univers.newWritableTransformGroup(t3d), netRoot);
+		netBox = univers.newWritableTransformGroup(t3d);
+		netBox.setName("netroot:netbox");
+		Node box = univers.renderer.createBox("netBox", 2, 2, 2, app);
+		Utils3d.setParents(box, netBox, netRoot);
 	}
 
 	public synchronized void setLattice(Lattice l) {
-		createNet(l.x, l.y, l.z, x, y, z);
+		createNet(l.x, l.y, l.z, hMax, kMax, lMax);
 	}
 
 	public synchronized void setCrystalSize(int x, int y, int z) {
-		createNet(a, b, c, x, y, z);
-	}
-
-	public synchronized Point3d getPoint(int h, int k, int l) {
-		return points[h + xMax][k + yMax][l + zMax];
+		createNet(aStar, bStar, cStar, x, y, z);
 	}
 
 	public synchronized void highlight(int h, int k, int l) {
-		if (!isSelected[h + xMax][k + yMax][l + zMax]) {
-			if (dontdraw[h + xMax][k + yMax][l + zMax])
-				univers.addNotify(netRoot, atoms[h + xMax][k + yMax][l + zMax]);
-			changeAtomApp(atoms[h + xMax][k + yMax][l + zMax], redApp);
-			isSelected[h + xMax][k + yMax][l + zMax] = true;
+		Atom atom = getAtom(h, k, l);
+		if (atom != null && !atom.isSelected) {
+			if (!atom.isVisible)
+				univers.addNotify(netRoot, atom);
+			changeAtomApp(atom, redApp);
+			atom.isSelected = true;
 		}
 	}
 
-	public synchronized void unHighlight(int h, int k, int l) {
-		if (isSelected[h + xMax][k + yMax][l + zMax]) {
-			changeAtomApp(atoms[h + xMax][k + yMax][l + zMax], defaultApp);
-			if (dontdraw[h + xMax][k + yMax][l + zMax])
-				univers.removeNotify(netRoot, atoms[h + xMax][k + yMax][l + zMax]);
-			isSelected[h + xMax][k + yMax][l + zMax] = false;
+	public synchronized void unHighlight(int h, int k, int l, boolean force) {
+		Atom atom = getAtom(h, k, l);
+		if (atom != null && (force || atom.isSelected)) {
+			changeAtomApp(atom, defaultApp);
+			if (force || !atom.isVisible)
+				univers.removeNotify(netRoot, atom);
+			atom.isSelected = false;
 		}
-	}
-
-	public synchronized void highlightGreen(int h, int k, int l) {
-		changeAtomApp(atoms[h + xMax][k + yMax][l + zMax], greenApp);
 	}
 
 	public synchronized float intensity(int h, int k, int l) {
-		return intensity[h + xMax][k + yMax][l + zMax];
+		return getAtom(h, k, l).intensity;
+	}
+
+	/**
+	 * this may be null
+	 * @param h
+	 * @param k
+	 * @param l
+	 * @return
+	 */
+	private Atom getAtom(int h, int k, int l) {
+		return atoms[h + hRange][k + kRange][l + lRange];
+	}
+
+	public void clearLattice() {
+		for (int i = -hRange; i <= hRange; i++) {
+			for (int j = -kRange; j <= kRange; j++) {
+				for (int k = -lRange; k <= lRange; k++) {
+					unHighlight(i, j, k, DefaultValues.developNet);
+				}
+			}
+		}
+	}
+
+	public void doRaysOrLaue(Graphics mg, boolean adjustR, boolean isRay) {
+		Vector3d vx = new Vector3d();
+		Vector3d vy = new Vector3d();
+		Vector3d vz = new Vector3d();
+		Vector3d c = new Vector3d();
+		Vector3d u = new Vector3d();
+		vx.set(1, 0, 0);
+		vy.set(0, 1, 0);
+		vz.set(0, 0, 1);
+		Precession precession = model3d.precession;
+		Orientation orientation = model3d.orientation;
+		precession.apply(vx);
+		precession.apply(vy);
+		precession.apply(vz);
+		double screenDistance = model3d.p3d.y;
+		double scaledRadius = model3d.virtualSphere.scaledRadius;
+		c.set(0, screenDistance + (DefaultValues.directRays ? scaledRadius : 0), 0);
+		double cn = c.dot(vy);
+		Point3d unOrientedCenter = new Point3d(model3d.virtualSphere.center);
+		precession.reverse(unOrientedCenter);
+		orientation.reverse(unOrientedCenter);
+		double rMask = Math.sin(precession.mu) * screenDistance;
+		Point3d cMask = model3d.mask3d.center();
+		Point3d pOrigin = Rays.o;
+		Point3d cSphere = model3d.virtualSphere.center;
+		Point3d pNet = new Point3d();
+		Point3d pProj = new Point3d();
+		for (int h = -hRange; h <= hRange; h++) {
+			for (int k = -kRange; k <= kRange; k++) {
+				for (int l = -lRange; l <= lRange; l++) {
+					if (h == 0 && k == 0 && l == 0)
+						continue;
+					Atom atom = getAtom(h, k, l);
+					if (atom == null)
+						continue;
+					pNet.set(atom.point);
+					model3d.tPrecOrient.transform(pNet);
+					double ewaldDiff = 0;
+					if (isRay) {
+						// cehck for point at sphere
+						ewaldDiff = unOrientedCenter.distance(atom.point) - scaledRadius;
+						if (
+								//ewaldDiff > 0 || 
+								Math.abs(ewaldDiff) > DefaultValues.ewaldSlop)
+							continue;
+					}
+					if (adjustR) {
+						scaledRadius = -(pNet.x * pNet.x + pNet.y * pNet.y + pNet.z * pNet.z) / (2 * pNet.y);
+						if (Double.isInfinite(scaledRadius) || Double.isNaN(scaledRadius) || scaledRadius <= 0d)
+							continue;
+					}
+					pProj.set(pNet.x, pNet.y + scaledRadius, pNet.z);
+
+					// project this point with precessed y(n) and screen center cn
+					if (!model3d.p3d.projPoint(pProj, vy, cn))
+						continue;
+					u.set(pProj);
+					if (isRay && model3d.p3d instanceof ProjScreen3d.Cylindrical) {
+						// cylindric is much simple because no precession allowed
+					} else {
+						u.sub(c);
+						u.set(u.dot(vx), u.dot(vy), u.dot(vz));
+					}
+
+					Point.Double p2d = model3d.p3d.proj3dTo2d(u);
+					if (p2d == null)
+						continue;
+
+					boolean doProject2D = true;
+					if (isRay) {
+						Point3d pFrom = (DefaultValues.directRays ? null : pNet);
+						Point3d pTo = (DefaultValues.directRays ? cSphere : pOrigin);
+						if (model3d.mask && (Math.abs(pProj.distance(cMask) - rMask)) > .1) {
+							pProj.scale(DefaultValues.maskDistFract);
+							doProject2D = false;
+						}
+						if (DefaultValues.directRays)
+							pProj.y -= scaledRadius;
+						if (DefaultValues.isUnitSphere 
+								&& model3d.persistent
+								&& !atom.isSpecial) {
+							// not showing all the rays -- just one -- when this is the unit sphere
+							// because we have just one perpendicular M-projection visualization
+							model3d.clearAllRays();
+						}
+						model3d.addImpactRay(cSphere, pFrom, pTo, pProj);
+						if (DefaultValues.isUnitSphere)
+							model3d.updateUnitSphere(h, k, l, atom.point, pNet);
+						if (model3d.showReciprocalLattice)
+							highlight(h, k, l);
+					}
+					if (doProject2D)
+						model3d.project2d(mg, p2d, h, k, l);
+				}
+			}
+		}
 	}
 
 }

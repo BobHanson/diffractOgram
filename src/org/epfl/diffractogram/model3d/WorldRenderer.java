@@ -64,7 +64,7 @@ public abstract class WorldRenderer {
 	
 	public abstract Node createCylinder(String name, double radius, double height, boolean isHollow, int xdiv, int ydiv, Appearance app);
 	
-	public abstract TransformGroup createArrow(String name, TransformGroup tg, double radiusArrow, double lenArrow, double radius, float height,
+	public abstract TransformGroup createArrow(String name, String text, TransformGroup tg, double radiusArrow, double lenArrow, double radius, float height,
 			int precision, Appearance app);
 	
 	public abstract Node createSphere(String name, double radius, int divs, boolean isAtom, Appearance app);

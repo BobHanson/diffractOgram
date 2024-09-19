@@ -450,7 +450,7 @@ public class Java3DWorldRenderer extends WorldRenderer {
 		return s;
 	}	
 
-	public TransformGroup createArrow(String name, TransformGroup tg, double radiusArrow, double lenArrow, double radius,
+	public TransformGroup createArrow(String name, String text, TransformGroup tg, double radiusArrow, double lenArrow, double radius,
 			float height, int precision, Appearance app) {
 		Node cone = new Cone((float) radiusArrow, (float) lenArrow, Cylinder.GENERATE_NORMALS, precision, 1, app);
 		Node cyl = new Cylinder((float) radius, height, Cylinder.GENERATE_NORMALS, precision, 1, app);

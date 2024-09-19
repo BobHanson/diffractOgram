@@ -9,6 +9,7 @@ public class JmolUniverse extends Univers {
 
 	public JmolUniverse(JPanel panel3d) {
 		super(panel3d);
+		allowArrowText = true;
 	}
 	
 	protected WorldRenderer getRenderer(JPanel panel3d) {

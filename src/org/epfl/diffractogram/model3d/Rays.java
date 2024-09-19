@@ -14,14 +14,14 @@ import javax.media.j3d.BranchGroup;
 import javax.media.j3d.TransparencyAttributes;
 import javax.vecmath.Point3d;
 
-import org.epfl.diffractogram.util.ColorConstants;
+import org.epfl.diffractogram.util.Colors;
 import org.epfl.diffractogram.util.Utils3d;
 
 
 public class Rays extends BranchGroup {
 	
 	private Vector<BranchGroup> raysAnt, raysUsed;
-	private final Appearance raysAppRed, raysAppWhite, raysAppTransp;
+	private final Appearance raysAppTransp;
 	private BranchGroup impacts;
 	private Model3d model3d;
 	public static final Point3d o = new Point3d(0, 0, 0);
@@ -34,8 +34,6 @@ public class Rays extends BranchGroup {
 		setCapability(BranchGroup.ALLOW_CHILDREN_EXTEND);
 		setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
 		setCapability(BranchGroup.ALLOW_CHILDREN_READ);
-		raysAppRed = Utils3d.createApp(ColorConstants.red);
-		raysAppWhite = Utils3d.createApp(ColorConstants.gray);
 		raysAppTransp = Utils3d.newAppearance("ray:transp");
 		raysAppTransp.setTransparencyAttributes(new TransparencyAttributes(TransparencyAttributes.FASTEST,1f));
 
@@ -78,9 +76,10 @@ public class Rays extends BranchGroup {
 	static int impactid;
 	
 	public void addImpactRay(Point3d cSphere, Point3d pNet, Point3d pOrigin, Point3d pProj) {
-		createRay(cSphere, pNet, raysAppRed);
-		createRay(pOrigin, pProj, raysAppRed);
-		model3d.univers.addNotify(impacts, model3d.univers.creator.createAtom("impact:" + ++impactid, pProj, ColorConstants.black, .03f));
+		if (pNet != null)
+			createRay(cSphere, pNet, Colors.appRed);
+		createRay(pOrigin, pProj, Colors.appRed);
+		model3d.univers.addNotify(impacts, model3d.univers.creator.createAtom("impact:" + ++impactid, pProj, Colors.black, .03f));
 	}
 
 	

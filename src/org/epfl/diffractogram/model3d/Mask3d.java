@@ -19,7 +19,7 @@ import javax.vecmath.Vector3d;
 
 import org.epfl.diffractogram.DefaultValues;
 import org.epfl.diffractogram.model3d.Model3d.Precession;
-import org.epfl.diffractogram.util.ColorConstants;
+import org.epfl.diffractogram.util.Colors;
 import org.epfl.diffractogram.util.Utils3d;
 
 public class Mask3d extends BranchGroup {
@@ -52,11 +52,11 @@ public class Mask3d extends BranchGroup {
 				Utils3d.createApp(new Color3f(.8f, .8f, .8f), .5f)), 
 				resizeTg, pTg, transTg, this);
 
-		Utils3d.setParents(univers.renderer.createTorus("maskframe",.04, 1, 10, 50, Utils3d.createApp(ColorConstants.black)), 
+		Utils3d.setParents(univers.renderer.createTorus("maskframe",.04, 1, 10, 50, Colors.appBlack), 
 				torTransTg, rotTg, transTg, this);
 
-		BranchGroup label = univers.creator.createFixedLegend("Precession mask", new Point3d(), .2f,
-				Utils3d.createApp(ColorConstants.black), false);
+		BranchGroup label = univers.creator.createFixedLegend("precmask", "Precession mask", new Point3d(), .2f,
+				Colors.appBlack, false);
 		Utils3d.setParents(label, Utils3d.getVectorTransformGroup(-w / 7, 0, h / 3.2, t3d), pTg);
 		setR(r);
 		setY(y);

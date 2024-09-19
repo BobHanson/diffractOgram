@@ -1,4 +1,5 @@
 package org.epfl.diffractogram.model3d;
+
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -37,10 +38,10 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 	private Map<Integer, List<Point.Double>> ht_index_ijk;
 	private Vector<Float> pointSizes;
 	private boolean firstPaint;
-	//private Raster blank;
-	//private Graphics mg;//, ig;
+	// private Raster blank;
+	// private Graphics mg;//, ig;
 	private boolean fixedWidth;
-	
+
 	public ProjScreen() {
 		firstPaint = true;
 		this.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -48,22 +49,22 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 		addMouseWheelListener(this);
 		addComponentListener(sizeListener);
 	}
-	
+
 	public synchronized void setImageSize(double w, double h, boolean fixedWidth) {
 
 		this.width = w;
 		this.height = h;
 		this.fixedWidth = fixedWidth;
-		iw = roundToPower2(w*64);
-		ih = roundToPower2(h*64);
+		iw = roundToPower2(w * 64);
+		ih = roundToPower2(h * 64);
 		// BH this does not do anything
-		//image = new BufferedImage(iw, ih, BufferedImage.TYPE_INT_ARGB);
+		// image = new BufferedImage(iw, ih, BufferedImage.TYPE_INT_ARGB);
 //		Graphics g = image.getGraphics();
 //		g.setColor(new Color(100, 100, 100, 100));
 //		g.fillRect(0, 0, iw, ih);		
 //		g.setColor(Color.black);
 //		g.dispose();
-		//blank = ((BufferedImage)image).getData();
+		// blank = ((BufferedImage)image).getData();
 
 		points = new Vector<Serializable>(10, 100);
 		pointSizes = new Vector<Float>(10, 100);
@@ -73,23 +74,21 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 		repaint();
 
 	}
-		
+
 	public synchronized void setImageDefaultOrigin(boolean fixedWidth) {
 		Dimension screen = getSize();
-		if (!fixedWidth && height/(screen.height)>width/screen.width) {
+		if (!fixedWidth && height / (screen.height) > width / screen.width) {
 			paintH = screen.height;
-			paintW = (int)Math.round(paintH*width/height);
+			paintW = (int) Math.round(paintH * width / height);
 			paintY = 0;
-			paintX = (screen.width-paintW)/2;
-		} 
-		else {
+			paintX = (screen.width - paintW) / 2;
+		} else {
 			paintW = screen.width;
-			paintH = (int)Math.round(paintW*height/width);
+			paintH = (int) Math.round(paintW * height / width);
 			paintX = 0;
-			paintY = (screen.height-paintH)/2;
+			paintY = (screen.height - paintH) / 2;
 		}
-		
-		
+
 // BH previously deleted
 //		if (screen.width>0 && screen.height>0) {
 //			image = new BufferedImage(screen.width, screen.height, BufferedImage.TYPE_INT_ARGB);
@@ -98,34 +97,37 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 //			ig.fillRect(0, 0, screen.width, screen.height);
 //		}
 	}
-	
+
 	public synchronized void clearImage() {
-		//((BufferedImage)image).setData(blank);
+		// ((BufferedImage)image).setData(blank);
 		points.clear();
 		pointSizes.clear();
 		index_ijk.clear();
 		ht_index_ijk.clear();
 		repaint();
 	}
-		
+
 	private String index = "";
 	private Vector<Integer> indexVect;
+
 	private void showIndex(int x, int y) {
-		double xx = ((double)x-paintX-paintW/2)/paintW;
-		double yy = ((double)y-paintY-paintH/2)/paintH;
+		double xx = ((double) x - paintX - paintW / 2) / paintW;
+		double yy = ((double) y - paintY - paintH / 2) / paintH;
 		double e = .015;
 		String s = "";
 		indexVect = new Vector<Integer>(10, 10);
-		for (int i=0; i<points.size(); i++) {
-			if (Math.abs(((Point.Double)points.get(i)).x-xx)<e && Math.abs(((Point.Double)points.get(i)).y-yy)<e) {
+		for (int i = 0; i < points.size(); i++) {
+			if (Math.abs(((Point.Double) points.get(i)).x - xx) < e
+					&& Math.abs(((Point.Double) points.get(i)).y - yy) < e) {
 				indexVect.add(new Integer(i));
-				int index = ((Integer)index_ijk.get(i)).intValue();
-				String sindex = "("+(((index>>16)&0xff)-128)+" "+(((index>>8)&0xff)-128)+" "+((index&0xff)-128)+") ";
+				int index = ((Integer) index_ijk.get(i)).intValue();
+				String sindex = "(" + (((index >> 16) & 0xff) - 128) + " " + (((index >> 8) & 0xff) - 128) + " "
+						+ ((index & 0xff) - 128) + ") ";
 				if (s.contains(sindex)) {
 					// BH 2024.06.27 duplicates here during precession
-					//System.out.println("PJS WHOAH" + sindex);
+					// System.out.println("PJS WHOAH" + sindex);
 				} else {
-					s+=sindex;
+					s += sindex;
 				}
 			}
 		}
@@ -141,10 +143,10 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 			index = s;
 		}
 	}
-	
-	public synchronized void paint(Graphics g) {		
+
+	public synchronized void paint(Graphics g) {
 		// does not fire while animating
-		Graphics2D g2d = (Graphics2D)g;
+		Graphics2D g2d = (Graphics2D) g;
 		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		if (firstPaint) {
@@ -154,32 +156,33 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 		// BH: for some reason, the background was black
 		Dimension size = getSize();
 		g.setColor(getBackground());
-		g.fillRect(0, 0,  size.width, size.height);
+		g.fillRect(0, 0, size.width, size.height);
 		// BH must have been an earlier idea
-		//g.drawImage(image, paintX, paintY, paintW, paintH, null);
-		
+		// g.drawImage(image, paintX, paintY, paintW, paintH, null);
+
 		g.setColor(new Color(255, 255, 255));
 		g.fillRect(paintX, paintY, paintW, paintH);
-		
+
 		Point.Double p;
 		// BH in JavaScript we must dispose after clipping
 		Graphics g1 = g.create();
 		g1.setClip(paintX, paintY, paintW, paintH);
-		for (int i=0; i<points.size(); i++) {
-			//boolean selected = (indexVect!=null && indexVect.contains(new Integer(i)));
-			p = (Point.Double)points.get(i);
-			paintPoint(g1, p.x, p.y, paintX, paintY, paintW, paintH, ((Float)pointSizes.get(i)).floatValue(), false, i);
+		for (int i = 0; i < points.size(); i++) {
+			// boolean selected = (indexVect!=null && indexVect.contains(new Integer(i)));
+			p = (Point.Double) points.get(i);
+			paintPoint(g1, p.x, p.y, paintX, paintY, paintW, paintH, ((Float) pointSizes.get(i)).floatValue(), false,
+					i);
 		}
 		g1.dispose();
 		g.setColor(Color.black);
-		g.drawLine(paintX+paintW/2, paintY, paintX+paintW/2, min(paintY+paintH, getHeight()));
-		g.drawLine(paintX, paintY+paintH/2, paintX+paintW, paintY+paintH/2);		
+		g.drawLine(paintX + paintW / 2, paintY, paintX + paintW / 2, min(paintY + paintH, getHeight()));
+		g.drawLine(paintX, paintY + paintH / 2, paintX + paintW, paintY + paintH / 2);
 	}
-	
+
 	private int min(int a, int b) {
-		return a<b?a:b;
+		return a < b ? a : b;
 	}
-	
+
 	private synchronized void paintPoint(Graphics g, double x, double y, int px, int py, int pw, int ph, float s,
 			boolean selected, int index) {
 		if (index >= 0) {
@@ -215,18 +218,19 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 		// BH necessary to enclose setClip with create/dispose in JavaScript
 		// BH but I don't see why this clip is necessary, actually
 		// BH moved this clip to the calling method.
-			//g1.setClip(px < 0 ? 0 : px, py < 0 ? 0 : py, px < 0 ? pw + px : pw, py < 0 ? ph + py : ph);
-			g.fillOval(x1, y1, w, w);
+		// g1.setClip(px < 0 ? 0 : px, py < 0 ? 0 : py, px < 0 ? pw + px : pw, py < 0 ?
+		// ph + py : ph);
+		g.fillOval(x1, y1, w, w);
 		// if (ig!=null)
 		// ig.fillOval((int)Math.round(x*pw+pw/2.0+px-w/2),
 		// (int)Math.round(y*ph+ph/2.0+py-w/2), w, w);
 	}
-	
-	public synchronized void drawPoint(Graphics mg, Point.Double p, float s, byte i, byte j, byte k) {
+
+	public synchronized void drawPoint(Graphics mg, Point.Double p, float s, int i, int j, int k) {
 		if (mg == null || Math.abs(p.x) < .01 && Math.abs(p.y) < .01)
 			return;
 		// BH better to use a HashMap
-		int ipt = (((int) (i + 128)) << 16) + (((int) (j + 128)) << 8) + ((int) (k + 128));
+		int ipt = ((i + 128) << 16) + ((j + 128) << 8) + (k + 128);
 		Integer index = new Integer(ipt);
 		List<Point.Double> ijkList = ht_index_ijk.get(index);
 		if (ijkList == null) {
@@ -250,59 +254,62 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 		points.add(p);
 		pointSizes.add(new Float(s));
 	}
-	
-	
+
 	public synchronized void mouseDragged(MouseEvent e) {
 		if (e.isControlDown() || e.isAltDown()) {
 			int a, b, d;
-			a = e.getX()-paintX0S;
-			b = e.getY()-paintY0S;
-			if (Math.abs(a)>Math.abs(b)) d=a;
-			else d=b;
-			if (d>0 || (paintW>=20 && paintH>=20)) {
-				paintX-=paintW/10*d/2;
-				paintY-=paintH/10*d/2;
-				paintW+=paintW/10*d;
-				paintH+=paintH/10*d;
+			a = e.getX() - paintX0S;
+			b = e.getY() - paintY0S;
+			if (Math.abs(a) > Math.abs(b))
+				d = a;
+			else
+				d = b;
+			if (d > 0 || (paintW >= 20 && paintH >= 20)) {
+				paintX -= paintW / 10 * d / 2;
+				paintY -= paintH / 10 * d / 2;
+				paintW += paintW / 10 * d;
+				paintH += paintH / 10 * d;
 			}
 			repaint();
-		}
-		else {
-			paintX+=(e.getX()-paintX0);
-			paintX0=e.getX();
-			paintY+=(e.getY()-paintY0);
-			paintY0=e.getY();
+		} else {
+			paintX += (e.getX() - paintX0);
+			paintX0 = e.getX();
+			paintY += (e.getY() - paintY0);
+			paintY0 = e.getY();
 			repaint();
 		}
 		paintX0S = e.getX();
 		paintY0S = e.getY();
 	}
+
 	public synchronized void mouseMoved(MouseEvent e) {
 		paintX0 = e.getX();
 		paintY0 = e.getY();
 		paintX0S = e.getX();
 		paintY0S = e.getY();
-		//hmm not during a paint?
+		// hmm not during a paint?
 		showIndex(paintX0, paintY0);
 	}
-	
+
 	public synchronized void mouseWheelMoved(MouseWheelEvent e) {
-		if (e.getWheelRotation()<0 && (paintW<=20 || paintH<=20)) return;
-		paintX-=paintW/10*e.getWheelRotation()/2;
-		paintY-=paintH/10*e.getWheelRotation()/2;
-		paintW+=paintW/10*e.getWheelRotation();
-		paintH+=paintH/10*e.getWheelRotation();
+		if (e.getWheelRotation() < 0 && (paintW <= 20 || paintH <= 20))
+			return;
+		paintX -= paintW / 10 * e.getWheelRotation() / 2;
+		paintY -= paintH / 10 * e.getWheelRotation() / 2;
+		paintW += paintW / 10 * e.getWheelRotation();
+		paintH += paintH / 10 * e.getWheelRotation();
 		repaint();
 	}
-	
+
 	public static int roundToPower2(double d) {
-		return (int)Math.pow(2, (int)Math.round(Math.log(d)/Math.log(2.0)));		
+		return (int) Math.pow(2, (int) Math.round(Math.log(d) / Math.log(2.0)));
 	}
-	
+
 	ComponentListener sizeListener = new ComponentAdapter() {
 		public void componentResized(ComponentEvent e) {
 			setImageDefaultOrigin(fixedWidth);
-			// BH added to fix clicking [ ] (maximize) button on frame in Java and general resize update in JavaScript
+			// BH added to fix clicking [ ] (maximize) button on frame in Java and general
+			// resize update in JavaScript
 			// BH as well as issues with moving the splitpane bar in Java and JavaScript
 			Dimension size = ProjScreen.this.getSize();
 			if (size.width > 0)
@@ -311,5 +318,3 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 		}
 	};
 }
-
-

@@ -65,7 +65,12 @@ public abstract class Univers {
 	private TransformGroup tgTop;
 	private BranchGroup root;
 	public Creator creator;
+	
+	protected boolean allowArrowText;
+
 	public Univers(JPanel panel3d) {
+
+		
 
 		renderer = getRenderer(panel3d);
 		
@@ -174,17 +179,24 @@ public abstract class Univers {
 	}
 
 	public void removeNotify(Group parent, Node child) {
+		if (child == null)
+			return;
 		if (parent == null)
 			parent = root;
 		renderer.notifyRemove(parent, child);
+		try {
 		parent.removeChild(child);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void addNotify(Group parent, Node child) {
 		if (parent == null)
 			parent = root;
 		parent.addChild(child);
-		renderer.notifyAdd(parent, child);
+		if (parent.getName() != null)
+			renderer.notifyAdd(parent, child);
 	}
 
 	public void removeAllNotify(Group g) {
@@ -236,7 +248,6 @@ public abstract class Univers {
 	  }
 
 		private int atomid;
-		
 		public BranchGroup createAtom(String name, Point3d p, Appearance app, double r, int facets) {
 			BranchGroup bg = new BranchGroup();
 			bg.setCapability(BranchGroup.ALLOW_DETACH);
@@ -244,7 +255,7 @@ public abstract class Univers {
 			return bg;
 		}
 
-		public BranchGroup createArrow(String name, Point3d b, Point3d a, double radius, double radiusArrow, double lenArrow,
+		protected BranchGroup createArrow(String name, String text, Point3d b, Point3d a, double radius, double radiusArrow, double lenArrow,
 				Appearance cylApp, int precision) {
 			Vector3f center = new Vector3f();
 			Vector3f unit = new Vector3f();
@@ -257,13 +268,14 @@ public abstract class Univers {
 			TransformGroup tg = new TransformGroup();
 			Utils3d.createMatrix(tg, center, unit);
 			BranchGroup cylBg = new BranchGroup();
-			cylBg.addChild(renderer.createArrow(name, tg, radiusArrow, lenArrow, radius, height, precision, cylApp));
+			cylBg.addChild(renderer.createArrow(name, text, tg, radiusArrow, lenArrow, radius, height, precision, cylApp));
 			return cylBg;
 		}
 
 		/**
 		 * Create a 3D text object in a BranchGroup
 		 * 
+		 * @param name
 		 * @param s
 		 * @param pos
 		 * @param rot      rotation point if this is to rotate (to remain in the plane
@@ -273,18 +285,18 @@ public abstract class Univers {
 		 * @param centered
 		 * @return
 		 */
-		public BranchGroup createLegend(String s, Point3d pos, Point3d rot, float size, Appearance app,
+		public BranchGroup createLegend(String name, String text, Point3d pos, Point3d rot, float size, Appearance app,
 				boolean centered) {
-			return renderer.createTextShape("text:" + s, new BranchGroup(), s, pos, size, new Font(null, Font.PLAIN, 2),
+			return renderer.createTextShape("text:" + name, new BranchGroup(), text, pos, size, new Font(null, Font.PLAIN, 2),
 					centered ? Label.CENTER : Label.LEFT, KeyEvent.VK_RIGHT, rot, app);
 		}
 
-		public BranchGroup createFixedLegend(String s, Point3d pos, float size, Appearance app, boolean centered) {
-			return createLegend(s, pos, null, size, app, centered);
+		public BranchGroup createFixedLegend(String name, String text, Point3d pos, float size, Appearance app, boolean centered) {
+			return createLegend(name, text, pos, null, size, app, centered);
 		}
 
 
-		public BranchGroup createRepere(Color3f colorText, Color3f colorArrows, Color3f colorCenter, String[] names,
+		public BranchGroup createRepere(String prefix, Color3f colorText, Color3f colorArrows, Color3f colorCenter, String[] names,
 				float sizeText, float sizeArrows, double deltaText, double deltaArrows, Vector3d x, Vector3d y,
 				Vector3d z, boolean fullRange) {
 			Appearance app1 = Utils3d.createApp(colorText);
@@ -292,43 +304,47 @@ public abstract class Univers {
 			BranchGroup repere = new BranchGroup();
 
 			if (colorCenter != null)
-				repere.addChild(renderer.createSphere("axes:o" + names[0], .05, 10, false, Utils3d.createApp(colorCenter)));
+				repere.addChild(
+						renderer.createSphere(prefix + "o" + names[0], .05, 10, false, Utils3d.createApp(colorCenter)));
 
 			Point3d o = new Point3d(0, 0, 0);
 			Point3d pt0 = new Point3d(o);
 			Point3d pt = new Point3d(Utils3d.mul(x, (x.length() + deltaArrows) / x.length()));
 			if (fullRange)
 				pt0.scaleAdd(-1, pt, o);
-			repere.addChild(createArrow("axes:" + names[0], pt0, pt, sizeArrows,
-					sizeArrows * 2f, sizeArrows * 6f, app2, 12));
+			repere.addChild(createArrow(prefix + names[0], names[0], pt0, pt, sizeArrows, sizeArrows * 2f,
+					sizeArrows * 6f, app2, 12));
 			pt.set(Utils3d.mul(y, (y.length() + deltaArrows) / y.length()));
 			if (fullRange)
 				pt0.scaleAdd(-1, pt, o);
-			repere.addChild(createArrow("axes:" + names[1], pt0, pt, sizeArrows,
-					sizeArrows * 2f, sizeArrows * 6f, app2, 12));
+			repere.addChild(createArrow(prefix + names[1], names[1], pt0, pt, sizeArrows, sizeArrows * 2f,
+					sizeArrows * 6f, app2, 12));
 			pt.set(Utils3d.mul(z, (z.length() + deltaArrows) / z.length()));
 			if (fullRange)
 				pt0.scaleAdd(-1, pt, o);
-			repere.addChild(createArrow("axes:" + names[2], pt0, pt, sizeArrows,
-					sizeArrows * 2f, sizeArrows * 6f, app2, 12));
-
-			repere.addChild(createLegend(names[0], new Point3d(Utils3d.mul(x, (x.length() + deltaText) / x.length())), o, sizeText,
-					app1, false));
-			repere.addChild(createLegend(names[1], new Point3d(Utils3d.mul(y, (y.length() + deltaText) / y.length())), o, sizeText,
-					app1, false));
-			repere.addChild(createLegend(names[2], new Point3d(Utils3d.mul(z, (z.length() + deltaText) / z.length())), o, sizeText,
-					app1, false));
+			repere.addChild(createArrow(prefix + names[2], names[2], pt0, pt, sizeArrows, sizeArrows * 2f,
+					sizeArrows * 6f, app2, 12));
+			if (!allowArrowText) {
+				repere.addChild(createLegend("axislabel" + names[0], names[0],
+						new Point3d(Utils3d.mul(x, (x.length() + deltaText) / x.length())), o, sizeText, app1, false));
+				repere.addChild(createLegend("axislabel" + names[1], names[1],
+						new Point3d(Utils3d.mul(y, (y.length() + deltaText) / y.length())), o, sizeText, app1, false));
+				repere.addChild(createLegend("axislabel" + names[2], names[2],
+						new Point3d(Utils3d.mul(z, (z.length() + deltaText) / z.length())), o, sizeText, app1, false));
+			}
 			return repere;
 		}
 
 		public BranchGroup createNamedVector(String name, 
 				Point3d p1, Point3d p2, Point3d p3, float size, float fontSize,
-				Color3f colorText, Color3f colorArrow) {
+				Color3f colorText, Color3f colorArrow, String text) {
 			Appearance app1 = Utils3d.createApp(colorText);
 			Appearance app2 = Utils3d.createApp(colorArrow);
 			BranchGroup group = new BranchGroup();
-			group.addChild(createArrow(name, p1, p2, .03 * size, .1 * size, .4 * size, app2, 12));
-			group.addChild(createFixedLegend(name, p3, fontSize, app1, true));
+			group.addChild(createArrow(name, text, p1, p2, .03 * size, .1 * size, .4 * size, app2, 12));
+			if (!allowArrowText)
+				group.addChild(createFixedLegend(name+ "_leg", text, p3, fontSize, app1, true));
+			group.setName(name);
 			return group;
 		}
 	}

@@ -9,6 +9,7 @@ public class Java3DUniverse extends Univers {
 
 	public Java3DUniverse(JPanel panel3d) {
 		super(panel3d);
+		allowArrowText = false;
 	}
 	
 	protected WorldRenderer getRenderer(JPanel panel3d) {

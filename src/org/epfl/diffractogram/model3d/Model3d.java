@@ -1,10 +1,9 @@
 package org.epfl.diffractogram.model3d;
 
 import java.awt.Graphics;
-import java.awt.Point;
+import java.awt.geom.Point2D.Double;
 import java.util.Vector;
 
-import javax.media.j3d.Appearance;
 import javax.media.j3d.BranchGroup;
 import javax.media.j3d.Group;
 import javax.media.j3d.Node;
@@ -21,7 +20,7 @@ import org.epfl.diffractogram.jmol.JmolUniverse;
 import org.epfl.diffractogram.util.Lattice;
 import org.epfl.diffractogram.util.Utils3d;
 
-import model3d.ColorConstants;
+import org.epfl.diffractogram.util.Colors;
 
 /**
  * The Model3d class comprises all the univers.root shapes.
@@ -48,57 +47,42 @@ import model3d.ColorConstants;
  */
 public class Model3d {
 
-	/**
-	 * TRUE for a unit - not Ewald - sphere
-	 * FALSE for original design
-	 * 
-	 */
-	public final boolean isUnitSphere = true;
-	
-	/**
-	 * TRUE to develop the reciprocal lattice as we go;
-	 * FALSE for orginal functionality
-	 */
-	final static boolean developNet = true;
-
-	/**
-	 * TRUE here indicates rays should eminate directly from their reciprocal lattice point;
-	 * FALSE is the original design with rays coming from the center of the RL.
-	 */
-	private final static boolean directRays = true;
-
 	public Univers univers;
 	public ProjScreen3d p3d;
 	public Net net;
 	public ProjScreen projScreen;
+
 	public boolean persistent = true;
+	public boolean showReciprocalLattice = true;
+
 	public Orientation orientation;
 	public Precession precession;
 	public Mask3d mask3d;
 	public Lattice lattice, reciprocal;
-	
+
 	protected VirtualSphere virtualSphere;
 
 	private Rays rays;
 	private GonioHead gonioHead;
 	private DefaultValues defaultValues;
-	private Transform3D tPrecOrient;
+	Transform3D tPrecOrient;
 	private Transform3D tPrecOrientInv;
-	private BranchGroup ucChild;
-	private TransformGroup ucTG;
-	
+	private BranchGroup usChild;
+	private TransformGroup usTG;
+	private BranchGroup mray, ms0, ma, mb, mc;
+
 	private double hCyl, hFlat;
 	private double lambda;
-	private boolean mask;
-
+	boolean mask;
 
 	public Model3d(JPanel panel3d, DefaultValues defaultValues, ProjScreen projScreen) {
 		this.defaultValues = defaultValues;
 
-		lattice = new Lattice(defaultValues.lattice.a, defaultValues.lattice.b, defaultValues.lattice.c,
-				defaultValues.lattice.alpha, defaultValues.lattice.beta, defaultValues.lattice.gamma);
-		lattice.setOrientation(defaultValues.uvw[0], defaultValues.uvw[1], defaultValues.uvw[2]);
-		
+		lattice = new Lattice(defaultValues.param_lattice.a, defaultValues.param_lattice.b,
+				defaultValues.param_lattice.c, defaultValues.param_lattice.alpha, defaultValues.param_lattice.beta,
+				defaultValues.param_lattice.gamma);
+		lattice.setOrientation(defaultValues.param_uvw[0], defaultValues.param_uvw[1], defaultValues.param_uvw[2]);
+
 		reciprocal = lattice.reciprocal();
 
 		univers = (DefaultValues.useJmol ? new JmolUniverse(panel3d) : new Java3DUniverse(panel3d));
@@ -110,7 +94,7 @@ public class Model3d {
 		precession = new Precession();
 
 		this.projScreen = projScreen;
-		setLambda(defaultValues.lambda);
+		setLambda(defaultValues.param_lambda);
 		virtualSphere = new VirtualSphere(this, defaultValues);
 		setFlatScreen();
 
@@ -134,9 +118,9 @@ public class Model3d {
 	}
 
 	private void createGonio() {
-		net = new Net(this,defaultValues); 
+		net = new Net(this, defaultValues);
 		gonioHead = new GonioHead(this);
-		univers.addNotify(net, gonioHead);			
+		univers.addNotify(net, gonioHead);
 		gonioHead.setY(virtualSphere.lambdaToRadius(lambda));
 	}
 
@@ -144,12 +128,19 @@ public class Model3d {
 		if (!persistent)
 			clearImage();
 		rays.removeAllRays(persistent);
-		if (!developNet)
-		for (int i = -net.xMax; i <= net.xMax; i++)
-			for (int j = -net.yMax; j <= net.yMax; j++)
-				for (int k = -net.zMax; k <= net.zMax; k++) {
-					net.unHighlight(i, j, k);
-				}
+		if (!DefaultValues.developNet)
+			net.clearLattice();
+	}
+
+	public void clearAll() {
+		clearAllRays();
+		clearImage();
+		if (!showReciprocalLattice) {
+			net.toggleDirect();
+			net.toggleReciprocalAxes();
+		}
+		if (DefaultValues.developNet)
+			net.setLambda(lambda);
 	}
 
 	public void clearImage() {
@@ -157,7 +148,7 @@ public class Model3d {
 		if (persistent)
 			rays.removeAllRays(false);
 	}
-	
+
 	/**
 	 * 
 	 * @param adjustR true only from lambda change
@@ -165,135 +156,47 @@ public class Model3d {
 	public synchronized void doRays(boolean adjustR) {
 		doRaysOrLaue(adjustR, true);
 	}
-	
-	
+
 	public void doLaue() {
 		doRaysOrLaue(true, false);
 	}
 
-	
 	/**
 	 * 
 	 * @param adjustR true only from lambda change
 	 */
 	private synchronized void doRaysOrLaue(boolean adjustR, boolean isRay) {
+		Graphics mg = projScreen.getGraphics();
 		clearAllRays();
-		Vector3d vx = new Vector3d();
-		Vector3d vy = new Vector3d();
-		Vector3d vz = new Vector3d();
-		Vector3d c = new Vector3d();
-		Vector3d u = new Vector3d();
-		vx.set(1, 0, 0);
-		vy.set(0, 1, 0);
-		vz.set(0, 0, 1);
-		precession.apply(vx);
-		precession.apply(vy);
-		precession.apply(vz);
-		double screenDistance = p3d.y;
-		c.set(0, screenDistance + (directRays ? virtualSphere.scaledRadius : 0), 0);
-		double cn = c.dot(vy);
 		tPrecOrient = new Transform3D();
 		tPrecOrient.mul(precession.t3d, orientation.t3d);
 		tPrecOrientInv = new Transform3D(tPrecOrient);
 		tPrecOrientInv.invert();
-		Point3d sReversed = new Point3d(virtualSphere.center);
-		precession.reverse(sReversed);
-		orientation.reverse(sReversed);
-		double rMask = Math.sin(precession.mu) * screenDistance;
-		Point3d cMask = mask3d.center();
-		Graphics mg = projScreen.getGraphics();
-		Point3d pOrigin = Rays.o;
-		Point3d cSphere = virtualSphere.center;
-		Point3d pNet = new Point3d();
-		Point3d pProj = new Point3d();
-		double d;
-		double scaledRadius = virtualSphere.scaledRadius;
-		for (int h = -net.xMax; h <= net.xMax; h++) {
-			for (int k = -net.yMax; k <= net.yMax; k++) {
-				for (int l = -net.zMax; l <= net.zMax; l++) {
-					if (h == 0 && k == 0 && l == 0)
-						continue;
-					Point3d p = net.points[h + net.xMax][k + net.yMax][l + net.zMax];
-					if (p == null)
-						continue;
 
-					pNet.set(p);
-					tPrecOrient.transform(pNet);
-
-					if (isRay) {
-						d = sReversed.distance(p) - scaledRadius;
-						if (d > 0 || Math.abs(d) > defaultValues.dotSize)
-							continue;
-						// TODO: ? if (Math.abs(d)>DefaultValues.dotSize) continue;
-					}
-					if (adjustR) {
-						scaledRadius = -(pNet.x * pNet.x + pNet.y * pNet.y + pNet.z * pNet.z) / (2 * pNet.y);
-						if (Double.isInfinite(scaledRadius) || Double.isNaN(scaledRadius) || scaledRadius <= 0d)
-							continue;
-					}
-					pProj.set(pNet.x, pNet.y + scaledRadius, pNet.z);
-
-					// project this point with precessed y(n) and screen center cn
-					if (!p3d.projPoint(pProj, vy, cn))
-						continue;
-					u.set(pProj);
-					if (isRay && p3d instanceof ProjScreen3d.Cylindric) {
-						// cylindric is much simple because no precession allowed
-					} else {
-						u.sub(c);
-						u.set(u.dot(vx), u.dot(vy), u.dot(vz));
-					}
-
-					Point.Double p2d = p3d.proj3dTo2d(u);
-					if (p2d == null)
-						continue;
-
-					if (isRay) {
-						if (mask && (d = Math.abs(pProj.distance(cMask) - rMask)) > .1) {
-							pProj.scale(defaultValues.maskDistFract);
-						} else {
-							float intensity = net.intensity(h, k, l);
-							projScreen.drawPoint(mg, p2d, intensity, (byte) h, (byte) k, (byte) l);
-						}
-						if (directRays) {
-							pProj.y -= virtualSphere.scaledRadius;
-						}
-
-
-						rays.addImpactRay(cSphere, pNet, directRays ? cSphere : pOrigin, pProj);
-						if (isUnitSphere) {
-							updateUnitSphere(h, k, l, p, pNet);
-						}
-
-						net.highlight(h, k, l);
-					} else {
-						float intensity = net.intensity(h, k, l);
-						projScreen.drawPoint(mg, p2d, intensity, (byte) h, (byte) k, (byte) l);
-					}
-				}
-			}
-		}
+		net.doRaysOrLaue(mg, adjustR, isRay);
 		if (mg != null)
 			mg.dispose();
 	}
 
 	public void setFlatScreen() {
-		setScreenType(new ProjScreen3d.Flat(univers, precession), p3d == null ? defaultValues.hFlatScreen : hFlat);
+		setScreenType(new ProjScreen3d.Flat(univers, precession),
+				p3d == null ? defaultValues.param_hFlatScreen : hFlat);
 		projScreen.setImageSize(p3d.w, p3d.h, false);
 	}
 
 	public void setCylindricScreen() {
-		setScreenType(new ProjScreen3d.Cylindric(univers, precession), p3d == null ? defaultValues.hCylScreen : hCyl);
+		setScreenType(new ProjScreen3d.Cylindrical(univers, precession),
+				p3d == null ? defaultValues.param_hCylScreen : hCyl);
 		projScreen.setImageSize(p3d.y * Math.PI * 2, p3d.h, true);
 	}
 
 	private void setScreenType(ProjScreen3d s, double h) {
 		double w, y;
 		if (p3d == null) {
-			hCyl = defaultValues.hCylScreen;
-			hFlat = defaultValues.hFlatScreen;
-			w = defaultValues.wScreen;
-			y = defaultValues.zScreen;
+			hCyl = defaultValues.param_hCylScreen;
+			hFlat = defaultValues.param_hFlatScreen;
+			w = defaultValues.param_wScreen;
+			y = defaultValues.param_zScreen;
 		} else {
 			w = p3d.w;
 			y = p3d.y;
@@ -311,7 +214,7 @@ public class Model3d {
 
 	public void setScreenSize(double w, double h) {
 		projScreen.setImageSize((p3d instanceof ProjScreen3d.Flat) ? w : (p3d.y * Math.PI * 2), h,
-				p3d instanceof ProjScreen3d.Cylindric);
+				p3d instanceof ProjScreen3d.Cylindrical);
 		p3d.setSize(w, h);
 	}
 
@@ -341,15 +244,15 @@ public class Model3d {
 		lattice.setOrientation(u, v, w);
 		reciprocal = lattice.reciprocal();
 		net.setLattice(reciprocal);
-		updateAxes(null);
+		updateUnitAxes(null);
 	}
 
 	public void setDefaultParamters(DefaultValues defaultValues) {
-		orientation.setOmega(defaultValues.omega);
-		orientation.setChi(defaultValues.chi);
-		orientation.setPhi(defaultValues.phi);
-		precession.setAngle(defaultValues.mu);
-		precession.setRotation(defaultValues.precession);
+		orientation.setOmega(defaultValues.param_omega);
+		orientation.setChi(defaultValues.oaram_chi);
+		orientation.setPhi(defaultValues.param_phi);
+		precession.setAngle(defaultValues.param_mu);
+		precession.setRotation(defaultValues.param_precession);
 	}
 
 	public boolean processActionCommand(String cmd, double val) {
@@ -359,6 +262,7 @@ public class Model3d {
 			virtualSphere.setLambda(val);
 			net.setLambda(val);
 			gonioHead.setY(virtualSphere.lambdaToRadius(val));
+			clearAll();
 			return true;
 		case "Omega":
 			orientation.setOmega(val);
@@ -380,14 +284,13 @@ public class Model3d {
 	}
 
 	public void setPrecessionDefaults(DefaultValues defaultValues) {
-		precession.setAngle(defaultValues.mu);
-		mask3d.setR(Math.sin(precession.mu) * (p3d.y * defaultValues.maskDistFract));
+		precession.setAngle(defaultValues.param_mu);
+		mask3d.setR(Math.sin(precession.mu) * (p3d.y * DefaultValues.maskDistFract));
 	}
 
 	/**
-	 * Objects added  precession angle mu
-	 * and rotation alpha along with a vector of PrecessionClass.PrecessionObject
-	 * and its subclass PrecessionRotObject.
+	 * Objects added precession angle mu and rotation alpha along with a vector of
+	 * PrecessionClass.PrecessionObject and its subclass PrecessionRotObject.
 	 * 
 	 * <pre>
 	 * 
@@ -521,8 +424,8 @@ public class Model3d {
 	 */
 	public static class Orientation {
 
-		private Transform3D t3d;
-		public double omega, chi, phi;
+		Transform3D t3d;
+		public double omega, chi, phi, omegaDeg, chiDeg, phiDeg;
 
 		private Vector<TransformGroup> v, vOmegaOnly;
 
@@ -536,7 +439,7 @@ public class Model3d {
 			t3dChi = new Transform3D();
 			t3dOmegaChi = new Transform3D();
 			t3dPhi = new Transform3D();
-			
+
 			v = new Vector<>(10, 10);
 			vOmegaOnly = new Vector<>(10, 10);
 		}
@@ -568,6 +471,7 @@ public class Model3d {
 		}
 
 		public void setOmega(double angle) {
+			omegaDeg = angle;
 			omega = Math.PI * angle / 180;
 			t3dOmega.rotZ(omega);
 			t3dOmegaChi.mul(t3dOmega, t3dChi);
@@ -578,6 +482,7 @@ public class Model3d {
 		}
 
 		public void setChi(double angle) {
+			chiDeg = angle;
 			chi = Math.PI * angle / 180;
 			t3dChi.rotY(chi);
 			t3dOmegaChi.mul(t3dOmega, t3dChi);
@@ -587,6 +492,7 @@ public class Model3d {
 		}
 
 		public void setPhi(double angle) {
+			phiDeg = angle;
 			phi = Math.PI * angle / 180;
 			t3dPhi.rotZ(phi);
 			t3d.mul(t3dOmegaChi, t3dPhi);
@@ -633,38 +539,41 @@ public class Model3d {
 		private TransformGroup orientationGonioRing;
 		private Transform3D t3d;
 		private TransformGroup tg;
-	
+
 		protected GonioHead(Model3d model3d) {
 			setName("goinohead");
-			orientationGonio = model3d.orientation.addOrientationObject(model3d.univers.newWritableTransformGroup(null));
-			orientationGonioRing = model3d.orientation.addOrientationOmegaOnly(model3d.univers.newWritableTransformGroup(null));
+			orientationGonio = model3d.orientation
+					.addOrientationObject(model3d.univers.newWritableTransformGroup(null));
+			orientationGonioRing = model3d.orientation
+					.addOrientationOmegaOnly(model3d.univers.newWritableTransformGroup(null));
 			t3d = new Transform3D();
 			tg = model3d.univers.newWritableTransformGroup(t3d);
 			Utils3d.setParents((Node) orientationGonio, tg, this);
 			Utils3d.setParents((Node) orientationGonioRing, tg, this);
 			buildGadjet(model3d, orientationGonio, orientationGonioRing);
 		}
-	
+
 		protected void setY(double y) {
 			t3d.set(new Vector3d(0, -y, 0));
 			tg.setTransform(t3d);
 		}
-	
+
 		private static void buildGadjet(Model3d model3d, TransformGroup gonio, TransformGroup gonioRing) {
-			if (model3d.isUnitSphere) {
+			if (DefaultValues.isUnitSphere) {
 				double scale = model3d.virtualSphere.scaledRadius;
 				Transform3D t = new Transform3D();
 				t.setScale(scale);
 				TransformGroup tg = new TransformGroup(t);
 				tg.setCapability(TransformGroup.ALLOW_CHILDREN_EXTEND);
 				tg.setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
-				model3d.updateAxes(tg);
+				tg.setName("usTG");
+				model3d.updateUnitAxes(tg);
 				Utils3d.setParents(tg, (Group) gonio);
 			} else {
-				Node ring = model3d.univers.renderer.createTorus("ring", .05, .6, 10, 50, Utils3d.createApp(ColorConstants.yellow));
-				Node sample = model3d.univers.renderer.createBox("stage", 0.2, 0.2, 0.1, Utils3d.createApp(ColorConstants.blue));
+				Node ring = model3d.univers.renderer.createTorus("ring", .05, .6, 10, 50, Colors.appYellow);
+				Node sample = model3d.univers.renderer.createBox("stage", 0.2, 0.2, 0.1, Colors.appBlue);
 				Node pin = model3d.univers.creator.createCylinder(model3d.univers, "pin", new Point3d(),
-						new Point3d(0, 0, -.4), .02, Utils3d.createApp(ColorConstants.orange), 5);
+						new Point3d(0, 0, -.4), .02, Colors.appOrange, 5);
 				// omega ring
 				Utils3d.setParents(ring, gonioRing);
 				// sample crystal
@@ -673,37 +582,36 @@ public class Model3d {
 				Utils3d.setParents(pin, (Group) gonio);
 			}
 		}
-		
+
 	}
 
 	public double getLambda() {
 		return lambda;
 	}
-	
-	public void updateAxes(TransformGroup tg) {
+
+	public void updateUnitAxes(TransformGroup tg) {
+		if (!DefaultValues.isUnitSphere)
+			return;
 		if (tg == null)
-			tg = ucTG;
+			tg = usTG;
 		else
-			ucTG = tg;
-		tg.removeChild(ucChild);
-		BranchGroup n = univers.creator.createRepere(ColorConstants.red, 
-				ColorConstants.green, null, 
-				new String[] { "a^", "b^", "c^" },
-				.055f, .01f, 0, 0, 
-				(Vector3d)transformLatticeV(new Vector3d(1/lattice.a, 0, 0), 1),
-				(Vector3d)transformLatticeV(new Vector3d(0, 1/lattice.b, 0), 1),
-				(Vector3d)transformLatticeV(new Vector3d(0, 0, 1/lattice.c), 1), true);
-		n.setName("unitcell:abc ");
+			usTG = tg;
+		univers.removeNotify(tg, usChild);
+		BranchGroup n = univers.creator.createRepere("sphereAxes:", Colors.red, Colors.green, null,
+				new String[] { "a^", "b^", "c^" }, .055f, .01f, 0, 0,
+				(Vector3d) transformLatticeV(new Vector3d(1 / lattice.a, 0, 0), 1),
+				(Vector3d) transformLatticeV(new Vector3d(0, 1 / lattice.b, 0), 1),
+				(Vector3d) transformLatticeV(new Vector3d(0, 0, 1 / lattice.c), 1), true);
+		n.setName("sphereAxes:");
 		n.setCapability(BranchGroup.ALLOW_DETACH);
-		ucChild = n;
-		tg.addChild(n);
+		usChild = n;
+		univers.addNotify(tg, n);
 	}
 
 	public Tuple3d transformLatticeV(Tuple3d v, double scale) {
 		lattice.transform(v);
 		if (scale <= 0) {
-			double len = Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-			v.scale(1 / len);
+			v.scale(1 / Utils3d.len(v));
 			if (scale < 0)
 				v.scale(-scale);
 		} else {
@@ -716,9 +624,12 @@ public class Model3d {
 		lattice.invertTransform(v);
 	}
 
-	private BranchGroup m, ms0, ma, mb, mc;
-	
 	void updateUnitSphere(int h, int k, int l, Point3d pN, Point3d pNet) {
+//		if (h != 0 && (h == 0 && k == 0 || h == 0 && l == 0 
+//				|| k == 0 && l == 0)) {
+//			System.out.println(h + " " + k + " " + l + " " 
+//				+ orientation.omegaDeg + " " + orientation.chiDeg + " " + orientation.phiDeg);
+//		}
 
 		// reverse S0
 		double r = virtualSphere.scaledRadius;
@@ -731,9 +642,15 @@ public class Model3d {
 //		tPrecOrientInv.transform(pNetTr); // now pN
 //		reciprocal.inverse.transform(pNetTr);
 //		pNetTr.scale(1/net.scaling);// now this is {h k l} YES
-		Point3d pNetTr = new Point3d(h, k, l);
-		reciprocal.rotate(pNetTr); // now (lambda/a, -lambda/b, 3 lambda/c)
+		// beta = 120:
+		Point3d m = new Point3d(h, k, l); // 1 0 0
+		reciprocal.rotate(m); // .0666 0 0.03849
+		m.scale(lambda); // because our R.L. is scaled by lambda
+		// this is now the original pNet - actually pN/overallScaling
 
+		// now m is (lambda/a, -lambda/b, 3 lambda/c) if cubic only
+
+		// System.out.println("\nm " + m);
 		// The three direct vectors
 
 		Vector3d va = (Vector3d) transformLatticeV(new Vector3d(1, 0, 0), 0);
@@ -742,17 +659,20 @@ public class Model3d {
 
 		// M dot a, M dot b, M dot c
 
-		double mDotA = Utils3d.dot(va, pNetTr);
-		double mDotB = Utils3d.dot(vb, pNetTr);
-		double mDotC = Utils3d.dot(vc, pNetTr);
+		double mDotA = Utils3d.dot(va, m);
+		double mDotB = Utils3d.dot(vb, m);
+		double mDotC = Utils3d.dot(vc, m);
 
 		// these are now h*lamba/a, k*lambda/b, l*lambda/c
 
+//		System.out.println("hkl "+ h + " " + k + " " + l + " mdot " + mDotA  + " " + mDotB + " " + mDotC
+//		);
+
 		// back to the net scaling -- lambda * DefaultValues.scale
 
-		va.scale(mDotA * net.scaling);
-		vb.scale(mDotB * net.scaling);
-		vc.scale(mDotC * net.scaling);
+		va.scale(mDotA);
+		vb.scale(mDotB);
+		vc.scale(mDotC);
 
 		// these are the projection points we need to along the axes.
 
@@ -762,32 +682,43 @@ public class Model3d {
 
 		// now in the same basis as rays
 
-		if (Math.abs(mDotA) > 0.05) {
+		double d = 0;
+		if (Math.abs(mDotA) > 0.01) {
 			p0.set(va);
+			p0.scale(DefaultValues.scale);
 			p0.y -= r;
-			if (p0.distance(pSo) > 0.05) {
-				ma = univers.creator.createNamedVector(" " + h, pSo, p0, p0, 0.2f, 0.06f, ColorConstants.red,
-						ColorConstants.red);
+
+			if ((d = p0.distance(pSo)) > 0.05) {
+				// System.out.println("ma=" + d/DefaultValues.scale + " " + (lambda/lattice.a));
+				ma = univers.creator.createNamedVector("hkla", pSo, p0, p0, 0.2f, 0.06f, Colors.red, Colors.red,
+						" " + h);
 				ma.setCapability(BranchGroup.ALLOW_DETACH);
 				univers.addNotify(rays, ma);
 			}
 		}
-		if (Math.abs(mDotB) > 0.05) {
+		if (Math.abs(mDotB) > 0.01) {
 			p0.set(vb);
+			p0.scale(DefaultValues.scale);
 			p0.y -= r;
-			if (p0.distance(pSo) > 0.05) {
-				mb = univers.creator.createNamedVector(" " + k, pSo, p0, p0, 0.2f, 0.06f, ColorConstants.red,
-						ColorConstants.red);
+			if ((d = p0.distance(pSo)) > 0.05) {
+				// System.out.println("mb=" + d/DefaultValues.scale + " " + (lambda/lattice.b));
+				mb = univers.creator.createNamedVector("hklb", pSo, p0, p0, 0.2f, 0.06f, Colors.red, Colors.red,
+						" " + k);
 				mb.setCapability(BranchGroup.ALLOW_DETACH);
 				univers.addNotify(rays, mb);
 			}
 		}
-		if (Math.abs(mDotC) > 0.05) {
+		if (Math.abs(mDotC) > 0.01) {
 			p0.set(vc);
+			p0.scale(DefaultValues.scale);
 			p0.y -= r;
-			if (p0.distance(pSo) > 0.05) {
-				mc = univers.creator.createNamedVector(" " + l, pSo, p0, p0, 0.2f, 0.06f, ColorConstants.red,
-						ColorConstants.red);
+			if ((d = p0.distance(pSo)) > 0.05) {
+
+				// this check is for p0 == pSo, in which case no line is drawn
+
+//				System.out.println("mc=" + d + " " + (lambda/lattice.c));
+				mc = univers.creator.createNamedVector("hklc", pSo, p0, p0, 0.2f, 0.06f, Colors.red, Colors.red,
+						" " + l);
 				mc.setCapability(BranchGroup.ALLOW_DETACH);
 				univers.addNotify(rays, mc);
 			}
@@ -795,26 +726,49 @@ public class Model3d {
 	}
 
 	private void setMrays(Point3d pNet, Point3d pSo, Point3d p0) {
-		if (m != null) {
-			rays.removeChild(m);
-			rays.removeChild(ms0);
+		if (mray != null) {
+			univers.removeNotify(rays, mray);
+			univers.removeNotify(rays, ms0);
 			if (ma != null) {
-				rays.removeChild(ma);
+				univers.removeNotify(rays, ma);
 			}
 			if (mb != null) {
-				rays.removeChild(mb);
+				univers.removeNotify(rays, mb);
 			}
 			if (mc != null) {
-				rays.removeChild(mc);
+				univers.removeNotify(rays, mc);
 			}
 		}
-		Appearance yellow = Utils3d.createApp(ColorConstants.yellow);
-		Appearance red = Utils3d.createApp(ColorConstants.red);
-		m = univers.creator.createCylinder(univers, "M", p0, pSo, .02, red, 4);
-		univers.addNotify(rays, m);
-		ms0 = univers.creator.createCylinder(univers, "-So", pNet, pSo, .02, yellow, 4);
+		mray = univers.creator.createCylinder(univers, "M", p0, pSo, .02, Colors.appRed, 4);
+		univers.addNotify(rays, mray);
+		ms0 = univers.creator.createCylinder(univers, "-So", pNet, pSo, .02, Colors.appYellow, 4);
 		univers.addNotify(rays, ms0);
 	}
 
+	public void setScreen(String type, double angleMu, double angleAlpha, boolean maskEnabled) {
+		switch (type) {
+		case ProjScreen3d.FLAT:
+			setFlatScreen();
+			univers.scale(2);
+			break;
+		case ProjScreen3d.CYLINDRICAL:
+			setCylindricScreen();
+			univers.scale(.5);
+			break;
+		}
+		precession.setAngle(angleMu);
+		precession.setRotation(angleAlpha);
+		setMask(maskEnabled);
+		clearAll();
+
+	}
+
+	public void project2d(Graphics mg, Double p2d, int h, int k, int l) {
+		projScreen.drawPoint(mg, p2d, net.intensity(h, k, l), h, k, l);
+	}
+
+	public void addImpactRay(Point3d cSphere, Point3d pFrom, Point3d pTo, Point3d pProj) {
+		rays.addImpactRay(cSphere, pFrom, pTo, pProj);
+	}
 
 }
