@@ -3279,7 +3279,7 @@ class MasterControl {
 				while ((parent = rootThreadGroup.getParent()) != null) {
 					rootThreadGroup = parent;
 				}
-				rootThreadGroup = new ThreadGroup(rootThreadGroup, "Java3D");
+				rootThreadGroup = new ThreadGroup(rootThreadGroup, "MasterControl");
 				// use the default maximum group priority
 				return null;
 			}

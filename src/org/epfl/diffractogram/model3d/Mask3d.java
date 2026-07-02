@@ -64,7 +64,7 @@ public class Mask3d extends BranchGroup {
 	}
 
 	public Point3d center() {
-		center.set(0, 0, r / defaultValues.maskDistFract);
+		center.set(0, 0, r / DefaultValues.maskDistFract);
 		precession.applyRot(center);
 		center.y += y;
 		return center;
@@ -78,7 +78,7 @@ public class Mask3d extends BranchGroup {
 
 	public void setY(double y) {
 		this.y = y;
-		t3d.set(new Vector3d(0, y * defaultValues.maskDistFract, 0));
+		t3d.set(new Vector3d(0, y * DefaultValues.maskDistFract, 0));
 		transTg.setTransform(t3d);
 	}
 
