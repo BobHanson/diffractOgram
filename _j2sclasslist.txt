@@ -473,6 +473,7 @@ javax/vecmath/Tuple3f.js
 javax/vecmath/Vector3d.js
 javax/vecmath/Vector3f.js
 org/epfl/diffractogram/DefaultValues.js
+org/epfl/diffractogram/diffractOgram.js
 org/epfl/diffractogram/diffractOgram2.js
 org/epfl/diffractogram/gui/BottomPanel.js
 org/epfl/diffractogram/gui/HVPanel.js
