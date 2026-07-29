@@ -6,7 +6,8 @@ It has a few differences from its original. Superficially, the text banners that
 
 More significantly, the goniometer is not shown. Instead, the origin of the refracted beam, originally from the center of the offset reciprocal lattice, has been moved to the center of the Ewald sphere, and the Ewald sphere has been adjusted to be unitless rather than wavelength-dependent.  
 
-<img width="844" height="1418 473" alt="image" src="https://github.com/user-attachments/assets/f9d40f6a-23ea-4a3a-9437-f7c51119ef88" />
+<img width="1141" height="630" alt="image" src="https://github.com/user-attachments/assets/46bfe4c8-c55c-42e7-a49b-3fd36e497db6" />
+
 
 Making the Ewald sphere a unit sphere (effectively unitless) allows us to visualize the allowed refractions as points along a unitless numberline that is laid out along each of the three crystal axes, where the indexes are h, k, and l:
 
