@@ -10,7 +10,7 @@ More significantly, the goniometer is not shown. Instead, the origin of the refr
 
 Making the Ewald sphere a unit sphere (effectively unitless) allows us to visualize the allowed refractions as points along a unitless numberline that is laid out along each of the three crystal axes, where the indexes are h, k, and l:
 
-<img width="1141" height="630" alt="image" src="https://github.com/user-attachments/assets/d1ffb11a-caa5-4f3a-86c4-6181aaeea7cf" />
+<img width="1140" height="630" alt="image" src="https://github.com/user-attachments/assets/d1ffb11a-caa5-4f3a-86c4-6181aaeea7cf" />
 
 It also suggests grouping these as dot products of the unit beam vectors S and So with the individual crystal axes:
 
