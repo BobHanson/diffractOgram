@@ -1,5 +1,9 @@
 DiffractOgram-SwingJS
 
+==Transpiling to JavaScript==
+
+To create JavaScript along with Java (doing all the coding in Java), you will need to use Eclipse with the java2script compilation-follower plugin. The [j2s.core.jar plugin](https://github.com/java2script/java2script/blob/master/sources/net.sf.j2s.core/dist/swingjs/ver/5.0.1/j2s.core.jar) can be found at the [java2script GitHub site](https://github.com/java2script/java2script). Take a look at [README.txt](https://github.com/BobHanson/java2script/blob/master/sources/net.sf.j2s.core/dist/README.txt). But, basically, just put j2s.core.jar into the eclipse _dropins_ directory (not _plugins_) and restart Eclipse. Do a clean build of the project, refresh the project contents, and you should see a site/ directory created. Run any of the HTML files in that directory. 
+
 ==Update 2026.07.29==
 
 The DiffractOgram applet is now fully functional using Jmol (DiffractOgram2; Java and JavaScript) or Java3D (DiffractOgram; Java only) for rendering the Java3D "world" environment. 
