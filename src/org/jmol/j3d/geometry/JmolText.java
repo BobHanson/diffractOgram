@@ -6,6 +6,12 @@ import javax.media.j3d.BranchGroup;
 
 import org.jmol.j3d.JmolWorldRendererI;
 
+/**
+ * Just a placeholder; not implemented
+ * 
+ * @author hanso
+ *
+ */
 public class JmolText extends JmolShape3D {
 	String text;
 	int align;

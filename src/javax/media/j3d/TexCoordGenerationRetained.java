@@ -402,15 +402,13 @@ class TexCoordGenerationRetained extends NodeComponentRetained {
 	}
     }
 
-    @Override
-    void handleFrequencyChange(int bit) {
-        switch (bit) {
-        case TexCoordGeneration.ALLOW_ENABLE_WRITE:
-        case TexCoordGeneration.ALLOW_PLANE_WRITE: {
-            setFrequencyChangeMask(bit, bit);
-        }
-        default:
-            break;
-        }
-    }
+	@Override
+	void handleFrequencyChange(int bit) {
+		switch (bit) {
+		case TexCoordGeneration.ALLOW_ENABLE_WRITE:
+		case TexCoordGeneration.ALLOW_PLANE_WRITE:
+			setFrequencyChangeMask(bit, bit);
+			break;
+		}
+	}
 }

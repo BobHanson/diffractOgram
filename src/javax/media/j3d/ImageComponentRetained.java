@@ -2564,6 +2564,7 @@ private ArrayList<NodeComponentRetained> userList = new ArrayList<NodeComponentR
                         // Unsupported case, so shouldn't be here.
                     case TYPE_USHORT_GRAY:
                         bufferType = BufferedImage.TYPE_USHORT_GRAY;
+                        break;
                     default:
                         assert false;
 

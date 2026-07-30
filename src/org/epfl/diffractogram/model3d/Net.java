@@ -5,6 +5,8 @@ import java.awt.Graphics;
 import java.awt.KeyboardFocusManager;
 import java.awt.Point;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.media.j3d.Appearance;
 import javax.media.j3d.BranchGroup;
@@ -65,7 +67,7 @@ public class Net extends BranchGroup {
 		}
 		
 		public String toString() {
-			return "Atom[" + hkl + " " + isSpecial + "]";
+			return "Atom[" + hkl + " spec=" + isSpecial + " vis=" + isVisible + "]";
 		}
 
 	}
@@ -75,7 +77,7 @@ public class Net extends BranchGroup {
 	public TransformGroup precessionObject;
 	private BranchGroup netLabel;
 	public BranchGroup netRoot;
-	private static Appearance defaultApp, redApp, greenApp;
+	private static Appearance defaultApp, highlightApp, greenApp;
 	private Vector3d aStar, bStar, cStar;
 	public int hMax, kMax, lMax;
 	public int hRange, kRange, lRange;
@@ -95,9 +97,10 @@ public class Net extends BranchGroup {
 	private TransformGroup netBox;
 
 	private Atom[][][] atoms;
+	private List<Atom> selectedAtoms;
 
 	public Net(Model3d model3d, DefaultValues defaultValues) {
-
+		selectedAtoms = new ArrayList<>();
 		rl = defaultValues.param_lattice.reciprocal();
 		this.model3d = model3d;
 		this.univers = model3d.univers;
@@ -111,9 +114,9 @@ public class Net extends BranchGroup {
 			defaultApp = Utils3d.newAppearance("color:blue");
 			defaultApp.setMaterial(new Material(Colors.blue, Colors.black, Colors.blue, Colors.white, 128));
 		}
-		if (redApp == null) {
-			redApp = Utils3d.newAppearance("color:red");
-			redApp.setMaterial(new Material(Colors.red, Colors.black, Colors.red, Colors.white, 128));
+		if (highlightApp == null) {
+			highlightApp = Utils3d.newAppearance("color:red");
+			highlightApp.setMaterial(new Material(Colors.red, Colors.black, Colors.red, Colors.white, 128));
 		}
 		if (greenApp == null) {
 			greenApp = Utils3d.newAppearance("color:green");
@@ -223,10 +226,13 @@ public class Net extends BranchGroup {
 		netRoot.setCapability(BranchGroup.ALLOW_CHILDREN_EXTEND);
 		netRoot.setCapability(BranchGroup.ALLOW_CHILDREN_WRITE);
 
+		boolean visible;
 		for (int h = -hMax; h <= hMax; h++) {
+			visible = (h == -hMax || h == hMax);
 			for (int k = -kMax; k <= kMax; k++) {
+				visible |= (k == -kMax || k == kMax);
 				for (int l = -lMax; l <= lMax; l++) {
-					boolean visible = !(h != -hMax && h != hMax && k != -kMax && k != kMax && l != -lMax && l != lMax);
+					visible |= (l == -lMax || l == lMax);
 					createAtom(h, k, l, false, !DefaultValues.developNet && visible);
 				}
 			}
@@ -379,19 +385,25 @@ public class Net extends BranchGroup {
 		createNet(aStar, bStar, cStar, x, y, z);
 	}
 
-	public synchronized void highlight(int h, int k, int l) {
-		Atom atom = getAtom(h, k, l);
-		if (atom != null && !atom.isSelected) {
-			if (!atom.isVisible)
-				univers.addNotify(netRoot, atom);
-			changeAtomApp(atom, redApp);
-			atom.isSelected = true;
+	public synchronized void highlight(Atom atom) {
+		if (atom.isSelected)
+			return;
+		if (!atom.isVisible)
+			univers.addNotify(netRoot, atom);
+		changeAtomApp(atom, highlightApp);
+		atom.isSelected = true;
+		atom.isVisible = !atom.isSpecial;
+		selectedAtoms.add(atom);
+	}
+
+	void clearSelectedAtoms() {
+		for (int i = selectedAtoms.size(); --i >= 0;) {
+			unhighlight(selectedAtoms.remove(i), false);
 		}
 	}
 
-	public synchronized void unHighlight(int h, int k, int l, boolean force) {
-		Atom atom = getAtom(h, k, l);
-		if (atom != null && (force || atom.isSelected)) {
+	public synchronized void unhighlight(Atom atom, boolean force) {
+		if (force || atom.isSelected) {
 			changeAtomApp(atom, defaultApp);
 			if (force || !atom.isVisible)
 				univers.removeNotify(netRoot, atom);
@@ -408,9 +420,9 @@ public class Net extends BranchGroup {
 	 * @param h
 	 * @param k
 	 * @param l
-	 * @return
+	 * @return atom for given hkl
 	 */
-	private Atom getAtom(int h, int k, int l) {
+	 public Atom getAtom(int h, int k, int l) {
 		return atoms[h + hRange][k + kRange][l + lRange];
 	}
 
@@ -418,7 +430,9 @@ public class Net extends BranchGroup {
 		for (int i = -hRange; i <= hRange; i++) {
 			for (int j = -kRange; j <= kRange; j++) {
 				for (int k = -lRange; k <= lRange; k++) {
-					unHighlight(i, j, k, DefaultValues.developNet);
+					Atom atom = getAtom(i, j, k);
+					if (atom != null)
+						unhighlight(atom, true);
 				}
 			}
 		}
@@ -451,6 +465,7 @@ public class Net extends BranchGroup {
 		Point3d cSphere = model3d.virtualSphere.center;
 		Point3d pNet = new Point3d();
 		Point3d pProj = new Point3d();
+		clearSelectedAtoms();
 		for (int h = -hRange; h <= hRange; h++) {
 			for (int k = -kRange; k <= kRange; k++) {
 				for (int l = -lRange; l <= lRange; l++) {
@@ -463,7 +478,7 @@ public class Net extends BranchGroup {
 					model3d.tPrecOrient.transform(pNet);
 					double ewaldDiff = 0;
 					if (isRay) {
-						// cehck for point at sphere
+						// check for point at sphere
 						ewaldDiff = unOrientedCenter.distance(atom.point) - scaledRadius;
 						if (
 								//ewaldDiff > 0 || 
@@ -476,7 +491,7 @@ public class Net extends BranchGroup {
 							continue;
 					}
 					pProj.set(pNet.x, pNet.y + scaledRadius, pNet.z);
-
+					
 					// project this point with precessed y(n) and screen center cn
 					if (!model3d.p3d.projPoint(pProj, vy, cn))
 						continue;
@@ -512,8 +527,9 @@ public class Net extends BranchGroup {
 						model3d.addImpactRay(cSphere, pFrom, pTo, pProj);
 						if (DefaultValues.isUnitSphere)
 							model3d.updateUnitSphere(h, k, l, atom.point, pNet);
-						if (model3d.showReciprocalLattice)
-							highlight(h, k, l);
+						if (model3d.showReciprocalLattice) {
+							highlight(atom);
+						}
 					}
 					if (doProject2D)
 						model3d.project2d(mg, p2d, h, k, l);

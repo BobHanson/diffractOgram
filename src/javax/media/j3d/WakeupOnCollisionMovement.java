@@ -300,8 +300,8 @@ public final class WakeupOnCollisionMovement extends WakeupCriterion {
 		  }
 		  ((GroupRetained) armingNode).searchGeometryAtoms(geometryAtoms);
 	      }
+	      break;
 	      // else use this.vwcBounds
-	  default:
 	}
 
 	behav.universe.geometryStructure.addWakeupOnCollision(this);

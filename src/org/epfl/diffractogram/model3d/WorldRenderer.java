@@ -21,6 +21,8 @@ import org.epfl.diffractogram.DefaultValues;
 import org.epfl.diffractogram.j3d.Java3DWorldRenderer;
 import org.epfl.diffractogram.jmol.JmolWorldRenderer;
 
+import javajs.api.Interface;
+
 public abstract class WorldRenderer {
 	
 	protected Univers univers;
@@ -47,7 +49,11 @@ public abstract class WorldRenderer {
 
 	public static WorldRenderer createWorldRenderer(JPanel panel3d, Univers univers) {
 		isJmol = DefaultValues.useJmol;
-		return (isJmol ? new JmolWorldRenderer(panel3d, univers) : new Java3DWorldRenderer(panel3d, univers));
+		return (isJmol ? new JmolWorldRenderer(panel3d, univers) : newJava3DWorldRenderer(panel3d, univers));
+	}
+
+	private static WorldRenderer newJava3DWorldRenderer(JPanel panel3d, Univers univers) {
+		return (WorldRenderer) Interface.getInstanceWithParams("org.epfl.diffractogram.j3d.Java3DWorldRenderer", new Class<?>[] { JPanel.class,  Univers.class }, new Object[] { panel3d, univers });
 	}
 
 	public abstract void setEnvironment(TransformGroup reset);

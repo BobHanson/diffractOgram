@@ -604,10 +604,8 @@ class TextureUnitStateRetained extends NodeComponentRetained {
     @Override
     void handleFrequencyChange(int bit) {
         switch (bit) {
-        case TextureUnitState.ALLOW_STATE_WRITE: {
+        case TextureUnitState.ALLOW_STATE_WRITE:
             setFrequencyChangeMask(bit, bit);
-        }
-        default:
             break;
         }
     }

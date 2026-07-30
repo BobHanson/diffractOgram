@@ -2478,10 +2478,8 @@ abstract class TextureRetained extends NodeComponentRetained {
         switch (bit) {
         case Texture.ALLOW_ENABLE_WRITE:
         case Texture.ALLOW_IMAGE_WRITE:
-        case Texture.ALLOW_LOD_RANGE_WRITE: {
+        case Texture.ALLOW_LOD_RANGE_WRITE:
             setFrequencyChangeMask(bit, bit);
-        }
-        default:
             break;
         }
     }

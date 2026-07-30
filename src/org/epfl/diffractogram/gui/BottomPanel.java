@@ -105,7 +105,7 @@ public class BottomPanel extends HVPanel.HPanel {
 				sync = true;
 			}
 			model3d.net.setLattice(model3d.reciprocal);
-			model3d.doRays(false);
+//			model3d.doRays(false);
 		}
 	}
 
@@ -193,6 +193,13 @@ public class BottomPanel extends HVPanel.HPanel {
 			String cmd = e.getActionCommand();
 			boolean adjustR = false;
 			switch (cmd) {
+			case "invalidEdit":
+				if (e.getSource() instanceof HVPanel.SliderAndValue) {
+					HVPanel.SliderAndValue slider = (HVPanel.SliderAndValue) e.getSource();
+					if (slider.lastValue != null)
+					slider.edit.setValue(slider.lastValue);
+				}
+				return;
 			case "Reset angles":
 				rotX.setValue(0);
 				rotY.setValue(0);
@@ -202,7 +209,7 @@ public class BottomPanel extends HVPanel.HPanel {
 //				uvw.edit.setText("0 1 0");
 //				HVPanel.quiet = false;
 				model3d.clearImage();
-				break;
+				return;
 			case "u v w":
 				HVPanel.quiet = true;
 				int[] ii = ((int[]) ((EditField) e.getSource()).getValue());
@@ -271,7 +278,8 @@ public class BottomPanel extends HVPanel.HPanel {
 			p5.putExtraSpace();
 			p1.addSubPane(p5);
 			p5.expand(true);
-			speed = p5.addSliderAndValueH("Speed", null, 1, 20, defaultValues.param_speed, 0, 80);
+			double s = defaultValues.param_speed;
+			speed = p5.addSliderAndValueH("Speed", null, 0, 20, s == 0 ? 1 : s, 0, 80);
 
 			HVPanel p7 = new HVPanel.HPanel();
 			p7.addButton(new JToggleButton("Lambda"));
@@ -297,33 +305,32 @@ public class BottomPanel extends HVPanel.HPanel {
 			animator.from = defaultValues.param_startAngle;
 			animator.to = defaultValues.param_stopAngle;
 			animator.fromToEnable = false;
-			animator.speed = 1;
+			animator.setSpeed(1);
 
-			setSpeed();
+			setSpeedFromTo();
 
 			fromToEnable.setSelected(false);
 			from.setEnable(false);
 			to.setEnable(false);
 		}
 
-		public void setSpeed() {
+		public void setSpeedFromTo() {
 			if (fromToEnable.isSelected()) {
 				int d = Math.round(to.getFloatValue() - from.getFloatValue());
-				animator.speed = (int) Math.round(speed.getValue() * d / 360);
-				if (animator.speed == 0)
-					animator.speed = 1;
+				double s = (int) Math.round(speed.getValue() * d / 360);
+				animator.setSpeed(s == 0 ? 1 : s);
 			}
 		}
 
 		public void actionPerformed(ActionEvent e) {
 			String action = e.getActionCommand();
 			if (e.getSource() == speed) {
-				animator.speed = speed.getValue();
+				animator.setSpeed(speed.getValue());
 				return;
 			}
 			if (action.equals("Speed")) {
-				animator.speed = (int) Math.round(((SliderAndValue) e.getSource()).getValue());
-				setSpeed();
+				animator.setSpeed((int) Math.round(((SliderAndValue) e.getSource()).getValue()));
+				setSpeedFromTo();
 				return;
 			}
 			animator.stopAnimation();
@@ -333,7 +340,7 @@ public class BottomPanel extends HVPanel.HPanel {
 				from.setEnable(b);
 				to.setEnable(b);
 				if (!b)
-					animator.speed = (int) Math.round(speed.getValue());
+					animator.setSpeed((int) Math.round(speed.getValue()));
 				return;
 			}
 			if (e.getSource() == fromToEnable) {
@@ -342,7 +349,7 @@ public class BottomPanel extends HVPanel.HPanel {
 				from.setEnable(b);
 				to.setEnable(b);
 				if (!b)
-					animator.speed = (int) Math.round(speed.getValue());
+					animator.setSpeed((int) Math.round(speed.getValue()));
 				return;
 			}
 			if (e.getSource() == from) {
@@ -427,19 +434,19 @@ public class BottomPanel extends HVPanel.HPanel {
 	}
 
 	class Screen extends HVPanel.VPanel {
-		private EditField w, h, y;
+		private EditField screenWidth, screenHeight, screenDistance;
 		private boolean flat;
 
 		public Screen() {
 			setBorder(new TitledBorder("Screen"));
 			HVPanel.HPanel p1 = new HVPanel.HPanel();
-			w = p1.addIntFieldSpinner("Size ", null, 2, (int) defaultValues.param_wScreen);
-			h = p1.addIntFieldSpinner(" x ", "cm", 2, (int) defaultValues.param_hFlatScreen);
-			((NumberFormatter) w.edit.getFormatter()).setMinimum(new Integer(1));
-			((NumberFormatter) h.edit.getFormatter()).setMinimum(new Integer(1));
+			screenWidth = p1.addIntFieldSpinner("Size ", null, 2, (int) defaultValues.param_wScreen);
+			screenHeight = p1.addIntFieldSpinner(" x ", "cm", 2, (int) defaultValues.param_hFlatScreen);
+			((NumberFormatter) screenWidth.edit.getFormatter()).setMinimum(new Integer(1));
+			((NumberFormatter) screenHeight.edit.getFormatter()).setMinimum(new Integer(1));
 			addSubPane(p1);
 			HVPanel.HPanel p10 = new HVPanel.HPanel();
-			y = p10.addIntFieldSpinner("Distance ", "cm", 2, (int) defaultValues.param_zScreen);
+			screenDistance = p10.addIntFieldSpinner("Distance ", "cm", 2, (int) defaultValues.param_zScreen);
 			addSubPane(p10);
 
 			HVPanel p11 = new HVPanel.HPanel();
@@ -461,12 +468,12 @@ public class BottomPanel extends HVPanel.HPanel {
 
 		public void actionPerformed(ActionEvent e) {
 			if (e.getActionCommand().equals("Size ") || e.getActionCommand().equals(" x ")) {
-				double dw = w.getFloatValue(), dh = h.getFloatValue();
+				double dw = screenWidth.getFloatValue(), dh = screenHeight.getFloatValue();
 				model3d.setScreenSize(dw, dh);
 				model3d.clearAll();
 			} else if (e.getActionCommand().equals("Distance ")) {
 				model3d.clearImage();
-				double d = y.getFloatValue();
+				double d = screenDistance.getFloatValue();
 				model3d.p3d.setPos(d);
 				model3d.mask3d.setY(d);
 			} else if (e.getActionCommand().equals(ProjScreen3d.FLAT)) {
@@ -476,9 +483,9 @@ public class BottomPanel extends HVPanel.HPanel {
 				super.actionPerformed(new ActionEvent(this, 0, "horizontal"));
 				model3d.setScreen(ProjScreen3d.FLAT, animPane.angle.getFloatValue(), paramPane.precess.getValue(),
 						animPane.mask.isSelected());
-				h.setValue(new Double(model3d.p3d.h));
-				w.setEnable(true);
-				w.setValue(new Double(model3d.p3d.w));
+				screenHeight.setValue(new Double(model3d.p3d.h));
+				screenWidth.setEnable(true);
+				screenWidth.setValue(new Double(model3d.p3d.w));
 				paramPane.precess.setEnabled(true);
 				animPane.angle.setEnable(true);
 				animPane.precession.setEnabled(true);
@@ -489,10 +496,10 @@ public class BottomPanel extends HVPanel.HPanel {
 				flat = false;
 				super.actionPerformed(new ActionEvent(this, 0, "vertical"));
 				model3d.setScreen(ProjScreen3d.CYLINDRICAL, 0, 0, false);
-				h.setValue(new Double(model3d.p3d.h));
-				w.setEnable(false);
-				w.nameLabel.setEnabled(true);
-				w.edit.setText("");
+				screenHeight.setValue(new Double(model3d.p3d.h));
+				screenWidth.setEnable(false);
+				screenWidth.nameLabel.setEnabled(true);
+				screenWidth.edit.setText("");
 				paramPane.precess.setEnabled(false);
 				animPane.angle.setEnable(false);
 				animPane.precession.setEnabled(false);
@@ -505,6 +512,7 @@ public class BottomPanel extends HVPanel.HPanel {
 				model3d.clearAll();
 			} else if (e.getActionCommand().equals("Clear")) {
 				model3d.clearAll();
+				return;
 			} else if (e.getActionCommand().equals("Help")) {
 				if (help == null)
 					help = new Help();

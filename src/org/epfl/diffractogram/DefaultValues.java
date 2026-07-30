@@ -12,8 +12,14 @@ public class DefaultValues {
 	// Javascript ave 170.6 ms of 636
 
 
+	/**
+	 * if Java (not JavaScript) and using Jmol; used only when creating the world to compile Net.netRoot
+	 */
 	public static /* not final */ boolean javaJmol = false;
-	
+
+	/**
+	 * if Java or JavaScript and using Jmol
+	 */
 	public static boolean useJmol = /** @j2sNative true || */javaJmol;
 
 	/**

@@ -981,16 +981,14 @@ class TextureAttributesRetained extends NodeComponentRetained {
 
     @Override
     void handleFrequencyChange(int bit) {
-	switch (bit) {
-	case TextureAttributes.ALLOW_MODE_WRITE:
-	case TextureAttributes.ALLOW_BLEND_COLOR_WRITE:
-	case TextureAttributes.ALLOW_TRANSFORM_WRITE:
-	case TextureAttributes.ALLOW_COLOR_TABLE_WRITE:
-	case TextureAttributes.ALLOW_COMBINE_WRITE: {
-            setFrequencyChangeMask(bit, bit);
-        }
-	default:
-	    break;
-	}
+		switch (bit) {
+		case TextureAttributes.ALLOW_MODE_WRITE:
+		case TextureAttributes.ALLOW_BLEND_COLOR_WRITE:
+		case TextureAttributes.ALLOW_TRANSFORM_WRITE:
+		case TextureAttributes.ALLOW_COLOR_TABLE_WRITE:
+		case TextureAttributes.ALLOW_COMBINE_WRITE:
+	            setFrequencyChangeMask(bit, bit);
+		    break;
+		}
     }
 }

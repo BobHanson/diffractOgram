@@ -381,8 +381,8 @@ class SoundSchedulerAtom extends Object {
                 if (debugFlag)
                     debugPrint("enable = " + enabled +
                                "enabled set to OFF");
-                // fail thru
-            case OFF:
+            //$FALL-THROUGH$
+		case OFF:
 		// QUESTION: Why would enable status ever be OFF yet
 		// status SOUND_AUDIBLE or _SILENT?
 	        if (status == SOUND_AUDIBLE) {
@@ -538,8 +538,8 @@ class SoundSchedulerAtom extends Object {
                 if (debugFlag)
                     debugPrint("Enable = " + enabled +
                                     "enabled set to OFF");
-                // fall thru
 
+            //$FALL-THROUGH$
             case OFF:
                 if (sgSound.release && sgSound.continuous) {
                      if (enabled == PENDING_OFF) {

@@ -15,10 +15,11 @@ import javax.vecmath.Tuple3d;
 import javax.vecmath.Vector3d;
 
 import org.epfl.diffractogram.DefaultValues;
-import org.epfl.diffractogram.j3d.Java3DUniverse;
 import org.epfl.diffractogram.jmol.JmolUniverse;
 import org.epfl.diffractogram.util.Lattice;
 import org.epfl.diffractogram.util.Utils3d;
+
+import javajs.api.Interface;
 
 import org.epfl.diffractogram.util.Colors;
 
@@ -85,7 +86,7 @@ public class Model3d {
 
 		reciprocal = lattice.reciprocal();
 
-		univers = (DefaultValues.useJmol ? new JmolUniverse(panel3d) : new Java3DUniverse(panel3d));
+		univers = (DefaultValues.useJmol ? new JmolUniverse(panel3d) : newJava3DUniverse(panel3d));
 		univers.rotX(-90);
 		univers.rotY(-90);
 		univers.setTopTransform();
@@ -109,6 +110,10 @@ public class Model3d {
 		univers.addNotify(null, rays);
 	}
 
+	private Univers newJava3DUniverse(JPanel panel3d) {
+		return (Univers) Interface.getInstanceWithParams("org.epfl.diffractogram.j3d.Java3DUniverse", new Class<?>[] { JPanel.class} , new Object[] { panel3d });
+	}
+
 	public void setMask(boolean enabled) {
 		if (!mask && enabled)
 			univers.addNotify(null, mask3d);
@@ -128,12 +133,13 @@ public class Model3d {
 		if (!persistent)
 			clearImage();
 		rays.removeAllRays(persistent);
-		if (!DefaultValues.developNet)
-			net.clearLattice();
+//		if (!DefaultValues.developNet)
+//			net.clearLattice();
 	}
 
 	public void clearAll() {
 		clearAllRays();
+		net.clearSelectedAtoms();
 		clearImage();
 		if (!showReciprocalLattice) {
 			net.toggleDirect();
@@ -682,6 +688,7 @@ public class Model3d {
 
 		// now in the same basis as rays
 
+		@SuppressWarnings("unused")
 		double d = 0;
 		if (Math.abs(mDotA) > 0.01) {
 			p0.set(va);
@@ -690,7 +697,7 @@ public class Model3d {
 
 			if ((d = p0.distance(pSo)) > 0.05) {
 				// System.out.println("ma=" + d/DefaultValues.scale + " " + (lambda/lattice.a));
-				ma = univers.creator.createNamedVector("hkla", pSo, p0, p0, 0.2f, 0.06f, Colors.red, Colors.red,
+				ma = univers.creator.createNamedVector("hkla", pSo, p0, p0, 0.2f, 0.06f, Colors.black, Colors.black,
 						" " + h);
 				ma.setCapability(BranchGroup.ALLOW_DETACH);
 				univers.addNotify(rays, ma);
@@ -702,7 +709,7 @@ public class Model3d {
 			p0.y -= r;
 			if ((d = p0.distance(pSo)) > 0.05) {
 				// System.out.println("mb=" + d/DefaultValues.scale + " " + (lambda/lattice.b));
-				mb = univers.creator.createNamedVector("hklb", pSo, p0, p0, 0.2f, 0.06f, Colors.red, Colors.red,
+				mb = univers.creator.createNamedVector("hklb", pSo, p0, p0, 0.2f, 0.06f, Colors.black, Colors.black,
 						" " + k);
 				mb.setCapability(BranchGroup.ALLOW_DETACH);
 				univers.addNotify(rays, mb);
@@ -717,7 +724,7 @@ public class Model3d {
 				// this check is for p0 == pSo, in which case no line is drawn
 
 //				System.out.println("mc=" + d + " " + (lambda/lattice.c));
-				mc = univers.creator.createNamedVector("hklc", pSo, p0, p0, 0.2f, 0.06f, Colors.red, Colors.red,
+				mc = univers.creator.createNamedVector("hklc", pSo, p0, p0, 0.2f, 0.06f, Colors.black, Colors.black,
 						" " + l);
 				mc.setCapability(BranchGroup.ALLOW_DETACH);
 				univers.addNotify(rays, mc);
@@ -739,7 +746,7 @@ public class Model3d {
 				univers.removeNotify(rays, mc);
 			}
 		}
-		mray = univers.creator.createCylinder(univers, "M", p0, pSo, .02, Colors.appRed, 4);
+		mray = univers.creator.createCylinder(univers, "M", p0, pSo, .02, Colors.appBlack, 4);
 		univers.addNotify(rays, mray);
 		ms0 = univers.creator.createCylinder(univers, "-So", pNet, pSo, .02, Colors.appYellow, 4);
 		univers.addNotify(rays, ms0);

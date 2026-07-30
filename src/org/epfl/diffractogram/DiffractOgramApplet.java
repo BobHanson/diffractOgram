@@ -86,6 +86,10 @@ public class DiffractOgramApplet extends JApplet implements Runnable {
 		mainApp.init();
 		mainApp.start();
 	}
+	
+	public String getParameter(String p) {
+		return (isApplet ? super.getParameter(p) : null);
+	}
 
 	// initialisation in GUI thread
 	public void run() {
@@ -137,7 +141,7 @@ public class DiffractOgramApplet extends JApplet implements Runnable {
 	}
 	
 	protected void setVersionValues() {
-		title = "DiffractOgram";
+		title = "DiffractOgram" + (isApplet ? "/applet" : "");
 		DefaultValues.isUnitSphere = false;
 		DefaultValues.directRays = true;  //true if isUnitSphere
 		DefaultValues.developNet = false;

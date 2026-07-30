@@ -10,7 +10,9 @@ import javajs.async.SwingJSUtils.StateHelper;
 import javajs.async.SwingJSUtils.StateMachine;
 
 /**
- * BH: This class will require a StateMachine implementation.
+ * BH: This class is used for both Java and JavaScript. It uses an asynchronous
+ * StateMachine implementation in order to mimic multiple threading in
+ * JavaScript.
  * 
  *
  */
@@ -21,8 +23,14 @@ public class Animator {
 	public boolean fromToEnable;
 	public double from;
 	public double to;
-	public double speed;
+	private double speed;
 	private AnimationThread currentThread;
+	private boolean stepping;
+
+	public void setSpeed(double speed) {
+		this.speed = speed;
+		stepping = (speed == 0);
+	}
 
 	private abstract class AnimationThread extends Thread {
 
@@ -48,7 +56,9 @@ public class Animator {
 				case STATE_LOOP:
 					if (isContinuing())
 						looping();
-					break;
+					if (!stepping)
+						break;
+					//$FALL-THROUGH$
 				case STATE_DONE:
 					done();
 					releaseButton(button);
@@ -70,6 +80,7 @@ public class Animator {
 			helper = new StateHelper(state);
 		}
 
+		@SuppressWarnings("deprecation")
 		public void run() {
 			if (currentThread != null && currentThread.running) {
 				currentThread.hasToStop = true;
@@ -101,7 +112,7 @@ public class Animator {
 
 			@Override
 			public void initializing() {
-				a = (fromToEnable ? from : currentValue);
+				a = (speed == 0 ? currentValue + 1 : fromToEnable ? from : currentValue);
 			}
 
 			@Override
@@ -153,6 +164,8 @@ public class Animator {
 				y0 = (fromToEnable ? from : currentValueY);
 				z0 = (fromToEnable ? from : currentValueZ);
 				helper.setLevel('x');
+				if (stepping)
+					setSpeed(1);
 			}
 
 			@Override
@@ -295,24 +308,34 @@ public class Animator {
 		}.start();
 	}
 
+
+	double lambda0;
+
 	public void animateLambda(final SliderAndValue slider, final double l0, final double l1, JToggleButton button) {
+		
+		
 		new AnimationThread(button) {
 			double l;
 
 			@Override
 			public void initializing() {
-				l = 10;
+				l = l0;
+				lambda0 = slider.getValue();
 			}
 
 			@Override
 			public void looping() {
 				if (isContinuing())
 					setSliderValue(slider, l);
-				l += speed / 50.0;
+				if (speed == 0)
+					done();
+				else
+					l += speed / 50.0;
 			}
 
 			@Override
 			public void done() {
+				setSliderValue(slider, lambda0);
 			}
 
 			@Override
@@ -391,6 +414,9 @@ public class Animator {
 		});
 	}
 
+	/**
+	 *  Java only
+	 */
 	private static void doSleep() {
 		try {
 			Thread.sleep(50);

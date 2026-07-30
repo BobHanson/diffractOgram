@@ -466,16 +466,19 @@ javax/vecmath/Color3f.js
 javax/vecmath/Matrix3d.js
 javax/vecmath/Matrix4f.js
 javax/vecmath/Point3d.js
+javax/vecmath/Point3i.js
 javax/vecmath/TexCoord2f.js
 javax/vecmath/Tuple2f.js
 javax/vecmath/Tuple3d.js
 javax/vecmath/Tuple3f.js
+javax/vecmath/Tuple3i.js
 javax/vecmath/Vector3d.js
 javax/vecmath/Vector3f.js
 org/epfl/diffractogram/DefaultValues.js
 org/epfl/diffractogram/diffractOgram.js
 org/epfl/diffractogram/diffractOgram2.js
 org/epfl/diffractogram/gui/BottomPanel.js
+org/epfl/diffractogram/gui/Help.js
 org/epfl/diffractogram/gui/HVPanel.js
 org/epfl/diffractogram/gui/MainPane.js
 org/epfl/diffractogram/jmol/JmolUniverse.js
@@ -492,6 +495,7 @@ org/epfl/diffractogram/model3d/WorldRenderer.js
 org/epfl/diffractogram/util/Animator.js
 org/epfl/diffractogram/util/Calc.js
 org/epfl/diffractogram/util/ColorConstants.js
+org/epfl/diffractogram/util/Colors.js
 org/epfl/diffractogram/util/Lattice.js
 org/epfl/diffractogram/util/Utils3d.js
 org/jmol/adapter/smarter/SmarterJmolAdapter.js
@@ -810,4 +814,5 @@ java/net/URLConnection.js
 javajs/api/GenericLineReader.js
 javajs/util/AjaxURLConnection.js
 javajs/util/Rdr.js
-org/epfl/diffractogram/gui/Help.js
+javajs/api/js/HTML5Applet.js
+javajs/api/js/JSUtilI.js

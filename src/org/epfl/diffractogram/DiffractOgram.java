@@ -37,6 +37,9 @@ public class DiffractOgram implements Runnable {
 	protected String title;
 	
 	public static boolean isApplet = true;
+
+	private static boolean argJmol;
+	
 	public JFrame frame;
 	public MainPane mainPane;
 	public boolean started;
@@ -80,13 +83,6 @@ public class DiffractOgram implements Runnable {
 		mainPane.destroy();
 	}
 	
-	public static void main(String[] args) {
-		isApplet = false;
-		DiffractOgram mainApp = new DiffractOgram();
-		mainApp.init();
-		mainApp.start();
-	}
-
 	// initialisation in GUI thread
 	public void run() {
 		createMainFrame();
@@ -134,13 +130,17 @@ public class DiffractOgram implements Runnable {
 			throw e;
 		}
 	}
-	
+
+	/**
+	 * Overridden in DiffractOgram2
+	 * 
+	 */
 	protected void setVersionValues() {
 		title = "DiffractOgram";
 		DefaultValues.isUnitSphere = false;
-		DefaultValues.directRays = true;  //true if isUnitSphere
+		DefaultValues.directRays = true;
 		DefaultValues.developNet = false;
-		DefaultValues.javaJmol = false;
+		DefaultValues.javaJmol = DiffractOgram.argJmol;
 	}
 
 	private void showMainPane() {
@@ -151,34 +151,11 @@ public class DiffractOgram implements Runnable {
 	  frame.toFront();
 	}
 	
-//	public URL getCodeBase() {
-//		//URL codeBase=null;
-//		try {
-//			return super.getCodeBase();
-//		} catch (Exception e) {
-//			try {
-//				return new URL(defCodeBase);
-//			} catch (MalformedURLException e1) {
-//				throw new RuntimeException(e1);
-//			}
-//		}
-//	}
-//	
-	public void showUp() {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-		  	if (!started) start();
-				frame.setVisible(true);
-				frame.toFront();
-			}
-		});
-	}
-		
 	public void setDndDropListener(DropTargetListener listener) {
 		new DropTarget(frame, listener);
 	}
 		
-	public void showException(Throwable error) {
+	private void showException(Throwable error) {
 		ErrorPane errorPane = new ErrorPane();
 		JFrame errorFrame = new JFrame("There was a problem");
 		errorFrame.getContentPane().add(errorPane);
@@ -192,7 +169,7 @@ public class DiffractOgram implements Runnable {
 		error.printStackTrace(errorPane.out);
 	}
 	
-	class ErrorPane extends JPanel {
+	private class ErrorPane extends JPanel {
 		public PrintStream out;
 		private JTextArea textArea;
 		
@@ -217,21 +194,13 @@ public class DiffractOgram implements Runnable {
 		}
 	}
 
-	class AppletMiniPane extends JPanel {
-		public AppletMiniPane() {
-			setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-			addMouseListener(new MouseAdapter() {
-				public void mouseClicked(MouseEvent e) {
-			  	if (!started) start();
-			  	if (frame!=null) {
-						frame.setVisible(true);
-						frame.toFront();
-			  	}
-				}
-			});
-		}
-		public void paint(Graphics g) {
-			new ImageIcon(getClass().getResource("/applet-mini.png")).paintIcon(this, g, 0, 0);
-		}
+	public static void main(String[] args) {
+		argJmol = (args.length > 0 && "jmol".equalsIgnoreCase("" + args[0]));
+		isApplet = false;
+		DiffractOgram mainApp = new DiffractOgram();
+		mainApp.init();
+		mainApp.start();
 	}
+
+
 }

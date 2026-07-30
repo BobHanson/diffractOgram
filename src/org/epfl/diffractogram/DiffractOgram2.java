@@ -1,8 +1,26 @@
 package org.epfl.diffractogram;
 
-@SuppressWarnings("serial")
+import swingjs.api.JSUtilI;
+
 public class DiffractOgram2 extends DiffractOgram {
 
+	public static boolean isJS = /** @j2sNative true || */
+			false;
+
+	public static JSUtilI jsutil;
+	
+	static {
+		try {
+			if (isJS) {
+				jsutil = ((JSUtilI) Class.forName("swingjs.JSUtil").newInstance());
+			}
+
+		} catch (Exception e) {
+			System.err.println("DiffractOgram2 could not create swinjs.JSUtil instance");
+		}
+	}
+
+	
 	public DiffractOgram2() {
 		super();
 	}
@@ -13,7 +31,7 @@ public class DiffractOgram2 extends DiffractOgram {
 		DefaultValues.directRays = true; //automatically true if isUnitSphere
 		DefaultValues.developNet = true;
 		DefaultValues.javaJmol = true;
-//		DefaultValues.useJmol = true;
+		DefaultValues.useJmol = true;
 	}
 
 	public static void main(String[] args) {

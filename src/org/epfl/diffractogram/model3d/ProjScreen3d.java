@@ -235,6 +235,7 @@ public abstract class ProjScreen3d extends BranchGroup {
 		private void createBaseRay(double y) {
 			if (DefaultValues.isUnitSphere)
 				return;
+			System.out.println("cba0 " + y);
 			if (baseRayFlat != null)
 				univers.removeNotify(this, baseRayFlat);
 			baseRayFlat = univers.creator.createCylinder(univers, "baserayflat", new Point3d(), new Point3d(0, y, 0), .02,

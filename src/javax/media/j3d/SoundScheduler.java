@@ -2123,6 +2123,7 @@ class SoundScheduler extends J3dStructure {
 		case SoundSchedulerAtom.RESTART_AUDIBLE:
 		    // stop sound first then fall thru to re-start
 		    turnOff(soundAtom);
+			//$FALL-THROUGH$
 		case SoundSchedulerAtom.START_AUDIBLE:
 		    // Pause and Resume related actions are checked when sound
 		    // is to be started or restarted
@@ -2146,6 +2147,7 @@ class SoundScheduler extends J3dStructure {
 		case SoundSchedulerAtom.RESTART_SILENT:
 		    // stop sound first then fall thru to re-start
 		    turnOff(soundAtom);
+			//$FALL-THROUGH$
 		case SoundSchedulerAtom.START_SILENT:
 		    // Pause and Resume related actions are checked when sound
 		    // is to be started or restarted
@@ -2169,6 +2171,7 @@ class SoundScheduler extends J3dStructure {
 		case SoundSchedulerAtom.RESUME_AUDIBLE:
 		    // pause then fall thru set make audible
 		    unpause(soundAtom);
+			//$FALL-THROUGH$
 		case SoundSchedulerAtom.MAKE_AUDIBLE:
 		    // change status to audible then update sound
 		    soundAtom.status = SoundSchedulerAtom.SOUND_AUDIBLE;
@@ -2178,6 +2181,7 @@ class SoundScheduler extends J3dStructure {
 		case SoundSchedulerAtom.RESUME_SILENT:
 		    // pause then fall thru set make silent
 		    unpause(soundAtom);
+			//$FALL-THROUGH$
 		case SoundSchedulerAtom.MAKE_SILENT:
 		    // change status to silent AFTER calling render so
 		    // that a currently audible sound will be muted.

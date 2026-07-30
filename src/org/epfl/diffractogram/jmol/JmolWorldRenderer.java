@@ -103,7 +103,7 @@ public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendere
 
 	private Node addObject(Node n) {
 		allObjects.add(n);
-		((JmolShape3D) n).renderer = this;
+		((JmolShape3D) n).setRenderer(this);
 		if (completed)
 			SwingUtilities.invokeLater(()->{
 				renderNode((JmolShape3D)n);				
@@ -261,8 +261,7 @@ public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendere
 	}
 	
     public void renderNode(Shape3D n) {
-		String s = ((JmolShape3D) n).renderScript(this);
-		scriptWait(s);
+		scriptWait(((JmolShape3D) n).renderScript(this));
 	}
 
 	@Override

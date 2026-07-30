@@ -195,7 +195,7 @@ public class ColorInterpolator extends Interpolator {
 		    break;
 		case Material.AMBIENT_AND_DIFFUSE:
 		    target.setAmbientColor(newColor);
-		    // fall through
+			//$FALL-THROUGH$
 		case Material.DIFFUSE:
 		    target.setDiffuseColor(newColor);
 		    break;

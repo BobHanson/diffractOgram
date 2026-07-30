@@ -30,7 +30,9 @@ import javax.swing.text.DefaultFormatter;
 import javax.swing.text.NumberFormatter;
 
 public abstract class HVPanel implements ActionListener {
+	
 	public static boolean quiet = true;
+
 	private ButtonGroup group;
 	private ActionListener listener;
 	protected JPanel jPanel;
@@ -237,6 +239,7 @@ public abstract class HVPanel implements ActionListener {
 		private JSpinner jspinner;
 		public JFormattedTextField edit;
 		public JLabel nameLabel, unit;
+		protected Object lastValue;
 		
 		public EditField(String name, String unit, int nbcol, String defValue, AbstractFormatter f, ActionListener listener, boolean spinner) {
 			createField(name, unit, nbcol, defValue, f, listener, spinner);
@@ -265,6 +268,7 @@ public abstract class HVPanel implements ActionListener {
 			createField(name, unit, nbcol, new Float(defValue), f, listener, spinner);
 		}
 
+		@SuppressWarnings("serial")
 		private void createField(String name, String unit, int nbcol, Object defValue, AbstractFormatter format,
 				ActionListener listener, boolean spinner) {
 			this.listener = listener;
@@ -273,11 +277,22 @@ public abstract class HVPanel implements ActionListener {
 				jspinner.setName(name);
 				edit = ((DefaultEditor) jspinner.getEditor()).getTextField();
 			} else {
-				edit = new JFormattedTextField(format);
+				edit = new JFormattedTextField(format) {
+				    protected void invalidEdit() {
+				    	super.invalidEdit();
+				    	listener.actionPerformed(new ActionEvent(edit, 0, "invalidEdit"));
+				    }
+				    
+				    public void setValue(Object v) {
+				    	super.setValue(v);
+				    	lastValue = v;
+				    }
+
+				};
 			}
+			edit.setName(name);
 			edit.setValue(defValue);
 			edit.setColumns(nbcol);
-//			edit.addActionListener(this);
 			edit.addPropertyChangeListener(this);
 			edit.setMinimumSize(new Dimension(30, 20));
 			nameLabel = new JLabel(name);
@@ -300,12 +315,14 @@ public abstract class HVPanel implements ActionListener {
 //		}
 		
 		public void propertyChange(PropertyChangeEvent evt) {
-//			System.out.println("HVP.PCE:" + getName() + " " + evt.getPropertyName() + "=" + evt.getNewValue() + "/" + edit.getText()
+//			System.out.println("HVP.PCE:" + evt.getPropertyName() + " " + evt.getPropertyName() + "=" + evt.getNewValue() + "/" + edit.getText()
 //			+ " " + evt.getNewValue().getClass().getName()
+//			+ " " + quiet
 //					);
 			// BH bug: odd requirement here with the expectation that 
 			// the editor value is unchanged, but the test is for a String equaling an Integer, which is never true.
 //			boolean sameValue = false;
+			
 			if (!quiet && evt.getPropertyName().equals("value")) {
 				listener.actionPerformed(new ActionEvent(this, 0, nameLabel.getText()));
 			}
@@ -359,10 +376,11 @@ public abstract class HVPanel implements ActionListener {
 	
 	public abstract class SliderAndValue implements ChangeListener, MouseWheelListener, ActionListener, PropertyChangeListener {
 		private JSlider slider;
-		private JFormattedTextField edit;
+		protected JFormattedTextField edit;
 		private JLabel nameLabel, unitLabel;
 		private ActionListener listener;
 		private double mult;
+		protected Object lastValue;
 		
 		public SliderAndValue(String name, String unit, double min, double max, double def, int nbDecimals, boolean orientation, int size, ActionListener listener) {
 			this.listener=listener;
@@ -391,9 +409,19 @@ public abstract class HVPanel implements ActionListener {
 				df.setDecimalFormatSymbols(s);
 				NumberFormatter formatter = new NumberFormatter(df);
 				formatter.setMinimum(new Double(min));
-				formatter.setMaximum(new Double(max));
-				
-				edit = new JFormattedTextField(formatter);
+				formatter.setMaximum(new Double(max));				
+				edit = new JFormattedTextField(formatter) {
+				    protected void invalidEdit() {
+				    	super.invalidEdit();
+				    	listener.actionPerformed(new ActionEvent(SliderAndValue.this, 0, "invalidEdit"));
+				    }
+				    
+				    public void setValue(Object v) {
+				    	super.setValue(v);
+				    	lastValue = v;
+				    }
+
+				};
 				edit.setValue(new Double(def));
 				edit.setColumns(3);
 				edit.setMinimumSize(new Dimension(40, 0));
