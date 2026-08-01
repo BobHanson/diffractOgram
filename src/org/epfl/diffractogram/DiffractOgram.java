@@ -1,59 +1,58 @@
 package org.epfl.diffractogram;
 
 import java.awt.BorderLayout;
-import java.awt.Cursor;
-import java.awt.Graphics;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
-import java.net.MalformedURLException;
-import java.net.URL;
 
-import javax.swing.ImageIcon;
-import javax.swing.JApplet;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 
 import org.epfl.diffractogram.gui.MainPane;
+import org.epfl.diffractogram.gui.MainPane.DOG;
 import org.epfl.diffractogram.model3d.WorldRenderer;
 
-
 @SuppressWarnings("serial")
-public class DiffractOgram implements Runnable {
-	static final int width=1050, height=750;
+public class DiffractOgram implements Runnable, DOG {
+	static final int width = 1050, height = 750;
 //	private static final String defCodeBase = "http://escher.epfl.ch/crystalOgraph/";
-	
-	protected String title;
-	
-	public static boolean isApplet = true;
 
-	private static boolean argJmol;
-	
+	protected String title;
+
+	protected static boolean argJmol;
+
 	public JFrame frame;
 	public MainPane mainPane;
 	public boolean started;
-	
-	public DiffractOgram() {
-		setVersionValues();
-		// not allowing indirect without unit sphere
-		if (DefaultValues.isUnitSphere)
-			DefaultValues.directRays = true;
 
-		DefaultValues.useJmol = /** @j2sNative true || */DefaultValues.javaJmol;
-		DefaultValues.showVersionDefaults();
+	public DiffractOgram() {
+		this(false);
 	}
-	
+
+	public DiffractOgram(boolean isDOG2) {
+		DefaultValues.isDOG2 = isDOG2;
+		setVersionValues();
+	}
+
+	/**
+	 * Overridden in DiffractOgram2
+	 * 
+	 */
+	protected void setVersionValues() {
+		title = "DiffractOgram";
+		DefaultValues.isUnitSphere = false;
+		DefaultValues.directRays = true;
+		DefaultValues.developNet = false;
+		DefaultValues.javaJmol = DiffractOgram.argJmol;
+		DefaultValues.finalizeDefaults();
+	}
+
 	public void init() {
 		if (WorldRenderer.isJS) {
 			run();
@@ -67,63 +66,45 @@ public class DiffractOgram implements Runnable {
 			}
 		}
 	}
+
 	public void start() {
-		started=true;
+		started = true;
 	}
+
 	public void stop() {
-		started=false;
+		started = false;
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
 				mainPane.stop();
 			}
 		});
 	}
-	
+
 	public void destroy() {
+		frame.remove(mainPane.getJPanel());
 		mainPane.destroy();
 	}
-	
+
 	// initialisation in GUI thread
 	public void run() {
-		createMainFrame();
-		if (isApplet) createWebPane();
-		
-		createMainPane();
-		showMainPane();
-		//new DropTarget(frame, new CifFileDropper(mainPane)); 
+		createAndShowFrame();
 	}
 
-	private void createMainFrame() {
-	  frame = new JFrame(title + " is starting up. Please wait...");
-	  frame.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
-				if (isApplet && WorldRenderer.isJS) {
-					stop();
-					frame.setVisible(false);
-				} else {
-					System.exit(0);
-				}
-			}
-	  });
-	  //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	private void createAndShowFrame() {
+		frame = new JFrame(title + " is starting up. Please wait...");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(width, height);
-	  frame.setVisible(true);
-	}
-	private void createWebPane() {
-//		if ("true".equals(getParameter("mini"))) {
-//			getContentPane().add(new AppletMiniPane());
-//		}
-//		else {
-//			getContentPane().add(new JLabel("Applet launched. Refresh page to load again...", JLabel.CENTER));
-//		}
-	}
-	
-	private void createMainPane() {
-		
+		frame.setVisible(true);
+
 		try {
-			DefaultValues defaultValues = new DefaultValues(); 
-//			defaultValues.parseParameters(this);
-			mainPane = new MainPane(defaultValues);
+			DefaultValues defaultValues = new DefaultValues();
+			mainPane = new MainPane(DefaultValues.isDOG2 ? this : null, defaultValues);
+			frame.getContentPane().add(mainPane.getJPanel());
+			frame.validate();
+			setFrameTitle();
+			frame.setVisible(true);
+			frame.toFront();
+			// new DropTarget(frame, new CifFileDropper(mainPane));
 		} catch (Error e) {
 			e.printStackTrace();
 			showException(e);
@@ -131,64 +112,50 @@ public class DiffractOgram implements Runnable {
 		}
 	}
 
-	/**
-	 * Overridden in DiffractOgram2
-	 * 
-	 */
-	protected void setVersionValues() {
-		title = "DiffractOgram";
-		DefaultValues.isUnitSphere = false;
-		DefaultValues.directRays = true;
-		DefaultValues.developNet = false;
-		DefaultValues.javaJmol = DiffractOgram.argJmol;
+	protected void setFrameTitle() {
+		frame.setTitle(title + (DefaultValues.useJmol ? "/Jmol" : ""));
 	}
 
-	private void showMainPane() {
-		frame.getContentPane().add(mainPane.toJPanel());
-		frame.validate();
-		frame.setTitle(title + (DefaultValues.useJmol ? "/Jmol" : ""));
-	  frame.setVisible(true);
-	  frame.toFront();
-	}
-	
 	public void setDndDropListener(DropTargetListener listener) {
 		new DropTarget(frame, listener);
 	}
-		
+
 	private void showException(Throwable error) {
 		ErrorPane errorPane = new ErrorPane();
 		JFrame errorFrame = new JFrame("There was a problem");
 		errorFrame.getContentPane().add(errorPane);
 		errorFrame.setSize(500, 400);
 		errorFrame.setVisible(true);
-		if (error instanceof NoClassDefFoundError && error.getMessage().indexOf("javax/media/j3d")!=-1) {
+		if (error instanceof NoClassDefFoundError && error.getMessage().indexOf("javax/media/j3d") != -1) {
 			errorPane.out.println("Java3D is not installed on your computer.");
 			errorPane.out.println("Please visit http://escher.epfl.ch/java3d to learn how to install it.");
 			errorPane.out.println("");
 		}
 		error.printStackTrace(errorPane.out);
 	}
-	
+
 	private class ErrorPane extends JPanel {
 		public PrintStream out;
 		private JTextArea textArea;
-		
+
 		public ErrorPane() {
 			textArea = new JTextArea();
 			textArea.setEditable(false);
-	    JScrollPane scrollPane = new JScrollPane(textArea);
+			JScrollPane scrollPane = new JScrollPane(textArea);
 			setLayout(new BorderLayout());
 			add(scrollPane);
-			
-			out = new PrintStream(new OutputStream(){
+
+			out = new PrintStream(new OutputStream() {
 				public void write(byte[] bb) throws IOException {
 					write(bb, 0, bb.length);
 				}
+
 				public void write(byte[] bb, int off, int len) throws IOException {
-					textArea.setText(textArea.getText()+new String(bb, off, len));
+					textArea.setText(textArea.getText() + new String(bb, off, len));
 				}
+
 				public void write(int b) throws IOException {
-					textArea.setText(textArea.getText()+(char)b);
+					textArea.setText(textArea.getText() + (char) b);
 				}
 			});
 		}
@@ -196,11 +163,14 @@ public class DiffractOgram implements Runnable {
 
 	public static void main(String[] args) {
 		argJmol = (args.length > 0 && "jmol".equalsIgnoreCase("" + args[0]));
-		isApplet = false;
 		DiffractOgram mainApp = new DiffractOgram();
 		mainApp.init();
 		mainApp.start();
 	}
 
+	@Override
+	public void showGoniometer(boolean show) {
+		// DiffractoGram2 only
+	}
 
 }

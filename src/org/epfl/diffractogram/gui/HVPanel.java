@@ -42,7 +42,7 @@ public abstract class HVPanel implements ActionListener {
 		jPanel.setLayout(new GridBagLayout());
 	}
 	
-	public JPanel toJPanel() {
+	public JPanel getJPanel() {
 		return jPanel;
 	}
 	

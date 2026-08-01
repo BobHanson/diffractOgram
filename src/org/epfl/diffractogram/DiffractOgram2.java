@@ -22,20 +22,35 @@ public class DiffractOgram2 extends DiffractOgram {
 
 	
 	public DiffractOgram2() {
-		super();
+		super(true);
 	}
 	
 	protected void setVersionValues() {
+		setVersionValues2();
+	}
+
+	protected void setVersionValues2() { 
 		title = "DiffractOgram2";
 		DefaultValues.isUnitSphere = true;
 		DefaultValues.directRays = true; //automatically true if isUnitSphere
 		DefaultValues.developNet = true;
 		DefaultValues.javaJmol = true;
-		DefaultValues.useJmol = true;
+		DefaultValues.finalizeDefaults();
 	}
-
+	
+	public void showGoniometer(boolean show) {
+		stop();
+		if (show) {
+			DiffractOgram.argJmol = true;
+			super.setVersionValues();
+		} else {
+			setVersionValues2();
+		}
+		mainPane.resetLeftPanel();
+		setFrameTitle();
+	}
+	
 	public static void main(String[] args) {
-		isApplet = false;
 		DiffractOgram mainApp = new DiffractOgram2();
 		mainApp.init();
 		mainApp.start();

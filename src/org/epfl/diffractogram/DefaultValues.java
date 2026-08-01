@@ -13,6 +13,11 @@ public class DefaultValues {
 
 
 	/**
+	 * if this is DiffractOgram2, so using Jmola and allowing goniometer switch
+	 */
+	public static boolean isDOG2;
+
+	/**
 	 * if Java (not JavaScript) and using Jmol; used only when creating the world to compile Net.netRoot
 	 */
 	public static /* not final */ boolean javaJmol = false;
@@ -42,6 +47,14 @@ public class DefaultValues {
 	public static boolean directRays = true;
 
 
+    static void finalizeDefaults() {
+		// forcing directRays if isUnitSphere
+		if (isUnitSphere)
+			directRays = true;
+		useJmol = /** @j2sNative true || */javaJmol;
+		showVersionDefaults();
+	}
+
 	public static void showVersionDefaults() {
 		System.err.println("isUnitSphere = " + isUnitSphere);
 		System.err.println("developNet = " + developNet);
@@ -60,7 +73,7 @@ public class DefaultValues {
 	// constant values
 	public final static double axisOffsets = .01;	
 	public final static double ewaldSlop = 0.005;
-	public final static float dotSize3d = .05f;
+	public final static float dotSize3d = .02f;
 	public final static double scale = 2;//5;
 	public final static double maskDistFract = 1/2d;
 
@@ -156,4 +169,5 @@ public class DefaultValues {
 		}
 	}
 
+	
 }

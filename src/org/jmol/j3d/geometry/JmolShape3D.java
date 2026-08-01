@@ -256,7 +256,7 @@ public abstract class JmolShape3D extends Shape3D {
 	}
 
 	private static String fixJ3dId(String name) {
-		return name.replace('*', '_').replace('\'', '_');
+		return name.replace('*', '_').replace('\'', '_').replace(':', '.');
 	}
 
 	private Viewer getViewer() {

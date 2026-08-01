@@ -75,6 +75,9 @@
     <mkdir dir="${appjars.dir}"/>
     <unjar dest="${appjars.dir}" src="${lib.dir}/diffractOgram.jar"/>
     <unjar dest="${appjars.dir}" src="${lib.dir}/JmolD.jar"/>
+  	<delete>
+  	    <fileset dir="${appjars.dir}" includes="**/*.java" />
+  	</delete>
   	<delete file="${appjars.dir}/META-INF/MANIFEST.MF" />
   	<!-- the following mitigation is in accord with https://logging.apache.org/log4j/2.x/security.html
   	     despite the fact that the org/apache/logging package is not included in Jmol.

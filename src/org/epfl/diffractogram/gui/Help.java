@@ -30,7 +30,7 @@ public class Help {
 			frame = new JFrame("DiffractOgram Help");
 			frame.setSize(800, 480);
 			frame.setVisible(false);
-			frame.setContentPane(new HelpPanel(helpURL).toJPanel());
+			frame.setContentPane(new HelpPanel(helpURL).getJPanel());
 			frame.validate();
 		}
 	}

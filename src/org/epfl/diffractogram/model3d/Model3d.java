@@ -15,6 +15,8 @@ import javax.vecmath.Tuple3d;
 import javax.vecmath.Vector3d;
 
 import org.epfl.diffractogram.DefaultValues;
+import org.epfl.diffractogram.DiffractOgram;
+import org.epfl.diffractogram.gui.MainPane;
 import org.epfl.diffractogram.jmol.JmolUniverse;
 import org.epfl.diffractogram.util.Lattice;
 import org.epfl.diffractogram.util.Utils3d;
@@ -75,8 +77,10 @@ public class Model3d {
 	private double hCyl, hFlat;
 	private double lambda;
 	boolean mask;
+	public MainPane main;
 
-	public Model3d(JPanel panel3d, DefaultValues defaultValues, ProjScreen projScreen) {
+	public Model3d(MainPane main, JPanel panel3d, DefaultValues defaultValues, ProjScreen projScreen) {
+		this.main = main;
 		this.defaultValues = defaultValues;
 
 		lattice = new Lattice(defaultValues.param_lattice.a, defaultValues.param_lattice.b,
@@ -607,7 +611,7 @@ public class Model3d {
 				new String[] { "a^", "b^", "c^" }, .055f, .01f, 0, 0,
 				(Vector3d) transformLatticeV(new Vector3d(1 / lattice.a, 0, 0), 1),
 				(Vector3d) transformLatticeV(new Vector3d(0, 1 / lattice.b, 0), 1),
-				(Vector3d) transformLatticeV(new Vector3d(0, 0, 1 / lattice.c), 1), true);
+				(Vector3d) transformLatticeV(new Vector3d(0, 0, 1 / lattice.c), 1), false);
 		n.setName("sphereAxes:");
 		n.setCapability(BranchGroup.ALLOW_DETACH);
 		usChild = n;

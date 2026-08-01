@@ -1,5 +1,6 @@
 package org.epfl.diffractogram.gui;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 
@@ -7,6 +8,7 @@ import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
 import org.epfl.diffractogram.DefaultValues;
+import org.epfl.diffractogram.DiffractOgram;
 import org.epfl.diffractogram.model3d.Model3d;
 import org.epfl.diffractogram.model3d.ProjScreen;
 
@@ -19,6 +21,12 @@ import org.epfl.diffractogram.model3d.ProjScreen;
  */
 
 public class MainPane extends HVPanel.VPanel {
+	
+	public interface DOG {
+		void showGoniometer(boolean show);
+	}
+	
+	public DOG dog2App;
 	public Model3d model3d;
 	private JSplitPane splitPane;
 	private ProjScreen projected;
@@ -26,39 +34,44 @@ public class MainPane extends HVPanel.VPanel {
 	@SuppressWarnings("unused")
 	private DefaultValues defaultValues;
 	
-	public MainPane(DefaultValues defaultValues) {
-		
+	public MainPane(DOG dogApp, DefaultValues defaultValues) {
+		this.dog2App = dogApp;
 		try {
-		this.defaultValues = defaultValues;
-		projected = new ProjScreen();
-		projected.setMinimumSize(new Dimension(0, 0));
+			this.defaultValues = defaultValues;
+			projected = new ProjScreen();
+			projected.setMinimumSize(new Dimension(0, 0));
 
-		JPanel panel3d = new JPanel();
-		panel3d.setMinimumSize(new Dimension(1, 1));
-		panel3d.setLayout(new BorderLayout());
-		
-		model3d = new Model3d(panel3d, defaultValues, projected);
+			splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, getLeftPanelAndModel(), projected);
+			splitPane.setResizeWeight(0.6);
+			splitPane.setMinimumSize(new Dimension(0, 0));
+			splitPane.setContinuousLayout(true);
+			// splitPane.setOneTouchExpandable(true);
 
-		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel3d, projected);
-		splitPane.setResizeWeight(0.6);
-		splitPane.setMinimumSize(new Dimension(0, 0));
-		splitPane.setContinuousLayout(true);
-		//splitPane.setOneTouchExpandable(true);
-		
-		bottomPanel = new BottomPanel(defaultValues, model3d);
-		
-		expand(true);
-		addComp(splitPane);
-		expand(false);
-		addSubPane(bottomPanel);
-		
-		model3d.complete();
-		
-		
+			bottomPanel = new BottomPanel(defaultValues, model3d);
+			expand(true);
+			addComp(splitPane);
+			expand(false);
+			addSubPane(bottomPanel);
+			model3d.complete();
 		} catch (Throwable t) {
 			t.printStackTrace();
 		}
 	}
+	
+	private Component getLeftPanelAndModel() {
+		JPanel panel3d = new JPanel();
+		panel3d.setMinimumSize(new Dimension(1, 1));
+		panel3d.setLayout(new BorderLayout());
+		model3d = new Model3d(this, panel3d, defaultValues, projected);
+		return panel3d;
+	}
+
+	public void resetLeftPanel() {
+		splitPane.setLeftComponent(getLeftPanelAndModel());
+		model3d.complete();		
+		bottomPanel.setModel(model3d);
+	}
+	
 	public void actionPerformed(ActionEvent e) {
 		if (e.getActionCommand().equals("horizontal")) {
 			changeSplitPane(JSplitPane.HORIZONTAL_SPLIT, 0.3);
@@ -91,5 +104,10 @@ public class MainPane extends HVPanel.VPanel {
 	}
 	public void destroy() {
 		model3d.destroy();
+	}
+
+	public void showGoniometer(boolean show) {
+		if (dog2App != null)
+			dog2App.showGoniometer(show);
 	}
 }

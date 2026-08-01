@@ -43,12 +43,6 @@ public class DiffractOgramApplet extends JApplet implements Runnable {
 	
 	public DiffractOgramApplet() {
 		setVersionValues();
-		// not allowing indirect without unit sphere
-		if (DefaultValues.isUnitSphere)
-			DefaultValues.directRays = true;
-
-		DefaultValues.useJmol = /** @j2sNative true || */DefaultValues.javaJmol;
-		DefaultValues.showVersionDefaults();
 	}
 	
 	public void init() {
@@ -132,7 +126,7 @@ public class DiffractOgramApplet extends JApplet implements Runnable {
 		try {
 			DefaultValues defaultValues = new DefaultValues(); 
 			defaultValues.parseParameters(this);
-			mainPane = new MainPane(defaultValues);
+			mainPane = new MainPane(null, defaultValues);
 		} catch (Error e) {
 			e.printStackTrace();
 			showException(e);
@@ -146,10 +140,11 @@ public class DiffractOgramApplet extends JApplet implements Runnable {
 		DefaultValues.directRays = true;  //true if isUnitSphere
 		DefaultValues.developNet = false;
 		DefaultValues.javaJmol = false;
+		DefaultValues.finalizeDefaults();
 	}
 
 	private void showMainPane() {
-		frame.getContentPane().add(mainPane.toJPanel());
+		frame.getContentPane().add(mainPane.getJPanel());
 		frame.validate();
 		frame.setTitle(title + (DefaultValues.useJmol ? "/Jmol" : ""));
 	  frame.setVisible(true);

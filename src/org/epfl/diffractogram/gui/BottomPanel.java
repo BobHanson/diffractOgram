@@ -54,6 +54,10 @@ public class BottomPanel extends HVPanel.HPanel {
 		quiet = false;
 	}
 
+	public void setModel(Model3d model) {
+		model3d = model;
+	}
+	
 	private boolean sync = true;
 
 	class LatticePane extends HVPanel.VPanel {
@@ -459,6 +463,11 @@ public class BottomPanel extends HVPanel.HPanel {
 			cb = new JCheckBox("Rec.Latt.");
 			cb.setSelected(true);
 			addButton(cb);
+			if (DefaultValues.isDOG2) {
+				cb = new JCheckBox("Goniometer");
+				cb.setSelected(!DefaultValues.isUnitSphere);
+				addButton(cb);
+			}
 			HVPanel p2 = new HVPanel.HPanel();
 			p2.addButton(new JButton("Clear"));
 			p2.addButton(new JButton("Help"));
@@ -510,6 +519,11 @@ public class BottomPanel extends HVPanel.HPanel {
 			} else if (e.getActionCommand().equals("Rec.Latt.")) {
 				model3d.showReciprocalLattice = ((JCheckBox) e.getSource()).isSelected();
 				model3d.clearAll();
+			} else if (e.getActionCommand().equals("Goniometer")) {
+				boolean show = ((JCheckBox) e.getSource()).isSelected();
+				if (show != !DefaultValues.isUnitSphere)
+					model3d.main.showGoniometer(show);
+				return;
 			} else if (e.getActionCommand().equals("Clear")) {
 				model3d.clearAll();
 				return;
