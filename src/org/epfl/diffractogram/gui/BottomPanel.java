@@ -19,6 +19,7 @@ import javax.vecmath.Vector3d;
 
 import org.epfl.diffractogram.DefaultValues;
 import org.epfl.diffractogram.model3d.Model3d;
+import org.epfl.diffractogram.model3d.Model3d.Parameters;
 import org.epfl.diffractogram.util.Animator;
 import org.epfl.diffractogram.util.Lattice;
 
@@ -31,7 +32,7 @@ public class BottomPanel extends HVPanel.HPanel {
 
 	private Model3d model3d;
 	private LatticePane lPane, rPane;
-	private Parameters paramPane;
+	private ParameterPanel parameterPane;
 	public Animation animPane;
 	public Help help;
 	private int u, v, w;
@@ -47,7 +48,7 @@ public class BottomPanel extends HVPanel.HPanel {
 		addSubPane(lPane = new LatticePane("Unit cell", "", model3d.lattice));
 		addSubPane(rPane = new LatticePane("Reciprocal lattice", "*", model3d.reciprocal));
 		addSubPane(new CrystalSize());
-		addSubPane(paramPane = new Parameters());
+		addSubPane(parameterPane = new ParameterPanel());
 		addSubPane(animPane = new Animation());
 		addSubPane(new Screen());
 
@@ -56,6 +57,7 @@ public class BottomPanel extends HVPanel.HPanel {
 
 	public void setModel(Model3d model) {
 		model3d = model;
+		animPane.animator.setModel(model);
 	}
 	
 	private boolean sync = true;
@@ -156,17 +158,35 @@ public class BottomPanel extends HVPanel.HPanel {
 		}
 	}
 
-	public class Parameters extends HVPanel.VPanel {
+	public Model3d.Parameters getParameters() {
+	 return new Model3d.Parameters(parameterPane.rotX.getValue(), 
+			 parameterPane.rotY.getValue(),
+			 parameterPane.rotZ.getValue(), 
+			 parameterPane.lambda.getValue(),	
+			 parameterPane.precess.getValue());
+	}
+	
+	public class ParameterPanel extends HVPanel.VPanel {
+		
+
 		public SliderAndValue rotX, rotY, rotZ, lambda, precess;
 		public EditField uvw;
 
-		public Parameters() {
+		public void setParameters(Parameters params) {
+			rotX.setValue(params.rotX);
+			rotY.setValue(params.rotY);
+			rotZ.setValue(params.rotZ);
+			lambda.setValue(params.lambda);
+			precess.setValue(params.precess);
+		}
+
+		public ParameterPanel() {
 			setBorder(new TitledBorder("Parameters"));
 			this.expand(true);
 			HVPanel.VPanel p1 = new HVPanel.VPanel();
 			p1.expand(true);
 			rotX = p1.addSliderAndValueH("Omega", degs, -180, 180, defaultValues.param_omega, 0, 120);
-			rotY = p1.addSliderAndValueH("Chi", degs, -180, 180, defaultValues.oaram_chi, 0, 120);
+			rotY = p1.addSliderAndValueH("Chi", degs, -180, 180, defaultValues.param_chi, 0, 120);
 			rotZ = p1.addSliderAndValueH("Phi", degs, -180, 180, defaultValues.param_phi, 0, 120);
 			lambda = p1.addSliderAndValueH("Lambda", angs, .2f, 3.5f, (float) defaultValues.param_lambda, 2, 120);
 			precess = p1.addSliderAndValueH("Precession", degs, -180, 180, defaultValues.param_precession, 0, 120);
@@ -242,6 +262,7 @@ public class BottomPanel extends HVPanel.HPanel {
 //			model3d.orientationClass.setPhi(phi);
 //			HVPanel.quiet = false;
 //		}
+
 	}
 
 	public class Animation extends HVPanel.HPanel {
@@ -305,7 +326,7 @@ public class BottomPanel extends HVPanel.HPanel {
 
 			addSubPane(p1);
 			laue.setForeground(Color.blue);
-			animator = new Animator();
+			animator = new Animator(model3d);
 			animator.from = defaultValues.param_startAngle;
 			animator.to = defaultValues.param_stopAngle;
 			animator.fromToEnable = false;
@@ -367,31 +388,31 @@ public class BottomPanel extends HVPanel.HPanel {
 			switch (action) {
 			case "Omega":
 				if (((JToggleButton) e.getSource()).isSelected()) {
-					animator.animateSingleAngle(paramPane.rotX, paramPane.rotX.getValue(),
+					animator.animateSingleAngle(parameterPane.rotX, parameterPane.rotX.getValue(),
 							(JToggleButton) e.getSource());
 				}
 				return;
 			case "Chi":
 				if (((JToggleButton) e.getSource()).isSelected()) {
-					animator.animateSingleAngle(paramPane.rotY, paramPane.rotY.getValue(),
+					animator.animateSingleAngle(parameterPane.rotY, parameterPane.rotY.getValue(),
 							(JToggleButton) e.getSource());
 				}
 				return;
 			case "Phi":
 				if (((JToggleButton) e.getSource()).isSelected()) {
-					animator.animateSingleAngle(paramPane.rotZ, paramPane.rotZ.getValue(),
+					animator.animateSingleAngle(parameterPane.rotZ, parameterPane.rotZ.getValue(),
 							(JToggleButton) e.getSource());
 				}
 				return;
 			case "Lambda":
 				if (((JToggleButton) e.getSource()).isSelected()) {
-					animator.animateLambda(paramPane.lambda, paramPane.lambda.getMin(), paramPane.lambda.getMax(),
+					animator.animateLambda(parameterPane.lambda, parameterPane.lambda.getMin(), parameterPane.lambda.getMax(),
 							(JToggleButton) e.getSource());
 				}
 				return;
 			case "Debye-Scherrer":
 				if (((JToggleButton) e.getSource()).isSelected()) {
-					animator.animateRandom(paramPane.rotX, paramPane.rotY, paramPane.rotZ,
+					animator.animateRandom(parameterPane.rotX, parameterPane.rotY, parameterPane.rotZ,
 							(JToggleButton) e.getSource());
 				}
 				return;
@@ -408,8 +429,8 @@ public class BottomPanel extends HVPanel.HPanel {
 						((JToggleButton) e.getSource()).setSelected(false);
 						return;
 					}
-					animator.animateSequential(paramPane.rotX, paramPane.rotY, paramPane.rotZ,
-							paramPane.rotX.getValue(), paramPane.rotY.getValue(), paramPane.rotZ.getValue(),
+					animator.animateSequential(parameterPane.rotX, parameterPane.rotY, parameterPane.rotZ,
+							parameterPane.rotX.getValue(), parameterPane.rotY.getValue(), parameterPane.rotZ.getValue(),
 							(JToggleButton) e.getSource());
 				} else {
 					animator.stopAnimation();
@@ -427,7 +448,7 @@ public class BottomPanel extends HVPanel.HPanel {
 				return;
 			case "Precession":
 				if (((JToggleButton) e.getSource()).isSelected()) {
-					animator.animatePrecession(paramPane.precess, paramPane.precess.getValue(),
+					animator.animatePrecession(parameterPane.precess, parameterPane.precess.getValue(),
 							(JToggleButton) e.getSource());
 				} else {
 					animator.stopAnimation();
@@ -490,12 +511,12 @@ public class BottomPanel extends HVPanel.HPanel {
 					return;
 				flat = true;
 				super.actionPerformed(new ActionEvent(this, 0, "horizontal"));
-				model3d.setScreen(ProjScreen3d.FLAT, animPane.angle.getFloatValue(), paramPane.precess.getValue(),
+				model3d.setScreen(ProjScreen3d.FLAT, animPane.angle.getFloatValue(), parameterPane.precess.getValue(),
 						animPane.mask.isSelected());
 				screenHeight.setValue(new Double(model3d.p3d.h));
 				screenWidth.setEnable(true);
 				screenWidth.setValue(new Double(model3d.p3d.w));
-				paramPane.precess.setEnabled(true);
+				parameterPane.precess.setEnabled(true);
 				animPane.angle.setEnable(true);
 				animPane.precession.setEnabled(true);
 				animPane.mask.setEnabled(true);
@@ -509,7 +530,7 @@ public class BottomPanel extends HVPanel.HPanel {
 				screenWidth.setEnable(false);
 				screenWidth.nameLabel.setEnabled(true);
 				screenWidth.edit.setText("");
-				paramPane.precess.setEnabled(false);
+				parameterPane.precess.setEnabled(false);
 				animPane.angle.setEnable(false);
 				animPane.precession.setEnabled(false);
 				animPane.mask.setEnabled(false);
@@ -611,4 +632,9 @@ public class BottomPanel extends HVPanel.HPanel {
 		return new Vector3d(Math.round(1000 * p.getX()) / 1000d, Math.round(1000 * p.getY()) / 1000d,
 				Math.round(1000 * p.getZ()) / 1000d);
 	}
+
+	public void setParameters(Parameters params) {
+		parameterPane.setParameters(params);
+	}
+
 }

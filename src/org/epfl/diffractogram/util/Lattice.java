@@ -14,7 +14,7 @@ public class Lattice extends Matrix3d {
 	public double a, b, c;
 	public double alpha, beta, gamma; // in degrees !!
 
-	final public Vector3d x, y, z;
+	final public Vector3d va, vb, vc;
 
 	private Vector3d center;
 	private Vector3d xhat;
@@ -26,16 +26,16 @@ public class Lattice extends Matrix3d {
 	}
 
 	public Lattice(Lattice l) {
-		x = l.x;
-		y = l.y;
-		z = l.z;
+		va = l.va;
+		vb = l.vb;
+		vc = l.vc;
 		center = l.center;
-		alpha = y.angle(z) * 180d / Math.PI;
-		beta = x.angle(z) * 180d / Math.PI;
-		gamma = x.angle(y) * 180d / Math.PI;
-		a = x.length();
-		b = y.length();
-		c = z.length();
+		alpha = vb.angle(vc) * 180d / Math.PI;
+		beta = va.angle(vc) * 180d / Math.PI;
+		gamma = va.angle(vb) * 180d / Math.PI;
+		a = va.length();
+		b = vb.length();
+		c = vc.length();
 		init(center);
 	}
 
@@ -78,9 +78,9 @@ public class Lattice extends Matrix3d {
 		double y2 = b * Math.sqrt(1d - cos(alpha) * cos(alpha) - cos(beta) * cos(beta) - cos(gamma) * cos(gamma)
 				+ 2d * cos(alpha) * cos(beta) * cos(gamma)) / sin(beta);
 		double y3 = b * (cos(alpha) - cos(beta) * cos(gamma)) / sin(beta);
-		x = new Vector3d(a, 0, 0);
-		y = new Vector3d(y1, y2, y3);
-		z = new Vector3d(c * cos(beta), 0, c * sin(beta));
+		va = new Vector3d(a, 0, 0);
+		vb = new Vector3d(y1, y2, y3);
+		vc = new Vector3d(c * cos(beta), 0, c * sin(beta));
 		init(new Vector3d());
 		//showLattice();
 	}
@@ -88,40 +88,40 @@ public class Lattice extends Matrix3d {
 	/**
 	 * for reciprocal
 	 * 
-	 * @param x
-	 * @param y
-	 * @param z
+	 * @param va
+	 * @param vb
+	 * @param vc
 	 */
-	private Lattice(Vector3d x, Vector3d y, Vector3d z) {
-		alpha = y.angle(z) * 180d / Math.PI;
-		beta = x.angle(z) * 180d / Math.PI;
-		gamma = x.angle(y) * 180d / Math.PI;
-		a = x.length();
-		b = y.length();
-		c = z.length();
-		this.x = x;
-		this.y = y;
-		this.z = z;
+	private Lattice(Vector3d va, Vector3d vb, Vector3d vc) {
+		alpha = vb.angle(vc) * 180d / Math.PI;
+		beta = va.angle(vc) * 180d / Math.PI;
+		gamma = va.angle(vb) * 180d / Math.PI;
+		a = va.length();
+		b = vb.length();
+		c = vc.length();
+		this.va = va;
+		this.vb = vb;
+		this.vc = vc;
 		init(new Vector3d());
 	}
 
 	private void init(Vector3d center) {
 		if (center != null) {
 			this.center = center;
-			center.add(x, y);
-			center.add(z);
+			center.add(va, vb);
+			center.add(vc);
 			center.scale(-.5);
 		}
-		setColumn(0, x);
-		setColumn(1, y);
-		setColumn(2, z);
+		setColumn(0, va);
+		setColumn(1, vb);
+		setColumn(2, vc);
 		inverse = new Matrix3d(this);
 		inverse.invert();
-		xhat = new Vector3d(x);
+		xhat = new Vector3d(va);
 		xhat.normalize();
-		yhat = new Vector3d(y);
+		yhat = new Vector3d(vb);
 		yhat.normalize();
-		zhat = new Vector3d(z);
+		zhat = new Vector3d(vc);
 		zhat.normalize();
 	}
 
@@ -134,18 +134,18 @@ public class Lattice extends Matrix3d {
 
 	public void setOrientation(int u, int v, int w) {
 		Vector3d e2 = new Vector3d(0, 1, 0);
-		Vector3d p = new Vector3d(u * x.getX() + v * y.getX() + w * z.getX(),
-				u * x.getY() + v * y.getY() + w * z.getY(), u * x.getZ() + v * y.getZ() + w * z.getZ());
+		Vector3d p = new Vector3d(
+				u * va.getX() + v * vb.getX() + w * vc.getX(),
+				u * va.getY() + v * vb.getY() + w * vc.getY(), 
+				u * va.getZ() + v * vb.getZ() + w * vc.getZ());
 		double angle = p.angle(e2);
 		Vector3d n = new Vector3d();
 		n.cross(e2, p);
-		Matrix3d r = Utils3d.getRotationMatrix(angle, n);
 		Transform3D t3d = new Transform3D();
-		t3d.set(r);
-
-		t3d.transform(x);
-		t3d.transform(y);
-		t3d.transform(z);
+		t3d.set(Utils3d.getRotationMatrix(angle, n));
+		t3d.transform(va);
+		t3d.transform(vb);
+		t3d.transform(vc);
 		init(new Vector3d());
 	}
 
@@ -198,19 +198,19 @@ public class Lattice extends Matrix3d {
 	}
 
 	public Lattice reciprocal() {
-		Vector3d[] vv = reciprocal(x, y, z);
+		Vector3d[] vv = reciprocal(va, vb, vc);
 		return new Lattice(vv[0], vv[1], vv[2]);
 	}
 
-	public static Vector3d[] reciprocal(Vector3d x, Vector3d y, Vector3d z) {
-		double iv = 1d / volume(x, y, z);
+	public static Vector3d[] reciprocal(Vector3d a, Vector3d b, Vector3d c) {
+		double iv = 1d / volume(a, b, c);
 		Vector3d[] r = new Vector3d[3];
 		r[0] = new Vector3d();
 		r[1] = new Vector3d();
 		r[2] = new Vector3d();
-		r[0].cross(y, z);
-		r[1].cross(z, x);
-		r[2].cross(x, y);
+		r[0].cross(b, c);
+		r[1].cross(c, a);
+		r[2].cross(a, b);
 		r[0].scale(iv);
 		r[1].scale(iv);
 		r[2].scale(iv);

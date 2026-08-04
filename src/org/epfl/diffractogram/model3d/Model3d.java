@@ -15,15 +15,13 @@ import javax.vecmath.Tuple3d;
 import javax.vecmath.Vector3d;
 
 import org.epfl.diffractogram.DefaultValues;
-import org.epfl.diffractogram.DiffractOgram;
 import org.epfl.diffractogram.gui.MainPane;
 import org.epfl.diffractogram.jmol.JmolUniverse;
+import org.epfl.diffractogram.util.Colors;
 import org.epfl.diffractogram.util.Lattice;
 import org.epfl.diffractogram.util.Utils3d;
 
 import javajs.api.Interface;
-
-import org.epfl.diffractogram.util.Colors;
 
 /**
  * The Model3d class comprises all the univers.root shapes.
@@ -49,6 +47,24 @@ import org.epfl.diffractogram.util.Colors;
  * </pre>
  */
 public class Model3d {
+
+	public static class Parameters {
+		public double rotX, rotY, rotZ, lambda, precess;
+		public int targetN;
+
+		public Parameters(double rotX, double rotY, double rotZ, double lambda, double precess) {
+			this.rotX = rotX;
+			this.rotY = rotY;
+			this.rotZ = rotZ;
+			this.lambda = lambda;
+			this.precess = precess;
+		}
+		
+		public String toString() {
+			return "[params Omega=" + rotX + " Chi=" + rotY 
+					+ " Phi=" + rotZ + " Lambda=" + lambda + " Precess=" + precess + " n=" + targetN + "]";
+		}
+	}
 
 	public Univers univers;
 	public ProjScreen3d p3d;
@@ -78,6 +94,8 @@ public class Model3d {
 	private double lambda;
 	boolean mask;
 	public MainPane main;
+	private boolean painting;
+	public int targetN;
 
 	public Model3d(MainPane main, JPanel panel3d, DefaultValues defaultValues, ProjScreen projScreen) {
 		this.main = main;
@@ -145,6 +163,7 @@ public class Model3d {
 		clearAllRays();
 		net.clearSelectedAtoms();
 		clearImage();
+		targetN = 0;
 		if (!showReciprocalLattice) {
 			net.toggleDirect();
 			net.toggleReciprocalAxes();
@@ -176,6 +195,7 @@ public class Model3d {
 	 * @param adjustR true only from lambda change
 	 */
 	private synchronized void doRaysOrLaue(boolean adjustR, boolean isRay) {
+		painting = true;
 		Graphics mg = projScreen.getGraphics();
 		clearAllRays();
 		tPrecOrient = new Transform3D();
@@ -183,9 +203,10 @@ public class Model3d {
 		tPrecOrientInv = new Transform3D(tPrecOrient);
 		tPrecOrientInv.invert();
 
-		net.doRaysOrLaue(mg, adjustR, isRay);
+		net.doRaysOrLaue(mg, adjustR, isRay, targetN );
 		if (mg != null)
 			mg.dispose();
+		painting = false;
 	}
 
 	public void setFlatScreen() {
@@ -259,7 +280,7 @@ public class Model3d {
 
 	public void setDefaultParamters(DefaultValues defaultValues) {
 		orientation.setOmega(defaultValues.param_omega);
-		orientation.setChi(defaultValues.oaram_chi);
+		orientation.setChi(defaultValues.param_chi);
 		orientation.setPhi(defaultValues.param_phi);
 		precession.setAngle(defaultValues.param_mu);
 		precession.setRotation(defaultValues.param_precession);
@@ -608,7 +629,7 @@ public class Model3d {
 			usTG = tg;
 		univers.removeNotify(tg, usChild);
 		BranchGroup n = univers.creator.createRepere("sphereAxes:", Colors.red, Colors.green, null,
-				new String[] { "a^", "b^", "c^" }, .055f, .01f, 0, 0,
+				new String[] { "a^", "b^", "c^" }, .055f, DefaultValues.arrowWidth, 0, 0,
 				(Vector3d) transformLatticeV(new Vector3d(1 / lattice.a, 0, 0), 1),
 				(Vector3d) transformLatticeV(new Vector3d(0, 1 / lattice.b, 0), 1),
 				(Vector3d) transformLatticeV(new Vector3d(0, 0, 1 / lattice.c), 1), false);
@@ -635,11 +656,8 @@ public class Model3d {
 	}
 
 	void updateUnitSphere(int h, int k, int l, Point3d pN, Point3d pNet) {
-//		if (h != 0 && (h == 0 && k == 0 || h == 0 && l == 0 
-//				|| k == 0 && l == 0)) {
-//			System.out.println(h + " " + k + " " + l + " " 
+//			System.out.println("update " + h + " " + k + " " + l + " " 
 //				+ orientation.omegaDeg + " " + orientation.chiDeg + " " + orientation.phiDeg);
-//		}
 
 		// reverse S0
 		double r = virtualSphere.scaledRadius;
@@ -774,12 +792,17 @@ public class Model3d {
 
 	}
 
-	public void project2d(Graphics mg, Double p2d, int h, int k, int l) {
-		projScreen.drawPoint(mg, p2d, net.intensity(h, k, l), h, k, l);
+	public void project2d(Graphics mg, Double p2d, int h, int k, int l, int n) {
+		projScreen.drawPoint(mg, p2d, net.intensity(h, k, l), h, k, l, n);
 	}
 
 	public void addImpactRay(Point3d cSphere, Point3d pFrom, Point3d pTo, Point3d pProj) {
 		rays.addImpactRay(cSphere, pFrom, pTo, pProj);
 	}
 
+	public void hideReciprocalLattice(boolean doHide) {
+		showReciprocalLattice = doHide;
+		net.hideLattice(doHide);
+	}
+	
 }

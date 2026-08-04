@@ -150,4 +150,6 @@ public abstract class WorldRenderer {
 		return null;
 	}
 
+	abstract public void scriptWait(String script);
+
 }

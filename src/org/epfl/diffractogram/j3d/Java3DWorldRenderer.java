@@ -503,5 +503,10 @@ public class Java3DWorldRenderer extends WorldRenderer {
 	public TransformGroup newTransformGroup(Transform3D t3d) {
 		return (t3d == null ? new TransformGroup() : new TransformGroup(t3d));
 	}
+
+	@Override
+	public void scriptWait(String script) {
+		// n/a
+	}
 	
 }

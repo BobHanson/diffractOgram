@@ -51,6 +51,8 @@ public class Net extends BranchGroup {
 
 		Point3i hkl;
 
+		private boolean hidden;
+
 		Atom(int h, int k, int l, Vector3d v, boolean isSpecial, boolean isVisible, float intensity) {
 			this.id = ++atomid;
 			this.hkl = new Point3i(h, k, l);
@@ -68,6 +70,10 @@ public class Net extends BranchGroup {
 		
 		public String toString() {
 			return "Atom[" + hkl + " spec=" + isSpecial + " vis=" + isVisible + "]";
+		}
+
+		public void setHidden(boolean doHide) {
+			this.hidden = doHide;
 		}
 
 	}
@@ -98,6 +104,7 @@ public class Net extends BranchGroup {
 
 	private Atom[][][] atoms;
 	private List<Atom> selectedAtoms;
+	private boolean isHidden;
 
 	public Net(Model3d model3d, DefaultValues defaultValues) {
 		selectedAtoms = new ArrayList<>();
@@ -132,7 +139,7 @@ public class Net extends BranchGroup {
 		precessionObject.addChild(orientationObject);
 		precessionObject.addChild(unitcellObject);
 
-		createNet(rl.x, rl.y, rl.z, hMax, kMax, lMax);
+		createNet(rl.va, rl.vb, rl.vc, hMax, kMax, lMax);
 
 		univers.addNotify(this, precessionObject);
 		KeyboardFocusManager kbfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
@@ -272,10 +279,11 @@ public class Net extends BranchGroup {
 		Atom atom = atoms[h + hRange][k + kRange][l + lRange] 
 				= new Atom(h, k, l, v, isSpecial, visible, Calc.calcIntensity(aStar, bStar, cStar, h, k, l));
 		Appearance app = isSpecial ? greenApp : defaultApp;
-		float dotSize = DefaultValues.dotSize3d * (isSpecial ? 0.8f : 1);
+		float dotSize = DefaultValues.dotSizeNet * (isSpecial ? 0.8f : 1);
 		TransformGroup tg = Utils3d.getVectorTransformGroup(v.x, v.y, v.z, null);
-		Utils3d.setParents(univers.renderer.createSphere("netroot:atom:sphere" + atom.getID(), dotSize, 10, true, app),
-				tg, atom);
+		Node node = univers.renderer.createSphere("netroot:atom:sphere" + atom.getID(), dotSize, 10, true, app);
+		node.setUserData(atom);
+		Utils3d.setParents(node, tg, atom);
 		if (visible && model3d.showReciprocalLattice)
 			univers.addNotify(netRoot, atom);
 	}
@@ -377,8 +385,8 @@ public class Net extends BranchGroup {
 		Utils3d.setParents(box, netBox, netRoot);
 	}
 
-	public synchronized void setLattice(Lattice l) {
-		createNet(l.x, l.y, l.z, hMax, kMax, lMax);
+	public synchronized void setLattice(Lattice rl) {
+		createNet(rl.va, rl.vb, rl.vc, hMax, kMax, lMax);
 	}
 
 	public synchronized void setCrystalSize(int x, int y, int z) {
@@ -438,7 +446,7 @@ public class Net extends BranchGroup {
 		}
 	}
 
-	public void doRaysOrLaue(Graphics mg, boolean adjustR, boolean isRay) {
+	public void doRaysOrLaue(Graphics mg, boolean adjustR, boolean isRay, int targetN) {
 		Vector3d vx = new Vector3d();
 		Vector3d vy = new Vector3d();
 		Vector3d vz = new Vector3d();
@@ -466,6 +474,8 @@ public class Net extends BranchGroup {
 		Point3d pNet = new Point3d();
 		Point3d pProj = new Point3d();
 		clearSelectedAtoms();
+		int n = 0;
+		//System.out.println("Net targetN=" + targetN);
 		for (int h = -hRange; h <= hRange; h++) {
 			for (int k = -kRange; k <= kRange; k++) {
 				for (int l = -lRange; l <= lRange; l++) {
@@ -480,9 +490,7 @@ public class Net extends BranchGroup {
 					if (isRay) {
 						// check for point at sphere
 						ewaldDiff = unOrientedCenter.distance(atom.point) - scaledRadius;
-						if (
-								//ewaldDiff > 0 || 
-								Math.abs(ewaldDiff) > DefaultValues.ewaldSlop)
+						if (Math.abs(ewaldDiff) > DefaultValues.ewaldSlop)
 							continue;
 					}
 					if (adjustR) {
@@ -491,7 +499,7 @@ public class Net extends BranchGroup {
 							continue;
 					}
 					pProj.set(pNet.x, pNet.y + scaledRadius, pNet.z);
-					
+
 					// project this point with precessed y(n) and screen center cn
 					if (!model3d.p3d.projPoint(pProj, vy, cn))
 						continue;
@@ -517,25 +525,41 @@ public class Net extends BranchGroup {
 						}
 						if (DefaultValues.directRays)
 							pProj.y -= scaledRadius;
-						if (DefaultValues.isUnitSphere 
-								&& model3d.persistent
-								&& !atom.isSpecial) {
+						if (DefaultValues.isUnitSphere && model3d.persistent 
+								&& !atom.isSpecial && targetN == 0) {
 							// not showing all the rays -- just one -- when this is the unit sphere
 							// because we have just one perpendicular M-projection visualization
 							model3d.clearAllRays();
 						}
-						model3d.addImpactRay(cSphere, pFrom, pTo, pProj);
-						if (DefaultValues.isUnitSphere)
-							model3d.updateUnitSphere(h, k, l, atom.point, pNet);
-						if (model3d.showReciprocalLattice) {
-							highlight(atom);
+						n++;
+						if (targetN == 0 || targetN == n) {
+							model3d.addImpactRay(cSphere, pFrom, pTo, pProj);
+							if (DefaultValues.isUnitSphere)
+								model3d.updateUnitSphere(h, k, l, atom.point, pNet);
+							if (model3d.showReciprocalLattice) {
+								highlight(atom);
+							}
+						} else if (targetN > 0) {
+							doProject2D = false;
 						}
 					}
 					if (doProject2D)
-						model3d.project2d(mg, p2d, h, k, l);
+						model3d.project2d(mg, p2d, h, k, l, n);
 				}
 			}
 		}
+	}
+
+	public void hideLattice(boolean doHide) {
+//		isHidden = doHide;
+//		univers.renderer.scriptWait("draw id 'netroot.atom*' " + (doHide ? "off" : "on"));
+//		for (int h = -hMax; h <= hMax; h++) {
+//			for (int k = -kMax; k <= kMax; k++) {
+//				for (int l = -lMax; l <= lMax; l++) {
+//					getAtom(h, k, l).setHidden(doHide);
+//				}
+//			}
+//		}
 	}
 
 }

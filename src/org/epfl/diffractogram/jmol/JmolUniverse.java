@@ -14,6 +14,6 @@ public class JmolUniverse extends Univers {
 	
 	protected WorldRenderer getRenderer(JPanel panel3d) {
 		return new JmolWorldRenderer(panel3d, this);
-	}
+	}	
 	
 }

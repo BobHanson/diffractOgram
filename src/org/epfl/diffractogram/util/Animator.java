@@ -4,6 +4,7 @@ import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 
 import org.epfl.diffractogram.gui.HVPanel.SliderAndValue;
+import org.epfl.diffractogram.model3d.Model3d;
 import org.epfl.diffractogram.model3d.WorldRenderer;
 
 import javajs.async.SwingJSUtils.StateHelper;
@@ -26,7 +27,17 @@ public class Animator {
 	private double speed;
 	private AnimationThread currentThread;
 	private boolean stepping;
+	private Model3d model3d;
 
+	public Animator(Model3d model3d) {
+	  this.model3d = model3d;
+		
+	}
+
+	public void setModel(Model3d model) {
+		this.model3d = model;
+	}
+	
 	public void setSpeed(double speed) {
 		this.speed = speed;
 		stepping = (speed == 0);

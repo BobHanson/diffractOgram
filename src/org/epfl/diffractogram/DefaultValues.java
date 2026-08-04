@@ -73,9 +73,11 @@ public class DefaultValues {
 	// constant values
 	public final static double axisOffsets = .01;	
 	public final static double ewaldSlop = 0.005;
-	public final static float dotSize3d = .02f;
+	public final static float dotSizeNet = .025f;
 	public final static double scale = 2;//5;
 	public final static double maskDistFract = 1/2d;
+
+	public static final float arrowWidth = .005f;
 
 	// setable values
 	
@@ -85,7 +87,7 @@ public class DefaultValues {
 	public double param_hCylScreen = 4;
 	public double param_lambda = 1.5;//was 0.5;
 	public int param_omega = 0;
-	public int oaram_chi = 0;
+	public int param_chi = 0;
 	public int param_phi = 0;
 	
 	public int[] param_uvw = {0, 1, 0};
@@ -134,7 +136,7 @@ public class DefaultValues {
 		param_crystalY = parseInt(applet.getParameter("k"), param_crystalY);
 		param_crystalZ = parseInt(applet.getParameter("l"), param_crystalZ);
 		param_omega = parseInt(applet.getParameter("omega"), param_omega);
-		oaram_chi = parseInt(applet.getParameter("chi"), oaram_chi);
+		param_chi = parseInt(applet.getParameter("chi"), param_chi);
 		param_phi = parseInt(applet.getParameter("phi"), param_phi);
 		param_mu = parseInt(applet.getParameter("mu"), param_mu);
 		param_precession = parseInt(applet.getParameter("precession"), param_precession);

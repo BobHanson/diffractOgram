@@ -8,8 +8,8 @@ import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
 import org.epfl.diffractogram.DefaultValues;
-import org.epfl.diffractogram.DiffractOgram;
 import org.epfl.diffractogram.model3d.Model3d;
+import org.epfl.diffractogram.model3d.Model3d.Parameters;
 import org.epfl.diffractogram.model3d.ProjScreen;
 
 /* TestApplet - MainPane.java
@@ -38,7 +38,7 @@ public class MainPane extends HVPanel.VPanel {
 		this.dog2App = dogApp;
 		try {
 			this.defaultValues = defaultValues;
-			projected = new ProjScreen();
+			projected = new ProjScreen(this);
 			projected.setMinimumSize(new Dimension(0, 0));
 
 			splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, getLeftPanelAndModel(), projected);
@@ -58,6 +58,16 @@ public class MainPane extends HVPanel.VPanel {
 		}
 	}
 	
+	public Model3d.Parameters getParameters() {
+		return bottomPanel.getParameters();
+	}
+
+	public void setParameters(Parameters params) {
+		model3d.targetN = params.targetN;
+		bottomPanel.setParameters(params);
+		model3d.doRays(false);
+	}
+
 	private Component getLeftPanelAndModel() {
 		JPanel panel3d = new JPanel();
 		panel3d.setMinimumSize(new Dimension(1, 1));
@@ -110,4 +120,5 @@ public class MainPane extends HVPanel.VPanel {
 		if (dog2App != null)
 			dog2App.showGoniometer(show);
 	}
+
 }

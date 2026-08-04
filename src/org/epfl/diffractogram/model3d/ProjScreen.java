@@ -6,45 +6,79 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-import java.io.Serializable;
+import java.awt.geom.Point2D.Double;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Vector;
 
 import javax.swing.JPanel;
+
+import org.epfl.diffractogram.gui.MainPane;
+import org.epfl.diffractogram.model3d.Model3d.Parameters;
+
+import javajs.util.PT;
 
 /**
  * This is the screen on the right, with the x/y axes
  *
  */
 @SuppressWarnings("serial")
-public class ProjScreen extends JPanel implements MouseMotionListener, MouseWheelListener {
-	private int paintW, paintH, paintX, paintY, paintX0, paintY0, paintX0S, paintY0S;
+public class ProjScreen extends JPanel implements MouseMotionListener, MouseListener, MouseWheelListener {
+	private int paintW, paintH, mouseX, mouseY, mouseX0, mouseY0, mouseX0S, mouseY0S;
 	private double width, height;
 	int iw, ih;
 	public Image image;
-	private Vector<Serializable> points, index_ijk;
-	private Map<Integer, List<Point.Double>> ht_index_ijk;
-	private Vector<Float> pointSizes;
 	private boolean firstPaint;
-	// private Raster blank;
-	// private Graphics mg;//, ig;
 	private boolean fixedWidth;
 
-	public ProjScreen() {
+	private List<Dot> dots;
+
+	private MainPane main;
+
+	private static class Dot {
+		Double point;
+		float pointSize;
+		int i, j, k, n;
+		private String coord;
+		private Parameters params;
+
+		public Dot(Double p, float s, int i, int j, int k, int n, Parameters params) {
+			this.point = p;
+			this.pointSize = s;
+			this.i = i;
+			this.j = j;
+			this.k = k;
+			this.n = n;
+			this.params = params;
+			params.targetN = n;
+		}
+
+		public boolean is(int i, int j, int k) {
+			return (this.i == i && this.j == j && this.k == k);
+		}
+		
+		public String getCoord() {
+			return (coord == null ? (coord = "(" + i + " " + j + " " + k + ")") : coord);
+		}
+		
+		public String toString() {
+			return getCoord() + " " + n  + " " + params+ " " + point;
+		}
+	}
+
+	public ProjScreen(MainPane main) {
+		this.main = main;
 		firstPaint = true;
 		this.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		addMouseListener(this);
 		addMouseMotionListener(this);
 		addMouseWheelListener(this);
 		addComponentListener(sizeListener);
@@ -52,24 +86,12 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 
 	public synchronized void setImageSize(double w, double h, boolean fixedWidth) {
 
+		dots = new ArrayList<Dot>();
 		this.width = w;
 		this.height = h;
 		this.fixedWidth = fixedWidth;
 		iw = roundToPower2(w * 64);
 		ih = roundToPower2(h * 64);
-		// BH this does not do anything
-		// image = new BufferedImage(iw, ih, BufferedImage.TYPE_INT_ARGB);
-//		Graphics g = image.getGraphics();
-//		g.setColor(new Color(100, 100, 100, 100));
-//		g.fillRect(0, 0, iw, ih);		
-//		g.setColor(Color.black);
-//		g.dispose();
-		// blank = ((BufferedImage)image).getData();
-
-		points = new Vector<Serializable>(10, 100);
-		pointSizes = new Vector<Float>(10, 100);
-		index_ijk = new Vector<Serializable>(10, 100);
-		ht_index_ijk = new HashMap<>();
 		setImageDefaultOrigin(fixedWidth);
 		repaint();
 
@@ -80,68 +102,94 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 		if (!fixedWidth && height / (screen.height) > width / screen.width) {
 			paintH = screen.height;
 			paintW = (int) Math.round(paintH * width / height);
-			paintY = 0;
-			paintX = (screen.width - paintW) / 2;
+			mouseY = 0;
+			mouseX = (screen.width - paintW) / 2;
 		} else {
 			paintW = screen.width;
 			paintH = (int) Math.round(paintW * height / width);
-			paintX = 0;
-			paintY = (screen.height - paintH) / 2;
+			mouseX = 0;
+			mouseY = (screen.height - paintH) / 2;
 		}
-
-// BH previously deleted
-//		if (screen.width>0 && screen.height>0) {
-//			image = new BufferedImage(screen.width, screen.height, BufferedImage.TYPE_INT_ARGB);
-//			ig = image.getGraphics();
-//			ig.setColor(new Color(100, 100, 100, 100));
-//			ig.fillRect(0, 0, screen.width, screen.height);
-//		}
 	}
 
 	public synchronized void clearImage() {
-		// ((BufferedImage)image).setData(blank);
-		points.clear();
-		pointSizes.clear();
-		index_ijk.clear();
-		ht_index_ijk.clear();
+		dots.clear();
 		repaint();
 	}
 
 	private String index = "";
-	private Vector<Integer> indexVect;
 
 	private void showIndex(int x, int y) {
-		double xx = ((double) x - paintX - paintW / 2) / paintW;
-		double yy = ((double) y - paintY - paintH / 2) / paintH;
-		double e = .015;
+		double xx = ((double) x - mouseX - paintW / 2) / paintW;
+		double yy = ((double) y - mouseY - paintH / 2) / paintH;
+		double e = .01;
+		String s = getIndexString(null, xx, yy, e);
+		if (!s.equals(index)) {
+			setToolTipText(s);
+			index = s;
+		}
+	}
+
+	private void showRay(int x, int y) {
+		double xx = ((double) x - mouseX - paintW / 2) / paintW;
+		double yy = ((double) y - mouseY - paintH / 2) / paintH;
+		double e = .01;
+		List<Dot> indexVect = new ArrayList<>();
+		getIndexString(indexVect, xx, yy, e);
+		if (indexVect.isEmpty())
+			return;
+		Dot dot = indexVect.get(0);
+		main.setParameters(dot.params);
+		
+	}
+
+	private String getIndexString(List<Dot> indexVect, double xx, double yy, double e) {
 		String s = "";
-		indexVect = new Vector<Integer>(10, 10);
-		for (int i = 0; i < points.size(); i++) {
-			if (Math.abs(((Point.Double) points.get(i)).x - xx) < e
-					&& Math.abs(((Point.Double) points.get(i)).y - yy) < e) {
-				indexVect.add(new Integer(i));
-				int index = ((Integer) index_ijk.get(i)).intValue();
-				String sindex = "(" + (((index >> 16) & 0xff) - 128) + " " + (((index >> 8) & 0xff) - 128) + " "
-						+ ((index & 0xff) - 128) + ") ";
-				if (s.contains(sindex)) {
-					// BH 2024.06.27 duplicates here during precession
-					// System.out.println("PJS WHOAH" + sindex);
-				} else {
-					s += sindex;
+		Dot d = findClosestDot(xx, yy, e);
+		if (d != null) {
+			xx = d.point.x;
+			yy = d.point.y;
+			for (int i = 0; i < dots.size(); i++) {
+				Dot dot = dots.get(i);
+				Double pt = dot.point;
+				if (near(pt, xx, yy, e)) {
+					if (indexVect != null)
+						indexVect.add(dot);
+					String sindex = dot.getCoord() + " ";
+					if (s.contains(sindex)) {
+						// BH 2024.06.27 duplicates here during precession
+					} else {
+						s += sindex;
+						if (indexVect != null)
+							indexVect.add(dot);
+					}
 				}
 			}
 		}
-		if (!s.equals(index)) {
-			setToolTipText(s);
-//			//paint(mg);
-//			Graphics mg = getGraphics();
-//			mg.setClip(0, getSize().height-20, getSize().width, 20);
-//			mg.clearRect(0, getSize().height-20, getSize().width, 20);
-//			mg.setColor(Color.black);
-//			mg.drawString(s, 5, getSize().height-5);
-//			mg.dispose();
-			index = s;
+		if (indexVect != null)
+			System.out.println(PT.rep(indexVect.size() + " " + indexVect.toString(), "(", "\n("));
+		return s;
+	}
+
+	private Dot findClosestDot(double xx, double yy, double e) {
+		double min = 1e10;
+		Dot minDot = null;
+		for (int i = 0; i < dots.size(); i++) {
+			Dot dot = dots.get(i);
+			Double pt = dot.point;
+			if (near(pt, xx, yy, e)) {
+				double d = (pt.x - xx)* (pt.x - xx) + (pt.y - yy) * (pt.y - yy);
+				if (d < min) {
+					min = d;
+					minDot = dot;
+				}					
+			}
 		}
+		return minDot;
+	}
+
+	private boolean near(Double pt, double x, double y, double e) {
+		return Math.abs(pt.x - x) < e && Math.abs(pt.y - y) < e;
 	}
 
 	public synchronized void paint(Graphics g) {
@@ -157,26 +205,21 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 		Dimension size = getSize();
 		g.setColor(getBackground());
 		g.fillRect(0, 0, size.width, size.height);
-		// BH must have been an earlier idea
-		// g.drawImage(image, paintX, paintY, paintW, paintH, null);
-
 		g.setColor(new Color(255, 255, 255));
-		g.fillRect(paintX, paintY, paintW, paintH);
+		g.fillRect(mouseX, mouseY, paintW, paintH);
 
-		Point.Double p;
 		// BH in JavaScript we must dispose after clipping
 		Graphics g1 = g.create();
-		g1.setClip(paintX, paintY, paintW, paintH);
-		for (int i = 0; i < points.size(); i++) {
-			// boolean selected = (indexVect!=null && indexVect.contains(new Integer(i)));
-			p = (Point.Double) points.get(i);
-			paintPoint(g1, p.x, p.y, paintX, paintY, paintW, paintH, ((Float) pointSizes.get(i)).floatValue(), false,
-					i);
+		g1.setClip(mouseX, mouseY, paintW, paintH);
+		for (int i = 0; i < dots.size(); i++) {
+			Dot dot = dots.get(i);
+			Double p = dot.point;
+			paintPoint(g1, p.x, p.y, mouseX, mouseY, paintW, paintH, dot.pointSize, false, i);
 		}
 		g1.dispose();
 		g.setColor(Color.black);
-		g.drawLine(paintX + paintW / 2, paintY, paintX + paintW / 2, min(paintY + paintH, getHeight()));
-		g.drawLine(paintX, paintY + paintH / 2, paintX + paintW, paintY + paintH / 2);
+		g.drawLine(mouseX + paintW / 2, mouseY, mouseX + paintW / 2, min(mouseY + paintH, getHeight()));
+		g.drawLine(mouseX, mouseY + paintH / 2, mouseX + paintW, mouseY + paintH / 2);
 	}
 
 	private int min(int a, int b) {
@@ -186,10 +229,12 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 	private synchronized void paintPoint(Graphics g, double x, double y, int px, int py, int pw, int ph, float s,
 			boolean selected, int index) {
 		if (index >= 0) {
-			for (int i = 0; i < pointSizes.size(); i++) {
-				if (i != index && ((Float) (pointSizes.get(i))).floatValue() > s) {
-					Point.Double p = (Point.Double) points.get(i);
-					if (Math.abs(p.x - x) < 0.001 && Math.abs(p.y - y) < 0.001) {
+			for (int i = 0; i < dots.size(); i++) {
+				if (i == index)
+				    continue;
+				Dot dot = dots.get(i);
+				if (dot.pointSize > s) {
+					if (near(dot.point, x, y, 0.001)) {
 						return;
 					}
 				}
@@ -201,7 +246,7 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 		int y1 = (int) Math.round(y * ph + ph / 2.0 + py - w / 2);
 		// if (x1+w<(px<0?0:px) || y1+w<(py<0?0:py) || x1>(px<0?pw+px:pw*2) ||
 		// y1>(py<0?ph+py:ph*2)) return;
-		if (x1 + w < paintX || y1 + w < paintY || x1 > paintX + paintW || y1 > paintY + paintH)
+		if (x1 + w < mouseX || y1 + w < mouseY || x1 > mouseX + paintW || y1 > mouseY + paintH)
 			return;
 
 		if (selected) {
@@ -226,76 +271,76 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 		// (int)Math.round(y*ph+ph/2.0+py-w/2), w, w);
 	}
 
-	public synchronized void drawPoint(Graphics mg, Point.Double p, float s, int i, int j, int k) {
-		if (mg == null || Math.abs(p.x) < .01 && Math.abs(p.y) < .01)
+	public synchronized void drawPoint(Graphics mg, Double p, float s, int i, int j, int k, int n) {
+		if (mg == null || near(p, 0, 0, 0.01))
 			return;
-		// BH better to use a HashMap
-		int ipt = ((i + 128) << 16) + ((j + 128) << 8) + (k + 128);
-		Integer index = new Integer(ipt);
-		List<Point.Double> ijkList = ht_index_ijk.get(index);
-		if (ijkList == null) {
-			ht_index_ijk.put(index, ijkList = new ArrayList<>());
-		} else {
-			for (int ii = ijkList.size(); --ii >= 0;) {
-//			if (((Integer) index_ijk.get(ii)).intValue() == index) {
-				Point.Double pi = ijkList.get(ii);
-				if (Math.abs(p.x - pi.x) < 0.001 && Math.abs(p.y - pi.y) < 0.001) {
+		double x = p.x;
+		double y = p.y;
+		for (int ii = 0; ii < dots.size(); ii++) {
+			Dot dot = dots.get(ii);
+			if (dot.is(ii,  j,  k)) {
+				Double pi = dot.point;
+				if (near(pi, x, y, 0.001)) {
 					return;
 				}
 				// points may be reflected in x or y axis
 			}
 		}
 		// BH more efficient
-		// g1.setClip(paintX, paintY, paintW, paintH);
-		paintPoint(mg, p.x, p.y, paintX, paintY, paintW, paintH, s, false, -1);
-		// paintPoint(image.getGraphics(), p.x, p.y, 0, 0, iw, ih, s);
-		index_ijk.add(index);
-		ijkList.add(p);
-		points.add(p);
-		pointSizes.add(new Float(s));
+		dots.add(new Dot(p, s, i, j, k, n, main.getParameters()));
+		paintPoint(mg, x, y, mouseX, mouseY, paintW, paintH, s, false, -1);
 	}
 
 	public synchronized void mouseDragged(MouseEvent e) {
 		if (e.isControlDown() || e.isAltDown()) {
 			int a, b, d;
-			a = e.getX() - paintX0S;
-			b = e.getY() - paintY0S;
+			a = e.getX() - mouseX0S;
+			b = e.getY() - mouseY0S;
 			if (Math.abs(a) > Math.abs(b))
 				d = a;
 			else
 				d = b;
 			if (d > 0 || (paintW >= 20 && paintH >= 20)) {
-				paintX -= paintW / 10 * d / 2;
-				paintY -= paintH / 10 * d / 2;
+				mouseX -= paintW / 10 * d / 2;
+				mouseY -= paintH / 10 * d / 2;
 				paintW += paintW / 10 * d;
 				paintH += paintH / 10 * d;
 			}
 			repaint();
 		} else {
-			paintX += (e.getX() - paintX0);
-			paintX0 = e.getX();
-			paintY += (e.getY() - paintY0);
-			paintY0 = e.getY();
+			mouseX += (e.getX() - mouseX0);
+			mouseX0 = e.getX();
+			mouseY += (e.getY() - mouseY0);
+			mouseY0 = e.getY();
 			repaint();
 		}
-		paintX0S = e.getX();
-		paintY0S = e.getY();
+		mouseX0S = e.getX();
+		mouseY0S = e.getY();
 	}
 
 	public synchronized void mouseMoved(MouseEvent e) {
-		paintX0 = e.getX();
-		paintY0 = e.getY();
-		paintX0S = e.getX();
-		paintY0S = e.getY();
+		mouseX0 = e.getX();
+		mouseY0 = e.getY();
+		mouseX0S = e.getX();
+		mouseY0S = e.getY();
 		// hmm not during a paint?
-		showIndex(paintX0, paintY0);
+		showIndex(mouseX0, mouseY0);
+	}
+
+	public synchronized void mouseClick(MouseEvent e) {
+		mouseX0 = e.getX();
+		mouseY0 = e.getY();
+		mouseX0S = e.getX();
+		mouseY0S = e.getY();
+		// hmm not during a paint?
+		showIndex(mouseX0, mouseY0);
 	}
 
 	public synchronized void mouseWheelMoved(MouseWheelEvent e) {
 		if (e.getWheelRotation() < 0 && (paintW <= 20 || paintH <= 20))
 			return;
-		paintX -= paintW / 10 * e.getWheelRotation() / 2;
-		paintY -= paintH / 10 * e.getWheelRotation() / 2;
+		mouseX -= paintW / 10 * e.getWheelRotation() / 2;
+		mouseY -= paintH / 10 * e.getWheelRotation() / 2;
 		paintW += paintW / 10 * e.getWheelRotation();
 		paintH += paintH / 10 * e.getWheelRotation();
 		repaint();
@@ -317,4 +362,36 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseWhee
 
 		}
 	};
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		mouseX0 = e.getX();
+		mouseY0 = e.getY();
+		mouseX0S = e.getX();
+		mouseY0S = e.getY();
+		// hmm not during a paint?
+		showRay(mouseX0, mouseY0);
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+	}
 }
