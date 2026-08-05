@@ -349,6 +349,8 @@ public abstract class Univers {
 		}
 	}
 
+	public abstract void echo(String string);
+
 }
 
 

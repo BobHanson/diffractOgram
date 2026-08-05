@@ -275,4 +275,8 @@ public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendere
 		viewer.scriptWait(s);
 	}
 
+	public void echo(String msg) {
+		viewer.script("set echo bottom left; echo " + (msg == null ? "" : msg));
+	}
+
 }

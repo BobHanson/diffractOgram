@@ -25,8 +25,6 @@ import javax.swing.JPanel;
 import org.epfl.diffractogram.gui.MainPane;
 import org.epfl.diffractogram.model3d.Model3d.Parameters;
 
-import javajs.util.PT;
-
 /**
  * This is the screen on the right, with the x/y axes
  *
@@ -132,13 +130,16 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseList
 
 	private void showIndex(int x, int y) {
 		List<Dot> indexVect = getIndexes(x, y);
-		if (indexVect == null)
+		if (indexVect == null) {
+			main.echo("");
 			return;	
+		}
 		String s = "";
 		for (int i = 0; i < indexVect.size(); i++)
 			s += indexVect.get(i).getCoord() + " ";
 		if (!s.equals(index)) {
 			setToolTipText(s);
+			main.echo(s);
 			index = s;
 		}
 	}
@@ -149,6 +150,7 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseList
 			return;
 		Dot dot = indexVect.get(0);
 		main.setParameters(dot.params);
+		main.echo(dot.getCoord());
 		
 	}
 

@@ -15,5 +15,9 @@ public class Java3DUniverse extends Univers {
 	protected WorldRenderer getRenderer(JPanel panel3d) {
 		return new Java3DWorldRenderer(panel3d, this);
 	}
+
+	@Override
+	public void echo(String string) {
+	}
 	
 }

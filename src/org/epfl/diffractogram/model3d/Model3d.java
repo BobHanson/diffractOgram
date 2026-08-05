@@ -821,4 +821,8 @@ public class Model3d {
 		net.hideLattice(doHide);
 	}
 
+	public void echo(String s) {
+		univers.echo(s);		
+	}
+
 }

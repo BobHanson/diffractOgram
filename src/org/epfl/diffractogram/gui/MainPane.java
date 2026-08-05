@@ -121,4 +121,8 @@ public class MainPane extends HVPanel.VPanel {
 			dog2App.showGoniometer(show);
 	}
 
+	public void echo(String s) {
+		model3d.echo(s);
+	}
+
 }
