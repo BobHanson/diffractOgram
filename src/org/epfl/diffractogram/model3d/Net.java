@@ -51,8 +51,6 @@ public class Net extends BranchGroup {
 
 		Point3i hkl;
 
-		private boolean hidden;
-
 		Atom(int h, int k, int l, Vector3d v, boolean isSpecial, boolean isVisible, float intensity) {
 			this.id = ++atomid;
 			this.hkl = new Point3i(h, k, l);
@@ -70,10 +68,6 @@ public class Net extends BranchGroup {
 		
 		public String toString() {
 			return "Atom[" + hkl + " spec=" + isSpecial + " vis=" + isVisible + "]";
-		}
-
-		public void setHidden(boolean doHide) {
-			this.hidden = doHide;
 		}
 
 	}
@@ -104,7 +98,6 @@ public class Net extends BranchGroup {
 
 	private Atom[][][] atoms;
 	private List<Atom> selectedAtoms;
-	private boolean isHidden;
 
 	public Net(Model3d model3d, DefaultValues defaultValues) {
 		selectedAtoms = new ArrayList<>();
@@ -473,6 +466,8 @@ public class Net extends BranchGroup {
 		Point3d cSphere = model3d.virtualSphere.center;
 		Point3d pNet = new Point3d();
 		Point3d pProj = new Point3d();
+		Point3d pNetOrigin = new Point3d();
+		model3d.tPrecOrient.transform(pNetOrigin);
 		clearSelectedAtoms();
 		int n = 0;
 		//System.out.println("Net targetN=" + targetN);
@@ -535,7 +530,7 @@ public class Net extends BranchGroup {
 						if (targetN == 0 || targetN == n) {
 							model3d.addImpactRay(cSphere, pFrom, pTo, pProj);
 							if (DefaultValues.isUnitSphere)
-								model3d.updateUnitSphere(h, k, l, atom.point, pNet);
+								model3d.updateUnitSphere(h, k, l, atom.point, (DefaultValues.addRL_S ? pNetOrigin : null), pNet);
 							if (model3d.showReciprocalLattice) {
 								highlight(atom);
 							}

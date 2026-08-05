@@ -46,6 +46,11 @@ public class DefaultValues {
 	 */
 	public static boolean directRays = true;
 
+	
+	/**
+	 * TRUE to duplicate the S vector (g - e) within the reciprocal lattice
+	 */
+	public static boolean addRL_S = true;
 
     static void finalizeDefaults() {
 		// forcing directRays if isUnitSphere

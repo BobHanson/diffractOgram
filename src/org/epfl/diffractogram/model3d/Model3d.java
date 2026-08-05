@@ -88,12 +88,13 @@ public class Model3d {
 	private Transform3D tPrecOrientInv;
 	private BranchGroup usChild;
 	private TransformGroup usTG;
-	private BranchGroup mray, ms0, ma, mb, mc;
+	private BranchGroup mray, mray2, ms0, ma, mb, mc;
 
 	private double hCyl, hFlat;
 	private double lambda;
 	boolean mask;
 	public MainPane main;
+	@SuppressWarnings("unused")
 	private boolean painting;
 	public int targetN;
 
@@ -655,7 +656,16 @@ public class Model3d {
 		lattice.invertTransform(v);
 	}
 
-	void updateUnitSphere(int h, int k, int l, Point3d pN, Point3d pNet) {
+	/**
+	 * Generate the M vector (g - e), (S = s - so) and its projections onto a, b, and c.
+	 * @param h
+	 * @param k
+	 * @param l
+	 * @param pN
+	 * @param pNetOrigin
+	 * @param pNet
+	 */
+	void updateUnitSphere(int h, int k, int l, Point3d pN, Point3d pNetOrigin, Point3d pNet) {
 //			System.out.println("update " + h + " " + k + " " + l + " " 
 //				+ orientation.omegaDeg + " " + orientation.chiDeg + " " + orientation.phiDeg);
 
@@ -664,7 +674,7 @@ public class Model3d {
 		Point3d p0 = new Point3d(0, -r, 0);
 		Point3d pSo = new Point3d(pNet);
 		pSo.add(p0);
-		setMrays(pNet, pSo, p0);
+		setMrays(new Point3d(), pNet, pSo, p0);
 
 //		Point3d pNetTr = new Point3d(pNet);
 //		tPrecOrientInv.transform(pNetTr); // now pN
@@ -754,7 +764,7 @@ public class Model3d {
 		}
 	}
 
-	private void setMrays(Point3d pNet, Point3d pSo, Point3d p0) {
+	private void setMrays(Point3d pNetOrigin, Point3d pNet, Point3d pSo, Point3d p0) {
 		if (mray != null) {
 			univers.removeNotify(rays, mray);
 			univers.removeNotify(rays, ms0);
@@ -768,8 +778,14 @@ public class Model3d {
 				univers.removeNotify(rays, mc);
 			}
 		}
+		if (mray2 != null)
+			univers.removeNotify(rays, mray2);
 		mray = univers.creator.createCylinder(univers, "M", p0, pSo, .02, Colors.appBlack, 4);
 		univers.addNotify(rays, mray);
+		if (DefaultValues.addRL_S) {
+			mray2 = univers.creator.createCylinder(univers, "M2", pNetOrigin, pNet, .02, Colors.appBlack, 4);
+			univers.addNotify(rays, mray2);
+		}
 		ms0 = univers.creator.createCylinder(univers, "-So", pNet, pSo, .02, Colors.appYellow, 4);
 		univers.addNotify(rays, ms0);
 	}
@@ -804,5 +820,5 @@ public class Model3d {
 		showReciprocalLattice = doHide;
 		net.hideLattice(doHide);
 	}
-	
+
 }

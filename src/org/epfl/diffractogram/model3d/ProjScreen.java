@@ -17,6 +17,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.geom.Point2D.Double;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.swing.JPanel;
@@ -44,6 +45,16 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseList
 	private MainPane main;
 
 	private static class Dot {
+		public static Comparator<Dot> sorter = new Comparator<Dot>() {
+
+			@Override
+			public int compare(Dot d2, Dot d1) {
+				return (  d1.i > d2.i ? 1 : d1.i < d2.i ? -1 
+						: d1.j > d2.j ? 1 : d1.j < d2.j ? -1 
+						: d1.k > d2.k ? 1 : d1.k < d2.k ? -1 : 0);
+			}
+			
+		};
 		Double point;
 		float pointSize;
 		int i, j, k, n;
@@ -120,10 +131,12 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseList
 	private String index = "";
 
 	private void showIndex(int x, int y) {
-		double xx = ((double) x - mouseX - paintW / 2) / paintW;
-		double yy = ((double) y - mouseY - paintH / 2) / paintH;
-		double e = .01;
-		String s = getIndexString(null, xx, yy, e);
+		List<Dot> indexVect = getIndexes(x, y);
+		if (indexVect == null)
+			return;	
+		String s = "";
+		for (int i = 0; i < indexVect.size(); i++)
+			s += indexVect.get(i).getCoord() + " ";
 		if (!s.equals(index)) {
 			setToolTipText(s);
 			index = s;
@@ -131,44 +144,41 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseList
 	}
 
 	private void showRay(int x, int y) {
-		double xx = ((double) x - mouseX - paintW / 2) / paintW;
-		double yy = ((double) y - mouseY - paintH / 2) / paintH;
-		double e = .01;
-		List<Dot> indexVect = new ArrayList<>();
-		getIndexString(indexVect, xx, yy, e);
-		if (indexVect.isEmpty())
+		List<Dot> indexVect = getIndexes(x, y);
+		if (indexVect == null)
 			return;
 		Dot dot = indexVect.get(0);
 		main.setParameters(dot.params);
 		
 	}
 
-	private String getIndexString(List<Dot> indexVect, double xx, double yy, double e) {
+	private List<Dot> getIndexes(int x, int y) {
 		String s = "";
+		double xx = ((double) x - mouseX - paintW / 2) / paintW;
+		double yy = ((double) y - mouseY - paintH / 2) / paintH;
+		double e = .01;
 		Dot d = findClosestDot(xx, yy, e);
-		if (d != null) {
-			xx = d.point.x;
-			yy = d.point.y;
-			for (int i = 0; i < dots.size(); i++) {
-				Dot dot = dots.get(i);
-				Double pt = dot.point;
-				if (near(pt, xx, yy, e)) {
-					if (indexVect != null)
-						indexVect.add(dot);
-					String sindex = dot.getCoord() + " ";
-					if (s.contains(sindex)) {
-						// BH 2024.06.27 duplicates here during precession
-					} else {
-						s += sindex;
-						if (indexVect != null)
-							indexVect.add(dot);
-					}
+		if (d == null)
+			return null;
+		List<Dot> indexVect = new ArrayList<Dot>();
+		xx = d.point.x;
+		yy = d.point.y;
+		for (int i = 0; i < dots.size(); i++) {
+			Dot dot = dots.get(i);
+			Double pt = dot.point;
+			if (near(pt, xx, yy, e)) {
+				String sindex = dot.getCoord() + " ";
+				if (s.contains(sindex)) {
+					// BH 2024.06.27 duplicates here during precession
+				} else {
+					s += sindex;
+					indexVect.add(dot);
 				}
 			}
 		}
-		if (indexVect != null)
-			System.out.println(PT.rep(indexVect.size() + " " + indexVect.toString(), "(", "\n("));
-		return s;
+		if (indexVect.size() > 1)
+			indexVect.sort(Dot.sorter);
+		return indexVect;
 	}
 
 	private Dot findClosestDot(double xx, double yy, double e) {
