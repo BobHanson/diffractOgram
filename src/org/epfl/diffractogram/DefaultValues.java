@@ -46,34 +46,26 @@ public class DefaultValues {
 	 */
 	public static boolean directRays = true;
 
+	/**
+	 * TRUE here to show the base ray even with unit circle
+	 * 
+	 */
+	public static boolean showBaseRayAlways = true;
+
 	
 	/**
 	 * TRUE to duplicate the S vector (g - e) within the reciprocal lattice
 	 */
 	public static boolean addRL_S = true;
 
-    static void finalizeDefaults() {
-		// forcing directRays if isUnitSphere
-		if (isUnitSphere)
-			directRays = true;
-		useJmol = /** @j2sNative true || */javaJmol;
-		showVersionDefaults();
-	}
-
-	public static void showVersionDefaults() {
-		System.err.println("isUnitSphere = " + isUnitSphere);
-		System.err.println("developNet = " + developNet);
-		System.err.println("directRays = " + directRays);
-		System.err.println("javaJmol = " + javaJmol);
-		System.err.println("useJmol = " + useJmol);
-	}
-	
 	public final static String UTF_Angstroms = "\u212b";
 	public final static String UTF_Degrees = "\u00b0";
 	
 
 	@SuppressWarnings("unused")
 	public static String strLambda = (true || useJmol ? "\u03bb" : "lambda");
+
+	public static int jmolTooltipTimeMS = 2000;
 
 	// constant values
 	public final static double axisOffsets = .01;	
@@ -176,5 +168,21 @@ public class DefaultValues {
 		}
 	}
 
+    static void finalizeDefaults() {
+		// forcing directRays if isUnitSphere
+		if (isUnitSphere)
+			directRays = true;
+		useJmol = /** @j2sNative true || */javaJmol;
+		showVersionDefaults();
+	}
+
+	public static void showVersionDefaults() {
+		System.err.println("isUnitSphere = " + isUnitSphere);
+		System.err.println("developNet = " + developNet);
+		System.err.println("directRays = " + directRays);
+		System.err.println("javaJmol = " + javaJmol);
+		System.err.println("useJmol = " + useJmol);
+	}
+	
 	
 }

@@ -190,7 +190,7 @@ public class Net extends BranchGroup {
 	}
 
 	public void setLambda(double val) {
-		createNet(aStar, bStar, cStar, hMax, kMax, lMax);
+		setNet();
 	}
 
 	public synchronized void createNet(Vector3d aStar, Vector3d bStar, Vector3d cStar, int hMax, int kMax, int lMax) {
@@ -200,6 +200,10 @@ public class Net extends BranchGroup {
 		this.hMax = hMax;
 		this.kMax = kMax;
 		this.lMax = lMax;
+		setNet();
+	}
+	
+	private void setNet() {
 
 		directTR = null;
 		scaling = DefaultValues.scale * (DefaultValues.isUnitSphere ? model3d.getLambda() : 1);
@@ -439,6 +443,13 @@ public class Net extends BranchGroup {
 		}
 	}
 
+	/**
+	 * 
+	 * @param mg
+	 * @param adjustR true only for lambda change or Laue pattern
+	 * @param isRay  false for Laue pattern
+	 * @param targetN
+	 */
 	public void doRaysOrLaue(Graphics mg, boolean adjustR, boolean isRay, int targetN) {
 		Vector3d vx = new Vector3d();
 		Vector3d vy = new Vector3d();
@@ -481,15 +492,19 @@ public class Net extends BranchGroup {
 						continue;
 					pNet.set(atom.point);
 					model3d.tPrecOrient.transform(pNet);
-					double ewaldDiff = 0;
 					if (isRay) {
 						// check for point at sphere
-						ewaldDiff = unOrientedCenter.distance(atom.point) - scaledRadius;
+						double ewaldDiff = unOrientedCenter.distance(atom.point) - scaledRadius;
 						if (Math.abs(ewaldDiff) > DefaultValues.ewaldSlop)
 							continue;
 					}
 					if (adjustR) {
-						scaledRadius = -(pNet.x * pNet.x + pNet.y * pNet.y + pNet.z * pNet.z) / (2 * pNet.y);
+						// only for Laue or change in lambda. (Not sure why for change in lambda.)
+						// set radius to exactly (x^2 + y^2 + z^2) / 2y, if we can
+						// that is, the exact radius to the point.
+						double sphereRadius = -(pNet.x * pNet.x + pNet.y * pNet.y + pNet.z * pNet.z) / (2 * pNet.y);
+						//System.out.println(sphereRadius + " " + pNet.distance(cSphere));
+						scaledRadius = sphereRadius;
 						if (Double.isInfinite(scaledRadius) || Double.isNaN(scaledRadius) || scaledRadius <= 0d)
 							continue;
 					}
@@ -502,6 +517,7 @@ public class Net extends BranchGroup {
 					if (isRay && model3d.p3d instanceof ProjScreen3d.Cylindrical) {
 						// cylindric is much simple because no precession allowed
 					} else {
+						// Laue pattern or flat
 						u.sub(c);
 						u.set(u.dot(vx), u.dot(vy), u.dot(vz));
 					}

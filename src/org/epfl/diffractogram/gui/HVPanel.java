@@ -7,6 +7,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.beans.PropertyChangeEvent;
@@ -382,6 +384,7 @@ public abstract class HVPanel implements ActionListener {
 		private double mult;
 		protected Object lastValue;
 		
+		@SuppressWarnings("serial")
 		public SliderAndValue(String name, String unit, double min, double max, double def, int nbDecimals, boolean orientation, int size, ActionListener listener) {
 			this.listener=listener;
 			mult = Math.pow(10, nbDecimals);
@@ -429,6 +432,35 @@ public abstract class HVPanel implements ActionListener {
 				edit.addPropertyChangeListener(this);
 				edit.addActionListener(this);
 				edit.addMouseWheelListener(this);
+				edit.addKeyListener(new KeyListener() {
+
+					@Override
+					public void keyTyped(KeyEvent e) {
+					}
+
+					@Override
+					public void keyPressed(KeyEvent e) {
+						int d = Integer.MIN_VALUE;
+						switch (e.getKeyCode()) {
+						case KeyEvent.VK_UP:
+							d = 1;
+							break;
+						case KeyEvent.VK_DOWN:
+							d = -1;
+							break;
+						}
+						if (d == Integer.MIN_VALUE)
+							return;
+						d += ((Number)edit.getValue()).intValue();
+						if (d <= max && d >= min) {
+							edit.setValue(Double.valueOf(d));							
+						}
+					}
+
+					@Override
+					public void keyReleased(KeyEvent e) {
+					}
+				});
 				subIncrement(c());
 				if (unit.length()!=0) {
 					jPanel.add(unitLabel = new JLabel(unit), c());

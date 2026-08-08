@@ -137,6 +137,7 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseList
 		String s = "";
 		for (int i = 0; i < indexVect.size(); i++)
 			s += indexVect.get(i).getCoord() + " ";
+		s = s.trim();
 		if (!s.equals(index)) {
 			setToolTipText(s);
 			main.echo(s);

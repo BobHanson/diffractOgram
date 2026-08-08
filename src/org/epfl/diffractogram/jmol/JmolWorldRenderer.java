@@ -17,10 +17,12 @@ import javax.media.j3d.Transform3D;
 import javax.media.j3d.TransformGroup;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.ToolTipManager;
 import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
+import org.epfl.diffractogram.DefaultValues;
 import org.epfl.diffractogram.model3d.Univers;
 import org.epfl.diffractogram.model3d.WorldRenderer;
 import org.epfl.diffractogram.util.Utils3d;
@@ -51,6 +53,9 @@ public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendere
 
 	public Viewer viewer;
 
+	static {
+		ToolTipManager.sharedInstance().setDismissDelay(DefaultValues.jmolTooltipTimeMS); 
+	}
 	@SuppressWarnings("serial")
 	class JmolPanel extends JPanel {
 
@@ -249,7 +254,10 @@ public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendere
 
 	public void complete() {
 		completed = true;
-		String s = "background white;set history 0;set preservestate false;";
+		String s = "background white;"
+				//+ "set history 0;"
+				//+ "set preservestate false"
+				+ ";";
 		for (int i = 0, n = allObjects.size(); i < n; i++) {
 			Node node = allObjects.get(i);
 			if (node instanceof JmolShape3D) {
@@ -271,7 +279,6 @@ public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendere
 
 	@Override
 	public void scriptWait(String s) {
-		//System.out.println(s);
 		viewer.scriptWait(s);
 	}
 

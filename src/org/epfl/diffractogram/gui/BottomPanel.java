@@ -97,8 +97,9 @@ public class BottomPanel extends HVPanel.HPanel {
 							beta.getFloatValue(), gamma.getFloatValue());
 					model3d.setLatticeOrientation(u, v, w);
 					rPane.put(model3d.reciprocal);
-					model3d.clearAll();
 					HVPanel.quiet = false;
+					model3d.clearAll();
+					model3d.checkLaue(); 
 				} else if (this == rPane) {
 					HVPanel.quiet = true;
 					model3d.setReciprocalLattice(a.getFloatValue(), b.getFloatValue(), c.getFloatValue(),
@@ -107,6 +108,7 @@ public class BottomPanel extends HVPanel.HPanel {
 					lPane.put(model3d.lattice);
 					HVPanel.quiet = false;
 					model3d.clearAll();
+					model3d.checkLaue(); 
 				}
 				sync = true;
 			}
@@ -233,15 +235,23 @@ public class BottomPanel extends HVPanel.HPanel {
 //				uvw.edit.setText("0 1 0");
 //				HVPanel.quiet = false;
 				model3d.clearImage();
+				model3d.checkLaue();
 				return;
 			case "u v w":
 				HVPanel.quiet = true;
-				int[] ii = ((int[]) ((EditField) e.getSource()).getValue());
-				u = ii[0];
-				v = ii[1];
-				w = ii[2];
-				model3d.setLatticeOrientation(u, v, w);
+				int[] ii = ((int[]) uvw.getValue());
+				boolean isValid = !(ii[0] == 0 && ii[1] == 0 && ii[2] == 0);
+				if (isValid) {
+					u = ii[0];
+					v = ii[1];
+					w = ii[2];
+					model3d.setLatticeOrientation(u, v, w);
+				}
 				HVPanel.quiet = false;
+				if (!isValid) {
+					uvw.setValue(defaultValues.param_uvw);
+					return;
+				}
 				break;
 			default:
 				adjustR = model3d.processActionCommand(cmd, ((SliderAndValue) e.getSource()).getValue());
@@ -269,10 +279,11 @@ public class BottomPanel extends HVPanel.HPanel {
 		private EditField from, to, angle;
 		private JCheckBox fromToEnable;
 		public Animator animator;
-		private JButton laue;
+		private JToggleButton laue;
 		private SliderAndValue speed;
 		private JToggleButton precession;
 		private JCheckBox mask;
+		private JToggleButton btnLambda;
 
 		public Animation() {
 			setBorder(new TitledBorder("Animation"));
@@ -307,8 +318,8 @@ public class BottomPanel extends HVPanel.HPanel {
 			speed = p5.addSliderAndValueH("Speed", null, 0, 20, s == 0 ? 1 : s, 0, 80);
 
 			HVPanel p7 = new HVPanel.HPanel();
-			p7.addButton(new JToggleButton("Lambda"));
-			p7.addButton(laue = new JButton("Laue"));
+			p7.addButton(btnLambda = new JToggleButton("Lambda"));
+			p7.addButton(laue = new JToggleButton("Laue"));
 			p1.addSubPane(p7);
 			// p1.putExtraSpace();
 
@@ -325,7 +336,6 @@ public class BottomPanel extends HVPanel.HPanel {
 			p1.addSubPane(p8);
 
 			addSubPane(p1);
-			laue.setForeground(Color.blue);
 			animator = new Animator(model3d);
 			animator.from = defaultValues.param_startAngle;
 			animator.to = defaultValues.param_stopAngle;
@@ -417,8 +427,10 @@ public class BottomPanel extends HVPanel.HPanel {
 				}
 				return;
 			case "Laue":
-				model3d.clearImage();
-				model3d.doLaue();
+				boolean selected = laue.isSelected();
+				setLaueMultiLambda(selected);
+				model3d.clearAll();
+				model3d.doLaue(selected);
 				return;
 			case "Sequential":
 				if (((JToggleButton) e.getSource()).isSelected()) {
@@ -456,6 +468,12 @@ public class BottomPanel extends HVPanel.HPanel {
 				return;
 			}
 		}
+
+		private void setLaueMultiLambda(boolean isLaue) {
+				laue.setForeground(isLaue ? Color.blue : Color.black);
+				parameterPane.lambda.setEnabled(!isLaue);
+				btnLambda.setEnabled(!isLaue);
+		}
 	}
 
 	class Screen extends HVPanel.VPanel {
@@ -478,18 +496,21 @@ public class BottomPanel extends HVPanel.HPanel {
 			p11.addButtonGroupped(new JRadioButton(ProjScreen3d.FLAT));
 			p11.addButtonGroupped(new JRadioButton(ProjScreen3d.CYLINDRICAL));
 			addSubPane(p11);
-			JCheckBox cb = new JCheckBox("Persistent");
+
+			HVPanel p2 = new HVPanel.HPanel();
+			JCheckBox cb = new JCheckBox("Persist");
 			cb.setSelected(true);
-			addButton(cb);
+			p2.addButton(cb);
 			cb = new JCheckBox("Rec.Latt.");
 			cb.setSelected(true);
-			addButton(cb);
+			p2.addButton(cb);
+			addSubPane(p2);
 			if (DefaultValues.isDOG2) {
 				cb = new JCheckBox("Goniometer");
 				cb.setSelected(!DefaultValues.isUnitSphere);
 				addButton(cb);
 			}
-			HVPanel p2 = new HVPanel.HPanel();
+			p2 = new HVPanel.HPanel();
 			p2.addButton(new JButton("Clear"));
 			p2.addButton(new JButton("Help"));
 			addSubPane(p2);
@@ -504,6 +525,10 @@ public class BottomPanel extends HVPanel.HPanel {
 			} else if (e.getActionCommand().equals("Distance ")) {
 				model3d.clearImage();
 				double d = screenDistance.getFloatValue();
+				if (d < 1) {
+					screenDistance.setValue((int) defaultValues.param_zScreen);
+					return;
+				}
 				model3d.p3d.setPos(d);
 				model3d.mask3d.setY(d);
 			} else if (e.getActionCommand().equals(ProjScreen3d.FLAT)) {

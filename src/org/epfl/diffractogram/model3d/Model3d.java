@@ -97,6 +97,7 @@ public class Model3d {
 	@SuppressWarnings("unused")
 	private boolean painting;
 	public int targetN;
+	public boolean isLaue;
 
 	public Model3d(MainPane main, JPanel panel3d, DefaultValues defaultValues, ProjScreen projScreen) {
 		this.main = main;
@@ -156,6 +157,7 @@ public class Model3d {
 		if (!persistent)
 			clearImage();
 		rays.removeAllRays(persistent);
+		clearMRays();
 //		if (!DefaultValues.developNet)
 //			net.clearLattice();
 	}
@@ -179,21 +181,38 @@ public class Model3d {
 			rays.removeAllRays(false);
 	}
 
+	public void checkLaue() {
+		if (isLaue)
+			doLaue(true);					
+	}
+
 	/**
 	 * 
 	 * @param adjustR true only from lambda change
 	 */
 	public synchronized void doRays(boolean adjustR) {
-		doRaysOrLaue(adjustR, true);
+		if (isLaue) {
+			doLaue(true);
+		} else {
+			doRaysOrLaue(adjustR, true);
+		}
 	}
 
-	public void doLaue() {
-		doRaysOrLaue(true, false);
+	/**
+	 * Show the Laue pattern
+	 * @param isLaue 
+	 */
+	public void doLaue(boolean isLaue) {
+		this.isLaue = isLaue;
+		clearImage();
+		if (isLaue)
+			doRaysOrLaue(true, false);
 	}
 
 	/**
 	 * 
-	 * @param adjustR true only from lambda change
+	 * @param adjustR true only from lambda change or Laue pattern
+	 * @param isRay false for Laue pattern
 	 */
 	private synchronized void doRaysOrLaue(boolean adjustR, boolean isRay) {
 		painting = true;
@@ -204,7 +223,7 @@ public class Model3d {
 		tPrecOrientInv = new Transform3D(tPrecOrient);
 		tPrecOrientInv.invert();
 
-		net.doRaysOrLaue(mg, adjustR, isRay, targetN );
+		net.doRaysOrLaue(mg, adjustR, isRay, targetN);
 		if (mg != null)
 			mg.dispose();
 		painting = false;
@@ -765,6 +784,18 @@ public class Model3d {
 	}
 
 	private void setMrays(Point3d pNetOrigin, Point3d pNet, Point3d pSo, Point3d p0) {
+		clearMRays();
+		mray = univers.creator.createCylinder(univers, "M", p0, pSo, .02, Colors.appBlack, 4);
+		univers.addNotify(rays, mray);
+		if (DefaultValues.addRL_S) {
+			mray2 = univers.creator.createCylinder(univers, "M2", pNetOrigin, pNet, .02, Colors.appBlack, 4);
+			univers.addNotify(rays, mray2);
+		}
+		ms0 = univers.creator.createCylinder(univers, "-So", pNet, pSo, .02, Colors.appYellow, 4);
+		univers.addNotify(rays, ms0);
+	}
+
+	private void clearMRays() {
 		if (mray != null) {
 			univers.removeNotify(rays, mray);
 			univers.removeNotify(rays, ms0);
@@ -779,15 +810,7 @@ public class Model3d {
 			}
 		}
 		if (mray2 != null)
-			univers.removeNotify(rays, mray2);
-		mray = univers.creator.createCylinder(univers, "M", p0, pSo, .02, Colors.appBlack, 4);
-		univers.addNotify(rays, mray);
-		if (DefaultValues.addRL_S) {
-			mray2 = univers.creator.createCylinder(univers, "M2", pNetOrigin, pNet, .02, Colors.appBlack, 4);
-			univers.addNotify(rays, mray2);
-		}
-		ms0 = univers.creator.createCylinder(univers, "-So", pNet, pSo, .02, Colors.appYellow, 4);
-		univers.addNotify(rays, ms0);
+			univers.removeNotify(rays, mray2);		
 	}
 
 	public void setScreen(String type, double angleMu, double angleAlpha, boolean maskEnabled) {
