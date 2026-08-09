@@ -73,7 +73,23 @@ public class Model3d {
 
 	public boolean persistent = true;
 	public boolean showReciprocalLattice = true;
+	public boolean showUnitCell = true;
 
+	public void setShowUnitCell(boolean show) {
+		showUnitCell = show;
+		clearAll();
+	}
+
+	public void setShowReciprocalLattice(boolean show) {
+		showReciprocalLattice = show;				
+		clearAll();
+	}
+	
+	public void setPersistent(boolean tf) {
+		persistent = tf;
+		clearAll();
+	}
+	
 	public Orientation orientation;
 	public Precession precession;
 	public Mask3d mask3d;
@@ -167,10 +183,6 @@ public class Model3d {
 		net.clearSelectedAtoms();
 		clearImage();
 		targetN = 0;
-		if (!showReciprocalLattice) {
-			net.toggleDirect();
-			net.toggleReciprocalAxes();
-		}
 		if (DefaultValues.developNet)
 			net.setLambda(lambda);
 	}

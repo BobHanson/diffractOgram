@@ -58,6 +58,13 @@ public class DefaultValues {
 	 */
 	public static boolean addRL_S = true;
 
+	
+	/**
+	 * TRUE show unit cell and Miller planes
+	 */
+	public static boolean allowShowUnitCell = false;
+
+	
 	public final static String UTF_Angstroms = "\u212b";
 	public final static String UTF_Degrees = "\u00b0";
 	

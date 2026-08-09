@@ -479,6 +479,7 @@ public class BottomPanel extends HVPanel.HPanel {
 	class Screen extends HVPanel.VPanel {
 		private EditField screenWidth, screenHeight, screenDistance;
 		private boolean flat;
+		private JCheckBox cbGON, cbRL, cbUC;
 
 		public Screen() {
 			setBorder(new TitledBorder("Screen"));
@@ -488,41 +489,54 @@ public class BottomPanel extends HVPanel.HPanel {
 			((NumberFormatter) screenWidth.edit.getFormatter()).setMinimum(new Integer(1));
 			((NumberFormatter) screenHeight.edit.getFormatter()).setMinimum(new Integer(1));
 			addSubPane(p1);
-			HVPanel.HPanel p10 = new HVPanel.HPanel();
-			screenDistance = p10.addIntFieldSpinner("Distance ", "cm", 2, (int) defaultValues.param_zScreen);
-			addSubPane(p10);
 
-			HVPanel p11 = new HVPanel.HPanel();
-			p11.addButtonGroupped(new JRadioButton(ProjScreen3d.FLAT));
-			p11.addButtonGroupped(new JRadioButton(ProjScreen3d.CYLINDRICAL));
-			addSubPane(p11);
+			HVPanel.HPanel p2 = new HVPanel.HPanel();
+			screenDistance = p2.addIntFieldSpinner("Distance ", "cm", 2, (int) defaultValues.param_zScreen);
+			addSubPane(p2);
 
-			HVPanel p2 = new HVPanel.HPanel();
+			p2 = new HVPanel.HPanel();
+			p2.addButtonGroupped(new JRadioButton(ProjScreen3d.FLAT));
+			p2.addButtonGroupped(new JRadioButton(ProjScreen3d.CYLINDRICAL));
+			addSubPane(p2);
+			p2 = new HVPanel.HPanel();
 			JCheckBox cb = new JCheckBox("Persist");
 			cb.setSelected(true);
 			p2.addButton(cb);
-			cb = new JCheckBox("Rec.Latt.");
-			cb.setSelected(true);
-			p2.addButton(cb);
-			addSubPane(p2);
 			if (DefaultValues.isDOG2) {
-				cb = new JCheckBox("Goniometer");
-				cb.setSelected(!DefaultValues.isUnitSphere);
-				addButton(cb);
+				cbGON = new JCheckBox("Goniometer");
+				cbGON.setSelected(!DefaultValues.isUnitSphere);
+				p2.addButton(cbGON);
 			}
+			addSubPane(p2);
+			
+			p2 = new HVPanel.HPanel();
+			cbRL = new JCheckBox("Rec.Latt.");
+			cbRL.setSelected(true);
+			p2.addButton(cbRL);
+			if (DefaultValues.allowShowUnitCell) {
+			cbUC = new JCheckBox("Unit Cell");
+			p2.addButton(cbUC);
+			}
+			addSubPane(p2);
+
 			p2 = new HVPanel.HPanel();
 			p2.addButton(new JButton("Clear"));
 			p2.addButton(new JButton("Help"));
 			addSubPane(p2);
+			
 			flat = true;
 		}
 
 		public void actionPerformed(ActionEvent e) {
-			if (e.getActionCommand().equals("Size ") || e.getActionCommand().equals(" x ")) {
+			String cmd = e.getActionCommand();
+			switch (cmd) {
+			case "Size ":
+			case " x ":
 				double dw = screenWidth.getFloatValue(), dh = screenHeight.getFloatValue();
 				model3d.setScreenSize(dw, dh);
 				model3d.clearAll();
-			} else if (e.getActionCommand().equals("Distance ")) {
+				break;
+			case "Distance ":
 				model3d.clearImage();
 				double d = screenDistance.getFloatValue();
 				if (d < 1) {
@@ -531,7 +545,8 @@ public class BottomPanel extends HVPanel.HPanel {
 				}
 				model3d.p3d.setPos(d);
 				model3d.mask3d.setY(d);
-			} else if (e.getActionCommand().equals(ProjScreen3d.FLAT)) {
+				break;
+			case ProjScreen3d.FLAT:
 				if (flat)
 					return;
 				flat = true;
@@ -545,7 +560,8 @@ public class BottomPanel extends HVPanel.HPanel {
 				animPane.angle.setEnable(true);
 				animPane.precession.setEnabled(true);
 				animPane.mask.setEnabled(true);
-			} else if (e.getActionCommand().equals(ProjScreen3d.CYLINDRICAL)) {
+				break;
+			case ProjScreen3d.CYLINDRICAL:
 				if (!flat)
 					return;
 				flat = false;
@@ -559,26 +575,54 @@ public class BottomPanel extends HVPanel.HPanel {
 				animPane.angle.setEnable(false);
 				animPane.precession.setEnabled(false);
 				animPane.mask.setEnabled(false);
-			} else if (e.getActionCommand().equals("Persistent")) {
-				model3d.persistent = ((JCheckBox) e.getSource()).isSelected();
+				break;
+			case "Persistent":
+				model3d.setPersistent(((JCheckBox) e.getSource()).isSelected());
+				break;
+			case "Rec.Latt.":
+			case "Unit Cell":
+			case "Goniometer":
+				if (setMode(cmd))
+					return;
+				break;
+			case "Clear":
 				model3d.clearAll();
-			} else if (e.getActionCommand().equals("Rec.Latt.")) {
-				model3d.showReciprocalLattice = ((JCheckBox) e.getSource()).isSelected();
-				model3d.clearAll();
-			} else if (e.getActionCommand().equals("Goniometer")) {
-				boolean show = ((JCheckBox) e.getSource()).isSelected();
-				if (show != !DefaultValues.isUnitSphere)
-					model3d.main.showGoniometer(show);
 				return;
-			} else if (e.getActionCommand().equals("Clear")) {
-				model3d.clearAll();
-				return;
-			} else if (e.getActionCommand().equals("Help")) {
+			case "Help":
 				if (help == null)
 					help = new Help();
 				help.show(true);
+				break;
 			}
 			model3d.doRays(false);
+		}
+
+		private boolean setMode(String type) {
+			boolean selected;
+			switch (type) {
+			case "Rec.Latt.":
+				selected = cbRL.isSelected();
+				model3d.setShowReciprocalLattice(selected);
+				if (selected && cbUC != null)
+					cbUC.setSelected(false);
+				return false;
+			case "Unit Cell":
+				selected = cbUC.isSelected();
+				model3d.setShowUnitCell(selected);
+				if (selected)
+					cbGON.setSelected(false);
+				return true;
+			default:
+			case "Goniometer":
+				selected = cbGON.isSelected();
+				if (selected != !DefaultValues.isUnitSphere) {
+					model3d.main.showGoniometer(selected);
+					if (selected && cbUC != null)
+						cbUC.setSelected(false);
+				}
+				return true;
+			}
+
 		}
 	}
 

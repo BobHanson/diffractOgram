@@ -72,7 +72,6 @@ public class Net extends BranchGroup {
 
 	}
 
-//	public UnitCell unitCell2;
 	public TransformGroup orientationObject;
 	public TransformGroup precessionObject;
 	private BranchGroup netLabel;
@@ -81,10 +80,10 @@ public class Net extends BranchGroup {
 	private Vector3d aStar, bStar, cStar;
 	public int hMax, kMax, lMax;
 	public int hRange, kRange, lRange;
-	BranchGroup directRepere;
+	BranchGroup axesDirect;
 
-	private BranchGroup unitCell;
-	private boolean showDirect, showRLAxes;
+	private BranchGroup axesRL;
+	private boolean showDirectAxes, showRLAxes = true;
 	private Univers univers;
 
 	double scaling;
@@ -122,15 +121,15 @@ public class Net extends BranchGroup {
 			greenApp = Utils3d.newAppearance("color:green");
 			greenApp.setMaterial(new Material(Colors.green, Colors.black, Colors.green, Colors.white, 128));
 		}
+		// orientationObject holds netRoot
 		orientationObject = model3d.orientation.addOrientationObject(univers.newWritableTransformGroup(null));
 		orientationObject.setName("orientation");
 		orientationObject.setCapability(TransformGroup.ALLOW_CHILDREN_EXTEND);
 		orientationObject.setCapability(TransformGroup.ALLOW_CHILDREN_WRITE);
-//		tgOmegaOnly.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 		precessionObject = model3d.precession.addPrecessionObject(univers.newWritableTransformGroup(null));
 		precessionObject.setName("precession");
 		precessionObject.addChild(orientationObject);
-		precessionObject.addChild(unitcellObject);
+		precessionObject.addChild(unitcellObject); // null
 
 		createNet(rl.va, rl.vb, rl.vc, hMax, kMax, lMax);
 
@@ -141,11 +140,17 @@ public class Net extends BranchGroup {
 
 	public class MyKeyboardManager extends DefaultKeyboardFocusManager {
 		public boolean dispatchKeyEvent(KeyEvent e) {
-			if (e.getKeyCode() == KeyEvent.VK_F1 && e.getID() == KeyEvent.KEY_PRESSED) {
-				toggleDirect();
-			}
-			if (e.getKeyCode() == KeyEvent.VK_F2 && e.getID() == KeyEvent.KEY_PRESSED) {
-				toggleReciprocalAxes();
+			if (e.getID() == KeyEvent.KEY_PRESSED) {
+				switch (e.getKeyCode()) {
+				case KeyEvent.VK_F2:
+					toggleReciprocalAxes();
+					break;
+				case KeyEvent.VK_F1:
+					toggleDirectAxes();
+					break;
+				default:
+					break;
+				}
 			}
 			return super.dispatchKeyEvent(e);
 		}
@@ -158,29 +163,23 @@ public class Net extends BranchGroup {
 //	}
 //
 	/**
-	 * VK_F3
+	 * VK_F1 only active if RL is showing
 	 */
 	public void toggleReciprocalAxes() {
-		if (showRLAxes || !model3d.showReciprocalLattice) {
-			univers.removeNotify(netRoot, unitCell);
-		} else if (showRLAxes) {
-			univers.addNotify(netRoot, unitCell);
-		}
-		if (!showDirect && model3d.showReciprocalLattice)
-			toggleDirect();
-		showRLAxes = model3d.showReciprocalLattice && !showRLAxes;
+		if (!model3d.showReciprocalLattice)
+			return;
+		showRLAxes = !showRLAxes;
+		createAxes();
 	}
 
 	/**
-	 * VK_F2
+	 * VK_F2 only active if RL is showing
 	 */
-	public void toggleDirect() {
-		if (showDirect || !model3d.showReciprocalLattice) {
-			univers.removeNotify(netRoot, directRepere);
-		} else {
-			univers.addNotify(netRoot, directRepere);
-		}
-		showDirect = model3d.showReciprocalLattice && !showDirect;
+	public void toggleDirectAxes() {
+		if (!model3d.showReciprocalLattice)
+			return;
+		showDirectAxes = !showDirectAxes;
+		createAxes();
 	}
 
 	private void changeAtomApp(Atom a, Appearance app) {
@@ -260,7 +259,7 @@ public class Net extends BranchGroup {
 		}
 
 		createLegend();
-		createRepere();
+		createAxes();
 		createTranspBox();
 		if (!DefaultValues.javaJmol)
 			netRoot.compile();
@@ -312,25 +311,29 @@ public class Net extends BranchGroup {
 		univers.addNotify(this, netLabel);
 	}
 
-	public void createRepere() {
-		if (!model3d.showReciprocalLattice)
-			return;
-		unitCell = new BranchGroup();
-		unitCell.setName("unitCell:");
-		unitCell.setCapability(BranchGroup.ALLOW_DETACH);
-		BranchGroup axes = univers.creator.createRepere("unitCell:", Colors.cyan, Colors.blue, null,
+	public void createAxes() {
+		if (axesRL != null)
+			univers.removeNotify(netRoot, axesRL);
+		axesRL = new BranchGroup();
+		String name = "axesrl:";
+		axesRL.setName(name);
+		axesRL.setCapability(BranchGroup.ALLOW_DETACH);
+		BranchGroup axes = univers.creator.createRepere(name, Colors.cyan, Colors.blue, null,
 				new String[] { "a*", "b*", "c*" }, .1f, .02f, DefaultValues.axisOffsets, -DefaultValues.axisOffsets,
 				(Vector3d) Utils3d.mul(aStar, 2 * DefaultValues.scale),
 				(Vector3d) Utils3d.mul(bStar, 2 * DefaultValues.scale),
 				(Vector3d) Utils3d.mul(cStar, 2 * DefaultValues.scale), false);
-		if (model3d.showReciprocalLattice) {
-			univers.addNotify(unitCell, axes);
-			univers.addNotify(netRoot, unitCell);
+		univers.addNotify(axesRL, axes);
+		if (model3d.showReciprocalLattice && showRLAxes) {
+			univers.addNotify(netRoot, axesRL);
 		}
 
-		directRepere = new BranchGroup();
-		directRepere.setName("directrepere:");
-		directRepere.setCapability(BranchGroup.ALLOW_DETACH);
+		if (axesDirect != null)
+			univers.removeNotify(netRoot, axesDirect);
+		axesDirect = new BranchGroup();
+		name = "axesuc:";
+		axesDirect.setName(name)	;
+		axesDirect.setCapability(BranchGroup.ALLOW_DETACH);
 		Vector3d[] r = Lattice.reciprocal(aStar, bStar, cStar);
 		r[0].normalize();
 		r[0].scale(.3 * DefaultValues.scale);
@@ -338,25 +341,25 @@ public class Net extends BranchGroup {
 		r[1].scale(.3 * DefaultValues.scale);
 		r[2].normalize();
 		r[2].scale(.3 * DefaultValues.scale);
-		axes = univers.creator.createRepere("directRepere:", Colors.red, Colors.red, null,
+		axes = univers.creator.createRepere(name, Colors.red, Colors.red, null,
 				new String[] { "a", "b", "c" }, .15f, .02f, DefaultValues.axisOffsets, -DefaultValues.axisOffsets, r[0],
 				r[1], r[2], false);
-		univers.addNotify(directRepere, axes);
-		if (showDirect) {
-			netRoot.addChild(directRepere);
+		univers.addNotify(axesDirect, axes);
+		if (model3d.showReciprocalLattice && showDirectAxes) {
+			netRoot.addChild(axesDirect);
 		}
 	}
 
 	public Transform3D getDirectTransform() {
 		if (directTR != null)
 			return directTR;
-		if (!showDirect)
-			netRoot.addChild(directRepere);
-		directTR = univers.renderer.getTransform(directRepere);
+		if (!showDirectAxes)
+			netRoot.addChild(axesDirect);
+		directTR = univers.renderer.getTransform(axesDirect);
 		directTRInv = new Transform3D(directTR);
 		directTRInv.invert();
-		if (!showDirect)
-			univers.removeNotify(netRoot, directRepere);
+		if (!showDirectAxes)
+			univers.removeNotify(netRoot, axesDirect);
 		return directTR;
 	}
 
