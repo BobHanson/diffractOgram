@@ -1,7 +1,6 @@
 package org.epfl.diffractogram.j3d;
 
 import java.awt.AWTEvent;
-import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Label;
@@ -45,8 +44,8 @@ import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
 import org.epfl.diffractogram.model3d.Univers;
-import org.epfl.diffractogram.model3d.WorldRenderer;
 import org.epfl.diffractogram.model3d.Univers.Selectable;
+import org.epfl.diffractogram.model3d.WorldRenderer;
 import org.epfl.diffractogram.util.Utils3d;
 import org.j3d.geom.Torus;
 
@@ -505,8 +504,29 @@ public class Java3DWorldRenderer extends WorldRenderer {
 	}
 
 	@Override
-	public void scriptWait(String script) {
+	public String scriptWait(String script) {
 		// n/a
+		return "";
 	}
+
+	@Override
+	public Node createMesh(String name, Object mesh) {
+		// n/a
+		return null;
+	}
+
+
+	@Override
+	public Node createUnitCell(String name, float radius, Color3f color, Vector3d x, Vector3d y, Vector3d z) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void createMillerPlanes(Node usCell, int h, int k, int l) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	
 }

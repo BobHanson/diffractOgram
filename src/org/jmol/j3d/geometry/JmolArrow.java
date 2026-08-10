@@ -30,7 +30,11 @@ public class JmolArrow extends JmolShape3D {
 
 		double r = distance(2, 3);
 		short colix = getJmolColor();
-		
+
+//		if (this.text.indexOf("a^") >= 0) {
+//			System.out.println("JmolArrow a^" + jmolVertices[0] + " " + jmolVertices[1]);
+//		}
+
 		if (shape == null) {
 			getThisID();
 			draw(new Object[][] { 

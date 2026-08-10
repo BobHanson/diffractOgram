@@ -16,9 +16,9 @@ import javax.media.j3d.TransformGroup;
 import javax.swing.JPanel;
 import javax.vecmath.Color3f;
 import javax.vecmath.Point3d;
+import javax.vecmath.Vector3d;
 
 import org.epfl.diffractogram.DefaultValues;
-import org.epfl.diffractogram.j3d.Java3DWorldRenderer;
 import org.epfl.diffractogram.jmol.JmolWorldRenderer;
 
 import javajs.api.Interface;
@@ -150,6 +150,14 @@ public abstract class WorldRenderer {
 		return null;
 	}
 
-	abstract public void scriptWait(String script);
+	abstract public String scriptWait(String script);
+
+	// Jmol only
+	
+	public abstract Node createMesh(String prefix, Object mesh);
+
+	public abstract Node createUnitCell(String name, float radius, Color3f color, Vector3d x, Vector3d y, Vector3d z);
+
+	public abstract void createMillerPlanes(Node usCell, int h, int k, int l);
 
 }

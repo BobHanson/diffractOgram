@@ -17,6 +17,7 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 import javax.vecmath.Vector3f;
 
+import org.epfl.diffractogram.util.Lattice;
 import org.epfl.diffractogram.util.Utils3d;
 
 /**
@@ -272,6 +273,12 @@ public abstract class Univers {
 			return cylBg;
 		}
 
+		public BranchGroup createMesh(String name, Object mesh) {
+			BranchGroup meshBg = new BranchGroup();
+			meshBg.addChild(renderer.createMesh(name, mesh));
+			return meshBg;
+		}
+
 		/**
 		 * Create a 3D text object in a BranchGroup
 		 * 
@@ -347,6 +354,7 @@ public abstract class Univers {
 			group.setName(name);
 			return group;
 		}
+
 	}
 
 	public abstract void echo(String string);

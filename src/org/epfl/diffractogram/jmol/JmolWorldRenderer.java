@@ -37,6 +37,8 @@ import org.jmol.j3d.geometry.JmolShape3D;
 import org.jmol.j3d.geometry.JmolSphere;
 import org.jmol.j3d.geometry.JmolText;
 import org.jmol.j3d.geometry.JmolTorus;
+import org.jmol.j3d.geometry.JmolUnitCell;
+import org.jmol.j3d.geometry.JmolVertexSet;
 import org.jmol.viewer.Viewer;
 
 /**
@@ -134,6 +136,13 @@ public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendere
 		return addObject(new JmolTorus(name, innerRadius, outerRadius, innerFaces, outerFaces, app));
 	}
 
+	@Override
+	public Node createUnitCell(String name,
+			float radius, Color3f color, Vector3d x, Vector3d y,
+			Vector3d z) {
+		return addObject(new JmolUnitCell(name, radius, x, y, z, Utils3d.createApp(color)));
+	}
+
 	public Node createBox(String name, double dx, double dy, double dz, Appearance app) {
 		return addObject(new JmolBox(name, dx, dy, dz, app));
 	}
@@ -153,6 +162,11 @@ public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendere
 		return tg;
 	}
 
+	@Override
+	public Node createMesh(String name, Object mesh) {
+		return new JmolVertexSet(name, mesh);
+	}
+
 	public Node createQuad(String name, QuadArray quad, Appearance app) {
 		return addObject(new JmolQuad(name, quad, app));
 	}
@@ -167,11 +181,9 @@ public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendere
 		if (child == null)
 			return;
 		String pname = parent.getName();
-		//System.out.println("JWR removing " + child.getName());
 		switch(pname == null ? "" : pname) {
 		case "root":
 			this.mapRoot.remove(child.getName());
-			//System.out.println("removed " + child.getName() + " from " + parent.getName());
 			break;
 		}
 		if (!completed)
@@ -193,7 +205,6 @@ public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendere
 	synchronized public void notifyAdd(Group parent, Node child) {
 		switch(parent.getName()) {
 		case "root":
-			//System.out.println("added " + child.getName() + " to " + parent.getName());
 			this.mapRoot.put(child.getName(), child);
 			break;
 		}
@@ -254,17 +265,13 @@ public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendere
 
 	public void complete() {
 		completed = true;
-		String s = "background white;"
-				//+ "set history 0;"
-				//+ "set preservestate false"
-				+ ";";
+		String s = DefaultValues.jmolStartupScript;
 		for (int i = 0, n = allObjects.size(); i < n; i++) {
 			Node node = allObjects.get(i);
 			if (node instanceof JmolShape3D) {
 				s += ((JmolShape3D) node).renderScript(this);
 			}
 		}
-	//	System.out.println(s);
 		scriptWait(s);
 	}
 	
@@ -278,12 +285,22 @@ public class JmolWorldRenderer extends WorldRenderer implements JmolWorldRendere
 	}
 
 	@Override
-	public void scriptWait(String s) {
-		viewer.scriptWait(s);
+	public String scriptWait(String s) {
+		// important to do this even if s is ""
+		return viewer.scriptWait(s);
 	}
 
 	public void echo(String msg) {
-		viewer.script("set echo bottom left; echo " + (msg == null ? "" : msg));
+		viewer.scriptWait("set echo bottom left; echo " + (msg == null ? "" : msg));
+	}
+
+	@Override
+	public void createMillerPlanes(Node usCell, int h, int k, int l) {
+		if (!(usCell instanceof JmolUnitCell))
+			return;
+		((JmolUnitCell) usCell).setMillerPlanes(h, k, l);
+		renderNode((JmolShape3D)usCell);				
+
 	}
 
 }

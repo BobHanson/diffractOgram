@@ -12,6 +12,6 @@ public interface JmolWorldRendererI {
 
 	Transform3D getTransform(Node shape);
 
-	void scriptWait(String s);
+	String scriptWait(String s);
 
 }

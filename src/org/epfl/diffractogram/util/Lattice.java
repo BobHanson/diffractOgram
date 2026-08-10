@@ -14,12 +14,13 @@ public class Lattice extends Matrix3d {
 	public double a, b, c;
 	public double alpha, beta, gamma; // in degrees !!
 
-	final public Vector3d va, vb, vc;
-
+	final public Vector3d va, vb, vc, va0, vb0, vc0;
 	private Vector3d center;
 	private Vector3d xhat;
 	private Vector3d yhat;
 	private Vector3d zhat;
+
+	public Transform3D uvw;
 
 	public Lattice() {
 		this(15, 15, 15, 90, 90, 90);
@@ -29,6 +30,9 @@ public class Lattice extends Matrix3d {
 		va = l.va;
 		vb = l.vb;
 		vc = l.vc;
+		this.va0 = new Vector3d(va);
+		this.vb0 = new Vector3d(vb);
+		this.vc0 = new Vector3d(vc);
 		center = l.center;
 		alpha = vb.angle(vc) * 180d / Math.PI;
 		beta = va.angle(vc) * 180d / Math.PI;
@@ -81,8 +85,11 @@ public class Lattice extends Matrix3d {
 		va = new Vector3d(a, 0, 0);
 		vb = new Vector3d(y1, y2, y3);
 		vc = new Vector3d(c * cos(beta), 0, c * sin(beta));
+		this.va0 = new Vector3d(va);
+		this.vb0 = new Vector3d(vb);
+		this.vc0 = new Vector3d(vc);
 		init(new Vector3d());
-		//showLattice();
+		// showLattice();
 	}
 
 	/**
@@ -102,6 +109,9 @@ public class Lattice extends Matrix3d {
 		this.va = va;
 		this.vb = vb;
 		this.vc = vc;
+		this.va0 = new Vector3d(va);
+		this.vb0 = new Vector3d(vb);
+		this.vc0 = new Vector3d(vc);
 		init(new Vector3d());
 	}
 
@@ -133,19 +143,20 @@ public class Lattice extends Matrix3d {
 //	}
 
 	public void setOrientation(int u, int v, int w) {
+		va.set(va0);
+		vb.set(vb0);
+		vc.set(vc0);
 		Vector3d e2 = new Vector3d(0, 1, 0);
-		Vector3d p = new Vector3d(
-				u * va.getX() + v * vb.getX() + w * vc.getX(),
-				u * va.getY() + v * vb.getY() + w * vc.getY(), 
-				u * va.getZ() + v * vb.getZ() + w * vc.getZ());
+		Vector3d p = new Vector3d(u * va.getX() + v * vb.getX() + w * vc.getX(),
+				u * va.getY() + v * vb.getY() + w * vc.getY(), u * va.getZ() + v * vb.getZ() + w * vc.getZ());
 		double angle = p.angle(e2);
 		Vector3d n = new Vector3d();
 		n.cross(e2, p);
-		Transform3D t3d = new Transform3D();
-		t3d.set(Utils3d.getRotationMatrix(angle, n));
-		t3d.transform(va);
-		t3d.transform(vb);
-		t3d.transform(vc);
+		uvw = new Transform3D();
+		uvw.set(Utils3d.getRotationMatrix(angle, n));
+		uvw.transform(va);
+		uvw.transform(vb);
+		uvw.transform(vc);
 		init(new Vector3d());
 	}
 
@@ -215,7 +226,7 @@ public class Lattice extends Matrix3d {
 		r[1].scale(iv);
 		r[2].scale(iv);
 		// note that these lattice vector lengths
-		// are all >= 1/a, 1/b, and 1/c. 
+		// are all >= 1/a, 1/b, and 1/c.
 //		System.out.println("latt " + r[0].length() * x.length());
 //		System.out.println("latt " + r[1].length() * y.length());
 //		System.out.println("latt " + r[2].length() * z.length());
@@ -225,9 +236,9 @@ public class Lattice extends Matrix3d {
 		// latt 1.1547005383792515
 		//
 		// this is becuase they must project onto the
-		// a, b, and c axes to give the necessary 
+		// a, b, and c axes to give the necessary
 		// n lambda / a distance.
-				return r;
+		return r;
 	}
 
 	private static double sin(double a) { // arguments in degrees !!

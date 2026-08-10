@@ -46,6 +46,8 @@ public abstract class JmolShape3D extends Shape3D {
 	public final static int JMOL_SHAPE_TORUS = 6;
 	public final static int JMOL_SHAPE_TEXT = 7;
 	public final static int JMOL_SHAPE_PANEL = 8;
+	public final static int JMOL_SHAPE_VERTEX_SET = 9;
+	public final static int JMOL_SHAPE_UNITCELL = 10;
 
 	protected Point3d[] vertices;
 
@@ -186,8 +188,7 @@ public abstract class JmolShape3D extends Shape3D {
 
 	protected void getShapes() {
 		if (isosurfaceCount == 0) {
-			Draw d = (Draw) getViewer().shm.getShape(JC.SHAPE_DRAW);
-			shape = d.getMesh(thisID);
+			shape = getDraw().getMesh(thisID);
 		} else {
 			Isosurface s = (Isosurface) getViewer().shm.getShape(JC.SHAPE_ISOSURFACE);
 			shapes = new Mesh[isosurfaceCount];
@@ -197,6 +198,11 @@ public abstract class JmolShape3D extends Shape3D {
 			}
 		}
 	}
+
+	protected Draw getDraw() {
+		return (Draw) getViewer().shm.getShape(JC.SHAPE_DRAW);
+	}
+
 
 	protected double distance(int i, int j) {
 		pt.sub2(jmolVertices[i], jmolVertices[j]);
@@ -232,10 +238,13 @@ public abstract class JmolShape3D extends Shape3D {
 			colix = getJmolColor();
 		M4d m = M4d.newA16(tr.mat);
 		if (isosurfaceCount == 0) {
-			shape.mat4 = M4d.newA16(tr.mat);
-			shape.recalcAltVertices = true;
-			shape.getOffsetVertices(null);
-			shape.colix = colix;
+			if (shape == null) {
+				System.out.println("JS3d ??? " + getName());
+				return "";
+			}
+			setShapeVertices(shape, tr);
+			if (colix != Short.MAX_VALUE)
+				shape.colix = colix;
 		} else {
 			for (int i = 0; i < isosurfaceCount; i++) {
 				// let Jmol calculate the alertative vertices and normals directly
@@ -246,6 +255,12 @@ public abstract class JmolShape3D extends Shape3D {
 			}
 		}
 		return "";
+	}
+
+	protected static void setShapeVertices(Mesh shape, Transform3D tr) {
+		shape.mat4 = M4d.newA16(tr.mat);
+		shape.recalcAltVertices = true;
+		shape.getOffsetVertices(null);
 	}
 
 	protected short getJmolColor() {
@@ -259,7 +274,7 @@ public abstract class JmolShape3D extends Shape3D {
 		return name.replace('*', '_').replace('\'', '_').replace(':', '.');
 	}
 
-	private Viewer getViewer() {
+	protected Viewer getViewer() {
 		return (Viewer) renderer.getViewer();
 	}
 

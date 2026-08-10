@@ -50,7 +50,7 @@ public class DefaultValues {
 	 * TRUE here to show the base ray even with unit circle
 	 * 
 	 */
-	public static boolean showBaseRayAlways = true;
+	public static boolean showBaseRayAlways = false;
 
 	
 	/**
@@ -60,9 +60,9 @@ public class DefaultValues {
 
 	
 	/**
-	 * TRUE show unit cell and Miller planes
+	 * TRUE allow showing unit cell and Miller planes
 	 */
-	public static boolean allowShowUnitCell = false;
+	public static boolean allowShowUnitCell = true;
 
 	
 	public final static String UTF_Angstroms = "\u212b";
@@ -82,6 +82,13 @@ public class DefaultValues {
 	public final static double maskDistFract = 1/2d;
 
 	public static final float arrowWidth = .005f;
+
+	public static final String jmolStartupScript = 
+			"background white;"
+			+ "set perspectivedepth off;"
+				//+ "set history 0;"
+				//+ "set preservestate false"
+				+ ";";
 
 	// setable values
 	
@@ -107,6 +114,8 @@ public class DefaultValues {
 	public int param_speed = 1;
 	public int param_startAngle = 0;
 	public int param_stopAngle = 360;
+
+	public final static double ucFactor = 0.15;
 	
 	public void parseParameters(JApplet applet) {
 		

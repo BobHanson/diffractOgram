@@ -514,8 +514,8 @@ public class BottomPanel extends HVPanel.HPanel {
 			cbRL.setSelected(true);
 			p2.addButton(cbRL);
 			if (DefaultValues.allowShowUnitCell) {
-			cbUC = new JCheckBox("Unit Cell");
-			p2.addButton(cbUC);
+				cbUC = new JCheckBox("Bragg");
+				p2.addButton(cbUC);
 			}
 			addSubPane(p2);
 
@@ -580,7 +580,7 @@ public class BottomPanel extends HVPanel.HPanel {
 				model3d.setPersistent(((JCheckBox) e.getSource()).isSelected());
 				break;
 			case "Rec.Latt.":
-			case "Unit Cell":
+			case "Bragg":
 			case "Goniometer":
 				if (setMode(cmd))
 					return;
@@ -602,25 +602,34 @@ public class BottomPanel extends HVPanel.HPanel {
 			switch (type) {
 			case "Rec.Latt.":
 				selected = cbRL.isSelected();
-				model3d.setShowReciprocalLattice(selected);
-				if (selected && cbUC != null)
+				model3d.setShowReciprocalLattice(selected);				
+				if (selected && cbUC != null) {
 					cbUC.setSelected(false);
+					setMode("Bragg");
+				}
+				model3d.clearAll();
 				return false;
-			case "Unit Cell":
+			case "Bragg":
 				selected = cbUC.isSelected();
-				model3d.setShowUnitCell(selected);
-				if (selected)
+				if (selected) {
 					cbGON.setSelected(false);
+					setMode("Goniometer");
+					cbRL.setSelected(false);
+					model3d.setShowReciprocalLattice(false);				
+				}
+				model3d.setShowUnitCell(selected);
 				return true;
-			default:
 			case "Goniometer":
 				selected = cbGON.isSelected();
 				if (selected != !DefaultValues.isUnitSphere) {
 					model3d.main.showGoniometer(selected);
 					if (selected && cbUC != null)
 						cbUC.setSelected(false);
+						setMode("Bragg");
 				}
 				return true;
+			default:
+				throw new RuntimeException("BottomPanel invalid mode " + type);
 			}
 
 		}

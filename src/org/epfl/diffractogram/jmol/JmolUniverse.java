@@ -7,18 +7,20 @@ import org.epfl.diffractogram.model3d.WorldRenderer;
 
 public class JmolUniverse extends Univers {
 
+	private JmolWorldRenderer jmolRenderer;
+
 	public JmolUniverse(JPanel panel3d) {
 		super(panel3d);
 		allowArrowText = true;
 	}
-	
+
 	protected WorldRenderer getRenderer(JPanel panel3d) {
-		return new JmolWorldRenderer(panel3d, this);
+		return jmolRenderer = new JmolWorldRenderer(panel3d, this);
 	}
 
 	@Override
 	public void echo(String msg) {
-		((JmolWorldRenderer) renderer).echo(msg);
-	}	
-	
+		jmolRenderer.echo(msg);
+	}
+
 }

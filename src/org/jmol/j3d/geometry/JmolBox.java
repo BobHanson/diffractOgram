@@ -6,19 +6,35 @@ import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
 
 import org.jmol.j3d.JmolWorldRendererI;
+import org.jmol.shapespecial.Draw;
 
 import javajs.util.P3d;
+import javajs.util.T3d;
 
 public class JmolBox extends JmolShape3D {
 
+	private boolean doFill;
+	private float radius;
+	
 	public JmolBox(String name, double dx, double dy, double dz, Appearance app) {
 		super(name, app, JMOL_SHAPE_BOX);
+		doFill = true;
 		vertices = new Point3d[4];
 		// o {1 0 0} {0 1 0} {0 0 1}
 		vertices[0] = new Point3d(-dx, -dy, -dz);
 		vertices[1] = new Point3d(dx, -dy, -dz);
 		vertices[2] = new Point3d(-dx, dy, -dz);
 		vertices[3] = new Point3d(-dx, -dy, dz);
+	}
+
+	public JmolBox(String name, float radius, Vector3d x, Vector3d y, Vector3d z, Appearance app, int type) {		
+		super(name, app, type);
+		this.radius = radius;
+		vertices = new Point3d[4];
+		vertices[0] = new Point3d();
+		vertices[1] = new Point3d(x);
+		vertices[2] = new Point3d(y);
+		vertices[3] = new Point3d(z);
 	}
 
 	Vector3d v3d = new Vector3d();
@@ -31,18 +47,25 @@ public class JmolBox extends JmolShape3D {
 			return "";
 		if (shape == null) {
 			// initially use the draw UNITCELL option; otherwise it is too complicated
-			P3d p = new P3d();
-			String s = getThisID() + " unitcell [ " + jmolPt(vertices[0], p);
-			v3d.sub(vertices[1], vertices[0]);
-			s += jmolPt(v3d, p);
-			v3d.sub(vertices[2], vertices[0]);
-			s += jmolPt(v3d, p);
-			v3d.sub(vertices[3], vertices[0]);
-			s += jmolPt(v3d, p);
-			s += " ]" + getJmolDrawApp(false) + " fill nomesh\n";
+			String s = getThisID() + 
+					(radius > 0 ? "width " + radius : "" ) + " unitcell "
+							+ getUnitCellDef() + getJmolDrawApp(false) + (doFill ? " fill nomesh" : "") + "\n";
 			scriptShape(s);
 		}
 		return recalcVertices(tr, Short.MIN_VALUE);
+	}
+
+	protected String getUnitCellDef() {
+		P3d p = new P3d();
+		String s = "[ " + jmolPt(vertices[0], p);
+		v3d.sub(vertices[1], vertices[0]);
+		s += jmolPt(v3d, p);
+		v3d.sub(vertices[2], vertices[0]);
+		s += jmolPt(v3d, p);
+		v3d.sub(vertices[3], vertices[0]);
+		s += jmolPt(v3d, p);
+		s += " ]";
+		return s;
 	}
 
 	// notes for future reference

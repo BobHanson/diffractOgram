@@ -73,16 +73,16 @@ public class Model3d {
 
 	public boolean persistent = true;
 	public boolean showReciprocalLattice = true;
-	public boolean showUnitCell = true;
+	public boolean showUnitCell = false;
 
 	public void setShowUnitCell(boolean show) {
 		showUnitCell = show;
-		clearAll();
+//		clearAll();
+		updateUnitAxes(null);
 	}
 
 	public void setShowReciprocalLattice(boolean show) {
 		showReciprocalLattice = show;				
-		clearAll();
 	}
 	
 	public void setPersistent(boolean tf) {
@@ -103,6 +103,7 @@ public class Model3d {
 	Transform3D tPrecOrient;
 	private Transform3D tPrecOrientInv;
 	private BranchGroup usChild;
+	private Node usCell;
 	private TransformGroup usTG;
 	private BranchGroup mray, mray2, ms0, ma, mb, mc;
 
@@ -174,14 +175,13 @@ public class Model3d {
 			clearImage();
 		rays.removeAllRays(persistent);
 		clearMRays();
-//		if (!DefaultValues.developNet)
-//			net.clearLattice();
 	}
 
 	public void clearAll() {
 		clearAllRays();
 		net.clearSelectedAtoms();
 		clearImage();
+		net.createAxes();
 		targetN = 0;
 		if (DefaultValues.developNet)
 			net.setLambda(lambda);
@@ -236,10 +236,14 @@ public class Model3d {
 		tPrecOrientInv.invert();
 
 		net.doRaysOrLaue(mg, adjustR, isRay, targetN);
+		if (net.thisHKL != null && showUnitCell) {
+			showMillerPlanes(
+					net.thisHKL.x, net.thisHKL.y, net.thisHKL.z);
+		}
 		if (mg != null)
 			mg.dispose();
 		painting = false;
-	}
+}
 
 	public void setFlatScreen() {
 		setScreenType(new ProjScreen3d.Flat(univers, precession),
@@ -669,6 +673,18 @@ public class Model3d {
 		n.setCapability(BranchGroup.ALLOW_DETACH);
 		usChild = n;
 		univers.addNotify(tg, n);
+
+		univers.removeNotify(tg, usCell);
+		if (showUnitCell) {
+			Node node = univers.renderer.createUnitCell("unitCell", DefaultValues.arrowWidth, Colors.black,
+					(Vector3d) transformLatticeV(new Vector3d(1, 0, 0), DefaultValues.ucFactor),
+					(Vector3d) transformLatticeV(new Vector3d(0, 1, 0), DefaultValues.ucFactor),
+					(Vector3d) transformLatticeV(new Vector3d(0, 0, 1), DefaultValues.ucFactor));
+			node.setCapability(BranchGroup.ALLOW_DETACH);
+			usCell = node;
+			univers.addNotify(tg, node);
+		}
+
 	}
 
 	public Tuple3d transformLatticeV(Tuple3d v, double scale) {
@@ -688,7 +704,9 @@ public class Model3d {
 	}
 
 	/**
-	 * Generate the M vector (g - e), (S = s - so) and its projections onto a, b, and c.
+	 * Generate the M vector (g - e), (S = s - so) and its projections onto a, b,
+	 * and c.
+	 * 
 	 * @param h
 	 * @param k
 	 * @param l
@@ -697,21 +715,15 @@ public class Model3d {
 	 * @param pNet
 	 */
 	void updateUnitSphere(int h, int k, int l, Point3d pN, Point3d pNetOrigin, Point3d pNet) {
-//			System.out.println("update " + h + " " + k + " " + l + " " 
-//				+ orientation.omegaDeg + " " + orientation.chiDeg + " " + orientation.phiDeg);
-
 		// reverse S0
 		double r = virtualSphere.scaledRadius;
 		Point3d p0 = new Point3d(0, -r, 0);
 		Point3d pSo = new Point3d(pNet);
 		pSo.add(p0);
 		setMrays(new Point3d(), pNet, pSo, p0);
-
-//		Point3d pNetTr = new Point3d(pNet);
-//		tPrecOrientInv.transform(pNetTr); // now pN
-//		reciprocal.inverse.transform(pNetTr);
-//		pNetTr.scale(1/net.scaling);// now this is {h k l} YES
-		// beta = 120:
+//		if (showUnitCell)
+//			return;
+		// create ma,mb,mc projections of M
 		Point3d m = new Point3d(h, k, l); // 1 0 0
 		reciprocal.rotate(m); // .0666 0 0.03849
 		m.scale(lambda); // because our R.L. is scaled by lambda
@@ -719,7 +731,6 @@ public class Model3d {
 
 		// now m is (lambda/a, -lambda/b, 3 lambda/c) if cubic only
 
-		// System.out.println("\nm " + m);
 		// The three direct vectors
 
 		Vector3d va = (Vector3d) transformLatticeV(new Vector3d(1, 0, 0), 0);
@@ -733,9 +744,6 @@ public class Model3d {
 		double mDotC = Utils3d.dot(vc, m);
 
 		// these are now h*lamba/a, k*lambda/b, l*lambda/c
-
-//		System.out.println("hkl "+ h + " " + k + " " + l + " mdot " + mDotA  + " " + mDotB + " " + mDotC
-//		);
 
 		// back to the net scaling -- lambda * DefaultValues.scale
 
@@ -759,7 +767,6 @@ public class Model3d {
 			p0.y -= r;
 
 			if ((d = p0.distance(pSo)) > 0.05) {
-				// System.out.println("ma=" + d/DefaultValues.scale + " " + (lambda/lattice.a));
 				ma = univers.creator.createNamedVector("hkla", pSo, p0, p0, 0.2f, 0.06f, Colors.black, Colors.black,
 						" " + h);
 				ma.setCapability(BranchGroup.ALLOW_DETACH);
@@ -771,7 +778,6 @@ public class Model3d {
 			p0.scale(DefaultValues.scale);
 			p0.y -= r;
 			if ((d = p0.distance(pSo)) > 0.05) {
-				// System.out.println("mb=" + d/DefaultValues.scale + " " + (lambda/lattice.b));
 				mb = univers.creator.createNamedVector("hklb", pSo, p0, p0, 0.2f, 0.06f, Colors.black, Colors.black,
 						" " + k);
 				mb.setCapability(BranchGroup.ALLOW_DETACH);
@@ -786,7 +792,6 @@ public class Model3d {
 
 				// this check is for p0 == pSo, in which case no line is drawn
 
-//				System.out.println("mc=" + d + " " + (lambda/lattice.c));
 				mc = univers.creator.createNamedVector("hklc", pSo, p0, p0, 0.2f, 0.06f, Colors.black, Colors.black,
 						" " + l);
 				mc.setCapability(BranchGroup.ALLOW_DETACH);
@@ -799,7 +804,7 @@ public class Model3d {
 		clearMRays();
 		mray = univers.creator.createCylinder(univers, "M", p0, pSo, .02, Colors.appBlack, 4);
 		univers.addNotify(rays, mray);
-		if (DefaultValues.addRL_S) {
+		if (DefaultValues.addRL_S && !showUnitCell) {
 			mray2 = univers.creator.createCylinder(univers, "M2", pNetOrigin, pNet, .02, Colors.appBlack, 4);
 			univers.addNotify(rays, mray2);
 		}
@@ -823,6 +828,7 @@ public class Model3d {
 		}
 		if (mray2 != null)
 			univers.removeNotify(rays, mray2);		
+		showMillerPlanes(0, 0, 0);
 	}
 
 	public void setScreen(String type, double angleMu, double angleAlpha, boolean maskEnabled) {
@@ -858,6 +864,11 @@ public class Model3d {
 
 	public void echo(String s) {
 		univers.echo(s);		
+	}
+
+	public void showMillerPlanes(int h, int k, int l) {
+		if (usCell != null)
+			univers.renderer.createMillerPlanes(usCell, h, k, l);
 	}
 
 }

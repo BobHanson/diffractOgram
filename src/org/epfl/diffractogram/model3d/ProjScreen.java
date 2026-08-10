@@ -271,7 +271,6 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseList
 			g.setColor(new Color(c, c, c));
 		}
 
-		// System.out.println(x+" "+y);
 		// g.setColor(Color.red);
 		// BH necessary to enclose setClip with create/dispose in JavaScript
 		// BH but I don't see why this clip is necessary, actually
@@ -302,6 +301,49 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseList
 		// BH more efficient
 		dots.add(new Dot(p, s, i, j, k, n, main.getParameters()));
 		paintPoint(mg, x, y, mouseX, mouseY, paintW, paintH, s, false, -1);
+	}
+
+	public static int roundToPower2(double d) {
+		return (int) Math.pow(2, (int) Math.round(Math.log(d) / Math.log(2.0)));
+	}
+
+	ComponentListener sizeListener = new ComponentAdapter() {
+		public void componentResized(ComponentEvent e) {
+			setImageDefaultOrigin(fixedWidth);
+			// BH added to fix clicking [ ] (maximize) button on frame in Java and general
+			// resize update in JavaScript
+			// BH as well as issues with moving the splitpane bar in Java and JavaScript
+			Dimension size = ProjScreen.this.getSize();
+			if (size.width > 0)
+				ProjScreen.this.paintImmediately(0, 0, size.width, size.height);
+
+		}
+	};
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		mouseX0 = e.getX();
+		mouseY0 = e.getY();
+		mouseX0S = e.getX();
+		mouseY0S = e.getY();
+		// hmm not during a paint?
+		showIndex(mouseX0, mouseY0);
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		mouseX0 = e.getX();
+		mouseY0 = e.getY();
+		mouseX0S = e.getX();
+		mouseY0S = e.getY();
+		// hmm not during a paint?
+		showRay(mouseX0, mouseY0);
 	}
 
 	public synchronized void mouseDragged(MouseEvent e) {
@@ -340,15 +382,6 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseList
 		showIndex(mouseX0, mouseY0);
 	}
 
-	public synchronized void mouseClick(MouseEvent e) {
-		mouseX0 = e.getX();
-		mouseY0 = e.getY();
-		mouseX0S = e.getX();
-		mouseY0S = e.getY();
-		// hmm not during a paint?
-		showIndex(mouseX0, mouseY0);
-	}
-
 	public synchronized void mouseWheelMoved(MouseWheelEvent e) {
 		if (e.getWheelRotation() < 0 && (paintW <= 20 || paintH <= 20))
 			return;
@@ -357,45 +390,6 @@ public class ProjScreen extends JPanel implements MouseMotionListener, MouseList
 		paintW += paintW / 10 * e.getWheelRotation();
 		paintH += paintH / 10 * e.getWheelRotation();
 		repaint();
-	}
-
-	public static int roundToPower2(double d) {
-		return (int) Math.pow(2, (int) Math.round(Math.log(d) / Math.log(2.0)));
-	}
-
-	ComponentListener sizeListener = new ComponentAdapter() {
-		public void componentResized(ComponentEvent e) {
-			setImageDefaultOrigin(fixedWidth);
-			// BH added to fix clicking [ ] (maximize) button on frame in Java and general
-			// resize update in JavaScript
-			// BH as well as issues with moving the splitpane bar in Java and JavaScript
-			Dimension size = ProjScreen.this.getSize();
-			if (size.width > 0)
-				ProjScreen.this.paintImmediately(0, 0, size.width, size.height);
-
-		}
-	};
-
-	@Override
-	public void mouseClicked(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mousePressed(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mouseReleased(MouseEvent e) {
-		mouseX0 = e.getX();
-		mouseY0 = e.getY();
-		mouseX0S = e.getX();
-		mouseY0S = e.getY();
-		// hmm not during a paint?
-		showRay(mouseX0, mouseY0);
 	}
 
 	@Override

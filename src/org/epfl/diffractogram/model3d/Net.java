@@ -97,6 +97,7 @@ public class Net extends BranchGroup {
 
 	private Atom[][][] atoms;
 	private List<Atom> selectedAtoms;
+	Point3i thisHKL;
 
 	public Net(Model3d model3d, DefaultValues defaultValues) {
 		selectedAtoms = new ArrayList<>();
@@ -409,7 +410,7 @@ public class Net extends BranchGroup {
 			unhighlight(selectedAtoms.remove(i), false);
 		}
 	}
-
+	
 	public synchronized void unhighlight(Atom atom, boolean force) {
 		if (force || atom.isSelected) {
 			changeAtomApp(atom, defaultApp);
@@ -484,7 +485,7 @@ public class Net extends BranchGroup {
 		model3d.tPrecOrient.transform(pNetOrigin);
 		clearSelectedAtoms();
 		int n = 0;
-		//System.out.println("Net targetN=" + targetN);
+		thisHKL = null;
 		for (int h = -hRange; h <= hRange; h++) {
 			for (int k = -kRange; k <= kRange; k++) {
 				for (int l = -lRange; l <= lRange; l++) {
@@ -506,7 +507,6 @@ public class Net extends BranchGroup {
 						// set radius to exactly (x^2 + y^2 + z^2) / 2y, if we can
 						// that is, the exact radius to the point.
 						double sphereRadius = -(pNet.x * pNet.x + pNet.y * pNet.y + pNet.z * pNet.z) / (2 * pNet.y);
-						//System.out.println(sphereRadius + " " + pNet.distance(cSphere));
 						scaledRadius = sphereRadius;
 						if (Double.isInfinite(scaledRadius) || Double.isNaN(scaledRadius) || scaledRadius <= 0d)
 							continue;
@@ -557,8 +557,10 @@ public class Net extends BranchGroup {
 							doProject2D = false;
 						}
 					}
-					if (doProject2D)
+					if (doProject2D) {
 						model3d.project2d(mg, p2d, h, k, l, n);
+						thisHKL = new Point3i(h, k, l);
+					}
 				}
 			}
 		}
