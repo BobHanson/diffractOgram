@@ -4,7 +4,9 @@ DiffractOgram-SwingJS
 
 To create JavaScript along with Java (doing all the coding in Java), you will need to use Eclipse with the java2script compilation-follower plugin. The [j2s.core.jar plugin](https://github.com/java2script/java2script/blob/master/sources/net.sf.j2s.core/dist/swingjs/ver/5.0.1/j2s.core.jar) can be found at the [java2script GitHub site](https://github.com/java2script/java2script). Take a look at [README.txt](https://github.com/BobHanson/java2script/blob/master/sources/net.sf.j2s.core/dist/README.txt). But, basically, just put j2s.core.jar into the eclipse _dropins_ directory (not _plugins_) and restart Eclipse. Do a clean build of the project, refresh the project contents, and you should see a site/ directory created. In this project, run build-1-site.xml to add the java2script/SwingJS runtime library to site/ and then also run build-2-core.xml to create site/swingjs/j2s/core/core_epfl.z.js, which _test_epfl_core.html requires. The core files are not required, but they will allow the web app to load quite rapidly. If you modify the Java code, you can run the various HTML files in site immediately --- except for _test_epf_core.html, which will require recreating core_epfl.z.js as well. 
 
-## **Update 2026.07.29**
+## **Update 2026.08.10**
+
+Ready for the IUCr Congress in Calgary!
 
 The DiffractOgram applet is now fully functional using Jmol (DiffractOgram2; Java and JavaScript) or Java3D (DiffractOgram; Java only) for rendering the Java3D "world" environment. 
 
@@ -44,7 +46,9 @@ and is the essence of what is referred to as Miller planes:
 
 <img width="1137" height="502" alt="image" src="https://github.com/user-attachments/assets/23646b74-974c-4a8d-bc8b-ad100ff0ed6c" />
 
-It might be interesting to add a Miller plane option, but that is not implemented.
+A "Bragg" option is now available that displays a (scaled down) unit cell and two planes for each reflection. 
+
+<img width="1543" height="1113" alt="image" src="https://github.com/user-attachments/assets/c656929d-a988-4373-bb3d-883d2affffae" />
 
 ## **Initial work**
 Current status: working in JavaScript
